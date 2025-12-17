@@ -1,0 +1,651 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
+)
+
+// AccountInfo represents the account holder and account details
+type AccountInfo struct {
+	BankName          string
+	AccountHolderName string
+	Address           []string // Multiple address lines
+	City              string
+	State             string
+	PhoneNo           string
+	Email             string
+	ODLimit           string
+	Currency          string
+	CustID            string
+	AccountNo         string
+	AccountType       string
+	AccountOpenDate   string
+	AccountStatus     string
+	BranchName        string
+	BranchAddress     []string
+	BranchCode        string
+	IFSC              string
+	MICR              string
+	JointHolders      string
+	Nomination        string
+	PrimePotential    string
+}
+
+// StatementPeriod represents the statement date range
+type StatementPeriod struct {
+	FromDate string
+	ToDate   string
+}
+
+// TxtTransaction represents a single transaction entry from TXT file
+type TxtTransaction struct {
+	Date           string
+	Narration      string // Can be multi-line
+	ChequeRefNo    string
+	ValueDate      string
+	WithdrawalAmt  float64
+	DepositAmt     float64
+	ClosingBalance float64
+}
+
+// StatementSummary represents the summary at the end of the statement
+type StatementSummary struct {
+	OpeningBalance          float64
+	TotalDebits             float64
+	TotalCredits            float64
+	ClosingBalance          float64
+	DebitCount              int
+	CreditCount             int
+	GeneratedOn             string
+	GeneratedBy             string
+	RequestingBranchCode    string
+	GSTN                    string
+	RegisteredOfficeAddress string
+}
+
+// TxtAccountStatement represents the complete extracted statement from TXT file
+type TxtAccountStatement struct {
+	AccountInfo     AccountInfo
+	StatementPeriod StatementPeriod
+	Transactions    []TxtTransaction
+	Summary         StatementSummary
+}
+
+// Helper function to parse amount strings (removes commas and converts to float)
+func parseAmount(amountStr string) float64 {
+	amountStr = strings.TrimSpace(amountStr)
+	amountStr = strings.ReplaceAll(amountStr, ",", "")
+	if amountStr == "" {
+		return 0.0
+	}
+	val, err := strconv.ParseFloat(amountStr, 64)
+	if err != nil {
+		return 0.0
+	}
+	return val
+}
+
+// Helper function to extract value after colon
+func extractAfterColon(line string) string {
+	parts := strings.SplitN(line, ":", 2)
+	if len(parts) == 2 {
+		return strings.TrimSpace(parts[1])
+	}
+	return ""
+}
+
+// Helper function to check if line is a transaction line (starts with date pattern DD/MM/YY)
+func isTransactionLine(line string) bool {
+	matched, _ := regexp.MatchString(`^\d{2}/\d{2}/\d{2}`, strings.TrimSpace(line))
+	return matched
+}
+
+// Helper function to check if line is a continuation of narration (no date, but has content)
+func isNarrationContinuation(line string) bool {
+	trimmed := strings.TrimSpace(line)
+	if trimmed == "" || strings.HasPrefix(trimmed, "**Continue**") {
+		return false
+	}
+	// If it doesn't start with a date and has content, it's likely a continuation
+	if !isTransactionLine(line) && len(trimmed) > 0 && !strings.HasPrefix(trimmed, "--------") {
+		return true
+	}
+	return false
+}
+
+// Extract account information from header section
+func extractAccountInfo(lines []string) AccountInfo {
+	info := AccountInfo{}
+
+	for i, line := range lines {
+		line = strings.TrimSpace(line)
+
+		// Extract Bank Name
+		if strings.Contains(line, "HDFC BANK") && info.BankName == "" {
+			info.BankName = "HDFC BANK Ltd."
+		}
+
+		// Extract Account Holder Name
+		if (strings.HasPrefix(line, "MR.") || strings.HasPrefix(line, "MRS.") || strings.HasPrefix(line, "MS.")) && info.AccountHolderName == "" {
+			// Extract just the name part (before any long spaces or special markers)
+			// The name is typically on the left side, before the branch info starts
+			parts := strings.Fields(line)
+			if len(parts) >= 3 {
+				// Take first few words as name (MR./MRS./MS. + name parts)
+				nameParts := []string{}
+				for _, part := range parts {
+					if strings.Contains(part, "OFF") || strings.Contains(part, "PUNE") {
+						break
+					}
+					nameParts = append(nameParts, part)
+				}
+				info.AccountHolderName = strings.Join(nameParts, " ")
+			} else {
+				info.AccountHolderName = strings.TrimSpace(line)
+			}
+		}
+
+		// Extract Address (lines after account holder name, before JOINT HOLDERS)
+		if info.AccountHolderName != "" && len(info.Address) == 0 {
+			// Collect address lines (usually 3-5 lines)
+			// Address is on the left side, branch info is on the right
+			for j := i + 1; j < i+7 && j < len(lines); j++ {
+				originalLine := lines[j]
+				// Extract left part (before the branch info which starts around column 80-90)
+				// Branch info typically starts with "City", "State", etc.
+				addrLine := ""
+				if len(originalLine) > 80 {
+					// Check if this line has branch info on the right
+					rightPart := strings.TrimSpace(originalLine[70:])
+					if strings.Contains(rightPart, "City") ||
+						strings.Contains(rightPart, "State") ||
+						strings.Contains(rightPart, "Phone") ||
+						strings.Contains(rightPart, "Email") ||
+						strings.Contains(rightPart, "OD Limit") ||
+						strings.Contains(rightPart, "Cust ID") ||
+						strings.Contains(rightPart, "Account No") {
+						// This line has branch info, extract left part as address
+						addrLine = strings.TrimSpace(originalLine[0:70])
+					} else {
+						// No branch info, might be a full address line
+						addrLine = strings.TrimSpace(originalLine)
+					}
+				} else {
+					addrLine = strings.TrimSpace(originalLine)
+				}
+
+				// Stop if we hit JOINT HOLDERS, Nomination, or Statement From
+				if strings.Contains(addrLine, "JOINT HOLDERS") ||
+					strings.Contains(addrLine, "Nomination") ||
+					strings.Contains(addrLine, "Statement From") ||
+					strings.Contains(addrLine, "--------") ||
+					strings.Contains(addrLine, "Date      Narration") ||
+					strings.Contains(addrLine, "OFF PUNE NAGAR HIGHWAY") {
+					break
+				}
+				// Add non-empty address lines
+				if addrLine != "" && !strings.Contains(addrLine, ":") {
+					info.Address = append(info.Address, addrLine)
+				}
+			}
+		}
+
+		// Extract fields with colons
+		if strings.Contains(line, "Account Branch :") {
+			info.BranchName = extractAfterColon(line)
+		}
+		if strings.Contains(line, "Address        :") {
+			// Address can span multiple lines
+			addr := extractAfterColon(line)
+			if addr != "" {
+				info.BranchAddress = append(info.BranchAddress, addr)
+			}
+			// Check next lines for continuation
+			for j := i + 1; j < i+3 && j < len(lines); j++ {
+				nextLine := strings.TrimSpace(lines[j])
+				if nextLine != "" && !strings.Contains(nextLine, ":") {
+					info.BranchAddress = append(info.BranchAddress, nextLine)
+				} else {
+					break
+				}
+			}
+		}
+		if strings.Contains(line, "City           :") {
+			info.City = extractAfterColon(line)
+		}
+		if strings.Contains(line, "State          :") {
+			info.State = extractAfterColon(line)
+		}
+		if strings.Contains(line, "Phone no.      :") {
+			info.PhoneNo = extractAfterColon(line)
+		}
+		if strings.Contains(line, "Email          :") {
+			info.Email = extractAfterColon(line)
+		}
+		if strings.Contains(line, "OD Limit       :") {
+			parts := strings.Split(line, "OD Limit       :")
+			if len(parts) == 2 {
+				rest := strings.TrimSpace(parts[1])
+				limitParts := strings.Fields(rest)
+				if len(limitParts) >= 2 {
+					info.ODLimit = limitParts[0]
+					info.Currency = limitParts[1]
+				}
+			}
+		}
+		if strings.Contains(line, "Cust ID        :") {
+			info.CustID = extractAfterColon(line)
+		}
+		if strings.Contains(line, "Account No     :") {
+			parts := strings.Split(line, "Account No     :")
+			if len(parts) == 2 {
+				rest := strings.TrimSpace(parts[1])
+				fields := strings.Fields(rest)
+				if len(fields) >= 1 {
+					info.AccountNo = fields[0]
+					if len(fields) > 1 {
+						info.PrimePotential = strings.Join(fields[1:], " ")
+					}
+				}
+			}
+		}
+		if strings.Contains(line, "A/C Open Date  :") {
+			info.AccountOpenDate = extractAfterColon(line)
+		}
+		if strings.Contains(line, "Account Status :") {
+			info.AccountStatus = extractAfterColon(line)
+		}
+		if strings.Contains(line, "RTGS/NEFT IFSC :") {
+			parts := strings.Split(line, "RTGS/NEFT IFSC :")
+			if len(parts) == 2 {
+				rest := strings.TrimSpace(parts[1])
+				fields := strings.Fields(rest)
+				if len(fields) >= 1 {
+					info.IFSC = fields[0]
+					if len(fields) >= 3 && fields[1] == "MICR" {
+						info.MICR = fields[2]
+					}
+				}
+			}
+		}
+		if strings.Contains(line, "Branch Code    :") {
+			info.BranchCode = extractAfterColon(line)
+		}
+		if strings.Contains(line, "Account Type   :") {
+			info.AccountType = extractAfterColon(line)
+		}
+		if strings.Contains(line, "JOINT HOLDERS :") {
+			info.JointHolders = extractAfterColon(line)
+		}
+		if strings.Contains(line, "Nomination :") {
+			parts := strings.Split(line, "Nomination :")
+			if len(parts) == 2 {
+				info.Nomination = strings.TrimSpace(parts[1])
+			}
+		}
+	}
+
+	return info
+}
+
+// Extract statement period
+func extractStatementPeriod(lines []string) StatementPeriod {
+	period := StatementPeriod{}
+
+	for _, line := range lines {
+		if strings.Contains(line, "Statement From") {
+			// Format: Statement From      : 01/04/2024  To: 31/03/2025
+			re := regexp.MustCompile(`Statement From\s+:\s+(\d{2}/\d{2}/\d{4})\s+To:\s+(\d{2}/\d{2}/\d{4})`)
+			matches := re.FindStringSubmatch(line)
+			if len(matches) == 3 {
+				period.FromDate = matches[1]
+				period.ToDate = matches[2]
+			}
+		}
+	}
+
+	return period
+}
+
+// Parse a transaction line
+func parseTransactionLine(line string) *TxtTransaction {
+	// Use original line (not trimmed) to preserve fixed-width positions
+	if !isTransactionLine(line) {
+		return nil
+	}
+
+	// Extract date (first 8 characters)
+	if len(line) < 8 {
+		return nil
+	}
+	date := strings.TrimSpace(line[0:8])
+	if date == "" {
+		return nil
+	}
+
+	// Find the reference number (typically 14-16 digits, but can vary)
+	// Reference number is usually after narration, before value date
+	// Look for patterns like: 16 digits, or alphanumeric codes
+	refRe := regexp.MustCompile(`([A-Z0-9]{14,16})`)
+	refMatches := refRe.FindAllString(line, -1)
+	chequeRef := ""
+	refIndex := -1
+
+	// Find the reference number that appears after the date and before value date
+	// Usually around position 60-80
+	valueDateRe := regexp.MustCompile(`(\d{2}/\d{2}/\d{2})`)
+	valueDateMatches := valueDateRe.FindAllString(line, -1)
+	valueDatePos := -1
+	if len(valueDateMatches) > 1 {
+		valueDatePos = strings.Index(line, valueDateMatches[1])
+	}
+
+	// Look for reference number between position 50 and value date position
+	for _, match := range refMatches {
+		pos := strings.Index(line, match)
+		// Reference should be after date (position 8+) and before value date
+		if pos > 50 && pos < 100 {
+			// Check if it's not part of narration (should be standalone)
+			// Reference numbers are usually right-aligned or have spaces around them
+			if valueDatePos == -1 || pos < valueDatePos {
+				chequeRef = match
+				refIndex = pos
+				break
+			}
+		}
+	}
+
+	// Fallback: if no reference found, try to find 16-digit number
+	if chequeRef == "" {
+		refRe16 := regexp.MustCompile(`(\d{16})`)
+		refMatches16 := refRe16.FindAllString(line, -1)
+		if len(refMatches16) > 0 {
+			for _, match := range refMatches16 {
+				pos := strings.Index(line, match)
+				if pos > 50 && pos < 100 {
+					chequeRef = match
+					refIndex = pos
+					break
+				}
+			}
+		}
+	}
+
+	// Find value date (DD/MM/YY format) - should be after reference number
+	// Reuse valueDateMatches already found above
+	valueDate := ""
+	if len(valueDateMatches) > 1 {
+		// Second date is value date (first is transaction date)
+		valueDate = valueDateMatches[1]
+	}
+
+	// Find all amounts (numbers with commas and decimals)
+	amountRe := regexp.MustCompile(`([\d,]+\.\d{2})`)
+	amountMatches := amountRe.FindAllString(line, -1)
+
+	// Extract narration (between date and reference number)
+	narration := ""
+	if refIndex > 0 {
+		// Narration is between position 10 (after date) and reference number
+		if refIndex > 10 {
+			narration = strings.TrimSpace(line[10:refIndex])
+			// Clean up narration - remove any trailing reference numbers or dates that might have been included
+			// Remove any 16-digit numbers or date patterns at the end
+			narration = regexp.MustCompile(`\s+\d{16}\s*$`).ReplaceAllString(narration, "")
+			narration = regexp.MustCompile(`\s+\d{2}/\d{2}/\d{2}\s*$`).ReplaceAllString(narration, "")
+			narration = strings.TrimSpace(narration)
+		}
+	} else if len(amountMatches) > 0 {
+		// Fallback: narration is between date and first amount
+		firstAmountIndex := strings.Index(line, amountMatches[0])
+		if firstAmountIndex > 10 {
+			narration = strings.TrimSpace(line[10:firstAmountIndex])
+			// Clean up narration
+			narration = regexp.MustCompile(`\s+\d{16}\s*$`).ReplaceAllString(narration, "")
+			narration = regexp.MustCompile(`\s+\d{2}/\d{2}/\d{2}\s*$`).ReplaceAllString(narration, "")
+			narration = strings.TrimSpace(narration)
+		}
+	}
+
+	// Parse amounts - typically we have 1-3 amounts
+	// Pattern: [withdrawal] [deposit] balance (balance is always last)
+	withdrawal := 0.0
+	deposit := 0.0
+	balance := 0.0
+
+	if len(amountMatches) == 0 {
+		return nil // No amounts found, invalid transaction
+	}
+
+	// The last amount is always the closing balance
+	balance = parseAmount(amountMatches[len(amountMatches)-1])
+
+	// Determine withdrawal and deposit based on positions
+	// In the fixed-width format:
+	// - Withdrawal column is around position 90-110
+	// - Deposit column is around position 110-130
+	// - Balance column is around position 130-150
+
+	if len(amountMatches) == 3 {
+		// Three amounts: withdrawal, deposit, balance
+		withdrawal = parseAmount(amountMatches[0])
+		deposit = parseAmount(amountMatches[1])
+	} else if len(amountMatches) == 2 {
+		// Two amounts: either withdrawal+balance or deposit+balance
+		// Check position to determine which
+		firstAmountPos := strings.Index(line, amountMatches[0])
+		secondAmountPos := strings.Index(line, amountMatches[1])
+
+		// If there's a large gap (>20 chars), likely withdrawal then deposit/balance
+		// Otherwise, check if first amount is in withdrawal column position
+		if secondAmountPos-firstAmountPos > 20 {
+			// Likely withdrawal then balance (deposit empty)
+			withdrawal = parseAmount(amountMatches[0])
+		} else {
+			// Check position - if first amount is far right, it might be balance
+			// Otherwise, it's likely a withdrawal or deposit
+			// We'll check the spacing pattern
+			if firstAmountPos > 90 {
+				// Far right, likely just balance (no withdrawal/deposit)
+			} else {
+				// Check if there's a large gap before it (suggests withdrawal column)
+				// or small gap (suggests deposit column)
+				// For simplicity, if it's the only amount before balance, treat as withdrawal
+				withdrawal = parseAmount(amountMatches[0])
+			}
+		}
+	} else if len(amountMatches) == 1 {
+		// Only balance - no withdrawal or deposit (unlikely but possible)
+		balance = parseAmount(amountMatches[0])
+	}
+
+	// Alternative approach: check the actual column positions
+	// Withdrawal is typically around column 90-110, Deposit 110-130, Balance 130+
+	if len(amountMatches) >= 2 {
+		for i, amt := range amountMatches[:len(amountMatches)-1] {
+			pos := strings.Index(line, amt)
+			if pos >= 85 && pos < 115 {
+				// In withdrawal column range
+				withdrawal = parseAmount(amt)
+			} else if pos >= 115 && pos < 135 {
+				// In deposit column range
+				deposit = parseAmount(amt)
+			} else if i == 0 {
+				// First amount, assume withdrawal
+				withdrawal = parseAmount(amt)
+			}
+		}
+	}
+
+	return &TxtTransaction{
+		Date:           date,
+		Narration:      narration,
+		ChequeRefNo:    chequeRef,
+		ValueDate:      valueDate,
+		WithdrawalAmt:  withdrawal,
+		DepositAmt:     deposit,
+		ClosingBalance: balance,
+	}
+}
+
+// Extract transactions from the file
+func extractTransactions(lines []string) []TxtTransaction {
+	var transactions []TxtTransaction
+	var currentTxn *TxtTransaction
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+
+		// Skip header lines and separators
+		if strings.HasPrefix(trimmed, "--------") ||
+			strings.HasPrefix(trimmed, "Date      Narration") ||
+			trimmed == "" ||
+			strings.Contains(trimmed, "**Continue**") ||
+			strings.Contains(trimmed, "Page No") {
+			continue
+		}
+
+		// Check if this is a transaction line
+		if isTransactionLine(trimmed) {
+			// Save previous transaction if exists
+			if currentTxn != nil {
+				transactions = append(transactions, *currentTxn)
+			}
+
+			// Parse new transaction
+			currentTxn = parseTransactionLine(trimmed)
+		} else if currentTxn != nil && isNarrationContinuation(trimmed) {
+			// This is a continuation of the narration
+			currentTxn.Narration += " " + trimmed
+		} else if strings.HasPrefix(trimmed, "********") {
+			// Reached summary section
+			if currentTxn != nil {
+				transactions = append(transactions, *currentTxn)
+				currentTxn = nil
+			}
+			break
+		}
+	}
+
+	// Don't forget the last transaction
+	if currentTxn != nil {
+		transactions = append(transactions, *currentTxn)
+	}
+
+	return transactions
+}
+
+// Extract statement summary
+func extractSummary(lines []string) StatementSummary {
+	summary := StatementSummary{}
+
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+
+		// Extract summary values
+		if strings.Contains(trimmed, "Opening Balance") && i+1 < len(lines) {
+			// Next line has the values
+			nextLine := strings.TrimSpace(lines[i+1])
+			// Format: 379,562.39    6,770,007.52    6,431,384.97    40,939.84
+			amountRe := regexp.MustCompile(`([\d,]+\.\d{2})`)
+			amounts := amountRe.FindAllString(nextLine, -1)
+			if len(amounts) >= 4 {
+				summary.OpeningBalance = parseAmount(amounts[0])
+				summary.TotalDebits = parseAmount(amounts[1])
+				summary.TotalCredits = parseAmount(amounts[2])
+				summary.ClosingBalance = parseAmount(amounts[3])
+			}
+		}
+
+		if strings.Contains(trimmed, "Dr Count") && i+1 < len(lines) {
+			nextLine := strings.TrimSpace(lines[i+1])
+			countRe := regexp.MustCompile(`(\d+)`)
+			counts := countRe.FindAllString(nextLine, -1)
+			if len(counts) >= 2 {
+				summary.DebitCount, _ = strconv.Atoi(counts[0])
+				summary.CreditCount, _ = strconv.Atoi(counts[1])
+			}
+		}
+
+		if strings.Contains(trimmed, "Generated On:") {
+			// Format: Generated On: 17-DEC-2025 10:11:33
+			re := regexp.MustCompile(`Generated On:\s+([\d\-A-Z\s:]+?)(?:\s+Generated By|$)`)
+			matches := re.FindStringSubmatch(trimmed)
+			if len(matches) >= 2 {
+				summary.GeneratedOn = strings.TrimSpace(matches[1])
+			}
+
+			re = regexp.MustCompile(`Generated By:\s+(\S+)`)
+			matches = re.FindStringSubmatch(trimmed)
+			if len(matches) >= 2 {
+				summary.GeneratedBy = matches[1]
+			}
+
+			re = regexp.MustCompile(`Requesting Branch Code:\s+(\S+)`)
+			matches = re.FindStringSubmatch(trimmed)
+			if len(matches) >= 2 {
+				summary.RequestingBranchCode = matches[1]
+			}
+		}
+
+		if strings.Contains(trimmed, "GSTN:") {
+			re := regexp.MustCompile(`GSTN:(\S+)`)
+			matches := re.FindStringSubmatch(trimmed)
+			if len(matches) >= 2 {
+				summary.GSTN = matches[1]
+			}
+		}
+
+		if strings.Contains(trimmed, "Registered Office Address:") {
+			parts := strings.SplitN(trimmed, "Registered Office Address:", 2)
+			if len(parts) == 2 {
+				summary.RegisteredOfficeAddress = strings.TrimSpace(parts[1])
+			}
+		}
+	}
+
+	return summary
+}
+
+// ReadAccountStatementFromTxt reads and parses the account statement from a text file
+func ReadAccountStatementFromTxt(filePath string) (*TxtAccountStatement, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open file: %w", err)
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("error reading file: %w", err)
+	}
+
+	// Extract account info from first page (usually first 25 lines)
+	headerLines := lines
+	if len(lines) > 25 {
+		headerLines = lines[0:25]
+	}
+
+	accountInfo := extractAccountInfo(headerLines)
+	statementPeriod := extractStatementPeriod(headerLines)
+	transactions := extractTransactions(lines)
+	summary := extractSummary(lines)
+
+	statement := &TxtAccountStatement{
+		AccountInfo:     accountInfo,
+		StatementPeriod: statementPeriod,
+		Transactions:    transactions,
+		Summary:         summary,
+	}
+
+	return statement, nil
+}
