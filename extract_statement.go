@@ -312,8 +312,13 @@ func extractStatementPeriod(lines []string) StatementPeriod {
 	return period
 }
 
+// Parse a transaction line with context (previous balance)
+func parseTransactionLineWithContext(line string, previousBalance float64) *TxtTransaction {
+	return parseTransactionLine(line, previousBalance)
+}
+
 // Parse a transaction line
-func parseTransactionLine(line string) *TxtTransaction {
+func parseTransactionLine(line string, previousBalance float64) *TxtTransaction {
 	// Use original line (not trimmed) to preserve fixed-width positions
 	if !isTransactionLine(line) {
 		return nil
@@ -427,8 +432,8 @@ func parseTransactionLine(line string) *TxtTransaction {
 
 	// Determine withdrawal and deposit based on positions
 	// In the fixed-width format:
-	// - Withdrawal column is around position 90-110
-	// - Deposit column is around position 110-130
+	// - Withdrawal column is around position 90-110 (left-aligned, less spacing)
+	// - Deposit column is around position 110-130 (right-aligned, more spacing before)
 	// - Balance column is around position 130-150
 
 	if len(amountMatches) == 3 {
@@ -437,49 +442,98 @@ func parseTransactionLine(line string) *TxtTransaction {
 		deposit = parseAmount(amountMatches[1])
 	} else if len(amountMatches) == 2 {
 		// Two amounts: either withdrawal+balance or deposit+balance
-		// Check position to determine which
 		firstAmountPos := strings.Index(line, amountMatches[0])
 		secondAmountPos := strings.Index(line, amountMatches[1])
+		firstAmount := parseAmount(amountMatches[0])
 
-		// If there's a large gap (>20 chars), likely withdrawal then deposit/balance
-		// Otherwise, check if first amount is in withdrawal column position
-		if secondAmountPos-firstAmountPos > 20 {
-			// Likely withdrawal then balance (deposit empty)
-			withdrawal = parseAmount(amountMatches[0])
-		} else {
-			// Check position - if first amount is far right, it might be balance
-			// Otherwise, it's likely a withdrawal or deposit
-			// We'll check the spacing pattern
-			if firstAmountPos > 90 {
-				// Far right, likely just balance (no withdrawal/deposit)
+		// Use balance change to determine if it's deposit or withdrawal
+		// If we have previous balance, use it to verify
+		balanceChange := balance - previousBalance
+
+		// Check the spacing pattern
+		// Deposits have more spacing before them (they're in the deposit column which is right-aligned)
+		// Withdrawals have less spacing (they're in the withdrawal column which is left-aligned)
+
+		// Calculate spacing before first amount
+		spacingBeforeFirst := 0
+		if firstAmountPos > 0 {
+			// Count spaces before the amount
+			for i := firstAmountPos - 1; i >= 0 && line[i] == ' '; i-- {
+				spacingBeforeFirst++
+			}
+		}
+
+		// Primary method: Use balance change if we have previous balance
+		if previousBalance > 0 {
+			if balanceChange > 0 {
+				// Balance increased - this is a deposit
+				deposit = firstAmount
+			} else if balanceChange < 0 {
+				// Balance decreased - this is a withdrawal
+				withdrawal = firstAmount
 			} else {
-				// Check if there's a large gap before it (suggests withdrawal column)
-				// or small gap (suggests deposit column)
-				// For simplicity, if it's the only amount before balance, treat as withdrawal
-				withdrawal = parseAmount(amountMatches[0])
+				// Balance unchanged - use position-based logic
+				if spacingBeforeFirst > 15 || firstAmountPos > 110 {
+					deposit = firstAmount
+				} else {
+					withdrawal = firstAmount
+				}
+			}
+		} else {
+			// No previous balance - use position and spacing
+			// Deposits typically have more spacing (20+ spaces) and are positioned after column 100
+			// Withdrawals typically have less spacing (<20 spaces) and are positioned before column 110
+
+			// Also check narration for deposit indicators
+			narrationUpper := strings.ToUpper(narration)
+			isLikelyDeposit := strings.Contains(narrationUpper, "SALARY") ||
+				strings.Contains(narrationUpper, "SAL FOR") ||
+				strings.Contains(narrationUpper, "CR-") ||
+				strings.Contains(narrationUpper, "CREDIT") ||
+				strings.Contains(narrationUpper, "IMPS") && strings.Contains(narrationUpper, "MR") ||
+				strings.Contains(narrationUpper, "NEFT CR") ||
+				strings.Contains(narrationUpper, "RTGS CR")
+
+			if isLikelyDeposit {
+				// Narration suggests deposit
+				deposit = firstAmount
+			} else if spacingBeforeFirst > 20 || firstAmountPos > 110 {
+				// Large spacing or position suggests deposit column
+				deposit = firstAmount
+			} else if firstAmountPos >= 85 && firstAmountPos < 110 && spacingBeforeFirst < 20 {
+				// In withdrawal column range with less spacing
+				withdrawal = firstAmount
+			} else {
+				// Fallback: check gap between amounts
+				gapBetweenAmounts := secondAmountPos - firstAmountPos
+				if gapBetweenAmounts > 30 {
+					// Very large gap suggests withdrawal column then balance
+					withdrawal = firstAmount
+				} else if spacingBeforeFirst > 15 {
+					// More spacing suggests deposit
+					deposit = firstAmount
+				} else {
+					// Default: check if amount matches typical withdrawal patterns
+					// If narration suggests withdrawal, use withdrawal
+					isLikelyWithdrawal := strings.Contains(narrationUpper, "DR-") ||
+						strings.Contains(narrationUpper, "DEBIT") ||
+						strings.Contains(narrationUpper, "UPI-") && firstAmountPos < 100
+
+					if isLikelyWithdrawal {
+						withdrawal = firstAmount
+					} else if spacingBeforeFirst > 10 {
+						// More spacing suggests deposit
+						deposit = firstAmount
+					} else {
+						// Default to withdrawal for safety (most transactions are withdrawals)
+						withdrawal = firstAmount
+					}
+				}
 			}
 		}
 	} else if len(amountMatches) == 1 {
 		// Only balance - no withdrawal or deposit (unlikely but possible)
 		balance = parseAmount(amountMatches[0])
-	}
-
-	// Alternative approach: check the actual column positions
-	// Withdrawal is typically around column 90-110, Deposit 110-130, Balance 130+
-	if len(amountMatches) >= 2 {
-		for i, amt := range amountMatches[:len(amountMatches)-1] {
-			pos := strings.Index(line, amt)
-			if pos >= 85 && pos < 115 {
-				// In withdrawal column range
-				withdrawal = parseAmount(amt)
-			} else if pos >= 115 && pos < 135 {
-				// In deposit column range
-				deposit = parseAmount(amt)
-			} else if i == 0 {
-				// First amount, assume withdrawal
-				withdrawal = parseAmount(amt)
-			}
-		}
 	}
 
 	return &TxtTransaction{
@@ -495,8 +549,14 @@ func parseTransactionLine(line string) *TxtTransaction {
 
 // Extract transactions from the file
 func extractTransactions(lines []string) []TxtTransaction {
+	return extractTransactionsWithOpeningBalance(lines, 0.0)
+}
+
+// Extract transactions from the file with opening balance
+func extractTransactionsWithOpeningBalance(lines []string, openingBalance float64) []TxtTransaction {
 	var transactions []TxtTransaction
 	var currentTxn *TxtTransaction
+	var previousBalance float64 = openingBalance // Track previous balance to determine deposit vs withdrawal
 
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
@@ -514,11 +574,12 @@ func extractTransactions(lines []string) []TxtTransaction {
 		if isTransactionLine(trimmed) {
 			// Save previous transaction if exists
 			if currentTxn != nil {
+				previousBalance = currentTxn.ClosingBalance
 				transactions = append(transactions, *currentTxn)
 			}
 
-			// Parse new transaction
-			currentTxn = parseTransactionLine(trimmed)
+			// Parse new transaction with previous balance context
+			currentTxn = parseTransactionLineWithContext(trimmed, previousBalance)
 		} else if currentTxn != nil && isNarrationContinuation(trimmed) {
 			// This is a continuation of the narration
 			currentTxn.Narration += " " + trimmed
@@ -646,8 +707,12 @@ func processStatementLines(lines []string) *TxtAccountStatement {
 
 	accountInfo := extractAccountInfo(headerLines)
 	statementPeriod := extractStatementPeriod(headerLines)
-	transactions := extractTransactions(lines)
+
+	// Extract summary first to get opening balance
 	summary := extractSummary(lines)
+
+	// Extract transactions with opening balance context
+	transactions := extractTransactionsWithOpeningBalance(lines, summary.OpeningBalance)
 
 	statement := &TxtAccountStatement{
 		AccountInfo:     accountInfo,
