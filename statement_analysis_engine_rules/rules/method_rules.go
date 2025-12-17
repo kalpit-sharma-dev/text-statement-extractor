@@ -50,6 +50,12 @@ func ClassifyMethod(narration string) string {
 		"ACH C-", "ACH D-", "ACH CR", "ACH DR",
 	}
 
+	// ATM Withdrawal patterns (check before Debit Card)
+	atmWithdrawalPatterns := []string{
+		"EAW", "ATW", "ATM WITHDRAWAL", "ATM CASH WITHDRAWAL",
+		"ELECTRONIC ATM WITHDRAWAL", "ATM CASH",
+	}
+	
 	// Debit Card patterns
 	debitCardPatterns := []string{
 		"POS", "DEBIT CARD", "ATM", "CASH WITHDRAWAL",
@@ -204,6 +210,13 @@ func ClassifyMethod(narration string) string {
 	for _, pattern := range achPatterns {
 		if strings.Contains(narration, pattern) {
 			return "ACH"
+		}
+	}
+
+	// Check ATM Withdrawal (before Debit Card to catch EAW/ATW)
+	for _, pattern := range atmWithdrawalPatterns {
+		if strings.Contains(narration, pattern) {
+			return "ATMWithdrawal"
 		}
 	}
 

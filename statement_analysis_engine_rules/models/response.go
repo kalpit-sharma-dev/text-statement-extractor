@@ -22,17 +22,18 @@ type TransactionType struct {
 
 // TransactionBreakdown represents breakdown by transaction type
 type TransactionBreakdown struct {
-	UPI        TransactionType `json:"UPI"`
-	IMPS       TransactionType `json:"IMPS"`
-	NEFT       TransactionType `json:"NEFT"`
-	RTGS       TransactionType `json:"RTGS"`
-	EMI        TransactionType `json:"EMI"`
-	BillPaid   TransactionType `json:"BillPaid"`
-	DebitCard  TransactionType `json:"DebitCard"`
-	NetBanking TransactionType `json:"NetBanking"`
-	Salary     TransactionType `json:"Salary"`
-	RD         TransactionType `json:"RD"`
-	Other      TransactionType `json:"Other"`
+	UPI           TransactionType `json:"UPI"`
+	IMPS          TransactionType `json:"IMPS"`
+	NEFT          TransactionType `json:"NEFT"`
+	RTGS          TransactionType `json:"RTGS"`
+	EMI           TransactionType `json:"EMI"`
+	BillPaid      TransactionType `json:"BillPaid"`
+	DebitCard     TransactionType `json:"DebitCard"`
+	ATMWithdrawal TransactionType `json:"ATMWithdrawal"`
+	NetBanking    TransactionType `json:"NetBanking"`
+	Salary        TransactionType `json:"Salary"`
+	RD            TransactionType `json:"RD"`
+	Other         TransactionType `json:"Other"`
 }
 
 // TopBeneficiary represents a top beneficiary

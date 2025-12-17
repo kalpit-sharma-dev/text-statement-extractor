@@ -49,6 +49,10 @@ func CalculateTransactionBreakdown(transactions []models.ClassifiedTransaction) 
 		case "DebitCard":
 			breakdown.DebitCard.Amount += amount
 			breakdown.DebitCard.Count++
+		case "ATMWithdrawal":
+			// ATM Withdrawal - count separately (not in Other)
+			breakdown.ATMWithdrawal.Amount += amount
+			breakdown.ATMWithdrawal.Count++
 		case "NetBanking":
 			breakdown.NetBanking.Amount += amount
 			breakdown.NetBanking.Count++
