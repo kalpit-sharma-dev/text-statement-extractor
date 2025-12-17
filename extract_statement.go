@@ -90,6 +90,14 @@ func parseAmount(amountStr string) float64 {
 	return val
 }
 
+// Helper function for absolute value
+func abs(x float64) float64 {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
 // Helper function to extract value after colon
 func extractAfterColon(line string) string {
 	parts := strings.SplitN(line, ":", 2)
@@ -390,8 +398,22 @@ func parseTransactionLine(line string, previousBalance float64) *TxtTransaction 
 	}
 
 	// Find all amounts (numbers with commas and decimals)
+	// But exclude amounts that are clearly in the narration (before position 85)
+	// Amounts should be in the transaction columns (position 85+)
 	amountRe := regexp.MustCompile(`([\d,]+\.\d{2})`)
-	amountMatches := amountRe.FindAllString(line, -1)
+	allAmountMatches := amountRe.FindAllString(line, -1)
+
+	// Filter amounts to only include those in the transaction amount columns (position 85+)
+	// This excludes amounts that appear in narration text
+	amountMatches := make([]string, 0)
+	for _, match := range allAmountMatches {
+		pos := strings.Index(line, match)
+		// Only include amounts that are in the transaction columns (after position 85)
+		// This is where withdrawal/deposit/balance columns are located
+		if pos >= 85 {
+			amountMatches = append(amountMatches, match)
+		}
+	}
 
 	// Extract narration (between date and reference number)
 	narration := ""
@@ -440,6 +462,26 @@ func parseTransactionLine(line string, previousBalance float64) *TxtTransaction 
 		// Three amounts: withdrawal, deposit, balance
 		withdrawal = parseAmount(amountMatches[0])
 		deposit = parseAmount(amountMatches[1])
+
+		// Validate: if both withdrawal and deposit are set, they should be reasonable
+		// If one is extremely large (like millions) and doesn't match balance change, it's likely wrong
+		if previousBalance > 0 {
+			expectedBalanceChange := deposit - withdrawal
+			actualBalanceChange := balance - previousBalance
+			// If the difference is huge (more than 1M), likely one amount is wrong
+			if abs(expectedBalanceChange-actualBalanceChange) > 1000000 {
+				// One of the amounts is likely wrong - use balance change to determine
+				if actualBalanceChange > 0 {
+					// Balance increased, so it's a deposit
+					deposit = actualBalanceChange
+					withdrawal = 0
+				} else {
+					// Balance decreased, so it's a withdrawal
+					withdrawal = -actualBalanceChange
+					deposit = 0
+				}
+			}
+		}
 	} else if len(amountMatches) == 2 {
 		// Two amounts: either withdrawal+balance or deposit+balance
 		firstAmountPos := strings.Index(line, amountMatches[0])
