@@ -37,14 +37,12 @@ func CalculateTransactionBreakdown(transactions []models.ClassifiedTransaction) 
 		case "NEFT":
 			breakdown.NEFT.Amount += amount
 			breakdown.NEFT.Count++
+		case "RTGS":
+			breakdown.RTGS.Amount += amount
+			breakdown.RTGS.Count++
 		case "EMI":
 			breakdown.EMI.Amount += amount
 			breakdown.EMI.Count++
-		case "RD", "FD", "SIP":
-			// Investment transactions - don't count in EMI
-			// These are tracked separately or can be added to a new field if needed
-			// For now, they won't be counted in transaction breakdown
-			// (They're investments, not payment methods)
 		case "ACH", "BillPaid":
 			breakdown.BillPaid.Amount += amount
 			breakdown.BillPaid.Count++
@@ -54,6 +52,26 @@ func CalculateTransactionBreakdown(transactions []models.ClassifiedTransaction) 
 		case "NetBanking":
 			breakdown.NetBanking.Amount += amount
 			breakdown.NetBanking.Count++
+		case "Salary":
+			// Salary - count separately (not in Other)
+			breakdown.Salary.Amount += amount
+			breakdown.Salary.Count++
+		case "RD":
+			// Recurring Deposit - count separately (not in Other)
+			breakdown.RD.Amount += amount
+			breakdown.RD.Count++
+		case "Insurance":
+			// Insurance premium - count in BillPaid (it's a bill payment)
+			breakdown.BillPaid.Amount += amount
+			breakdown.BillPaid.Count++
+		case "FD", "SIP", "Interest", "Cheque", "Dividend", "Other":
+			// Investment and other transaction types - count in Other
+			breakdown.Other.Amount += amount
+			breakdown.Other.Count++
+		default:
+			// Catch all unmatched methods (empty string, unknown methods, etc.)
+			breakdown.Other.Amount += amount
+			breakdown.Other.Count++
 		}
 	}
 

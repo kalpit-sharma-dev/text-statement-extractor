@@ -53,7 +53,8 @@ func ClassifyCategory(narration string, merchant string) string {
 	billsPatterns := []string{
 		"ELECTRICITY", "WATER", "GAS", "PHONE", "INTERNET",
 		"MOBILE", "BROADBAND", "DTH", "CABLE", "INSURANCE",
-		"PREMIUM", "LIC", "HDFC LIFE", "MAXLIFE", "SBI LIFE",
+		"PREMIUM", "LIC", "HDFC LIFE", "HLIC", "HLIC_INST", "HLIC INST",
+		"MAXLIFE", "SBI LIFE", "ICICI PRUDENTIAL", "BAJAJ ALLIANZ",
 		"PVVNL", "IGL", "AIRTEL", "JIO", "VODAFONE", "BSNL",
 		"RECHARGE", "PREPAID", "POSTPAID", "BILL",
 	}
@@ -81,7 +82,12 @@ func ClassifyCategory(narration string, merchant string) string {
 	// Investment patterns
 	investmentPatterns := []string{
 		"RD", "FD", "SIP", "MUTUAL FUND", "STOCK", "SHARE",
-		"DEMAT", "INVESTMENT", "NPS", "PPF", "ELSS",
+		"DEMAT", "INVESTMENT", "NPS", "PPF", "ELSS", "RD INSTALLMENT",
+	}
+
+	// Dividend patterns (income from investments)
+	dividendPatterns := []string{
+		"DIV", "DIVIDEND", "DIVIDEND CREDIT", "DIV CR",
 	}
 
 	// Check Food Delivery
@@ -147,6 +153,13 @@ func ClassifyCategory(narration string, merchant string) string {
 		}
 	}
 
+	// Check Dividend (income from investments) - should be classified as income category
+	for _, pattern := range dividendPatterns {
+		if strings.Contains(combined, pattern) {
+			return "Investment" // Dividends are investment income
+		}
+	}
+
 	// Check Investment
 	for _, pattern := range investmentPatterns {
 		if strings.Contains(combined, pattern) {
@@ -164,22 +177,22 @@ func ExtractMerchantName(narration string) string {
 
 	// Common merchant patterns
 	merchants := map[string][]string{
-		"Amazon":     {"AMAZON", "AMZN"},
-		"Flipkart":   {"FLIPKART", "FKRT"},
-		"Swiggy":     {"SWIGGY"},
-		"Zomato":     {"ZOMATO"},
-		"Uber":       {"UBER"},
-		"Ola":        {"OLA"},
-		"Netflix":    {"NETFLIX"},
-		"Spotify":    {"SPOTIFY"},
+		"Amazon":      {"AMAZON", "AMZN"},
+		"Flipkart":    {"FLIPKART", "FKRT"},
+		"Swiggy":      {"SWIGGY"},
+		"Zomato":      {"ZOMATO"},
+		"Uber":        {"UBER"},
+		"Ola":         {"OLA"},
+		"Netflix":     {"NETFLIX"},
+		"Spotify":     {"SPOTIFY"},
 		"Google Play": {"GOOGLE PLAY", "PLAYSTORE", "PLAY STORE"},
-		"MakeMyTrip": {"MAKE MY TRIP", "MMT", "MAKEMYTRIP"},
-		"Croma":      {"CROMA"},
-		"Tanishq":    {"TANISHQ"},
-		"Apollo":     {"APOLLO"},
-		"Reliance":   {"RELIANCE"},
-		"DMart":      {"DMART", "D MART"},
-		"Big Bazaar": {"BIG BAZAAR"},
+		"MakeMyTrip":  {"MAKE MY TRIP", "MMT", "MAKEMYTRIP"},
+		"Croma":       {"CROMA"},
+		"Tanishq":     {"TANISHQ"},
+		"Apollo":      {"APOLLO"},
+		"Reliance":    {"RELIANCE"},
+		"DMart":       {"DMART", "D MART"},
+		"Big Bazaar":  {"BIG BAZAAR"},
 	}
 
 	upperNarration := strings.ToUpper(narration)
@@ -211,4 +224,3 @@ func ExtractMerchantName(narration string) string {
 
 	return "Unknown"
 }
-

@@ -27,7 +27,12 @@ func ClassifyTransaction(txn models.ClassifiedTransaction) models.ClassifiedTran
 	txn.Beneficiary = rules.ExtractBeneficiary(normalizedNarration, txn.Method)
 
 	// Determine if income or expense
-	txn.IsIncome = txn.DepositAmt > 0
+	// Dividends are always income (even if they come as deposits)
+	if txn.Method == "Dividend" {
+		txn.IsIncome = true
+	} else {
+		txn.IsIncome = txn.DepositAmt > 0
+	}
 
 	// Check if bill payment
 	if rules.IsBillPayment(normalizedNarration) {

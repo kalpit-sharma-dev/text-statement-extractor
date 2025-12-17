@@ -34,9 +34,9 @@ func ClassifyMethod(narration string) string {
 	// Investment/Savings patterns (exclude these from EMI)
 	investmentPatterns := []string{
 		"RD", "FD", "SIP", "RECURRING DEPOSIT", "FIXED DEPOSIT",
-		"MUTUAL FUND", "INVESTMENT", "PPF", "ELSS",
+		"MUTUAL FUND", "INVESTMENT", "PPF", "ELSS", "RD INSTALLMENT",
 	}
-	
+
 	// EMI patterns (loans/repayments - exclude investments)
 	emiPatterns := []string{
 		"EMI", "LOAN", "REPAYMENT",
@@ -72,9 +72,45 @@ func ClassifyMethod(narration string) string {
 		"INTEREST", "INTEREST PAID", "INTEREST CREDIT",
 	}
 
+	// Dividend patterns
+	dividendPatterns := []string{
+		"DIV", "DIVIDEND", "DIVIDEND CREDIT", "DIV CR",
+	}
+
+	// Insurance premium patterns (check before other methods)
+	insurancePatterns := []string{
+		"HLIC", "HLIC_INST", "HLIC INST", "HDFC LIFE", "LIC", "INSURANCE",
+		"PREMIUM", "MAXLIFE", "SBI LIFE", "ICICI PRUDENTIAL", "BAJAJ ALLIANZ",
+	}
+
 	// Check patterns
 	checkPatterns := []string{
 		"CHQ", "CHEQUE", "CHEQUE NO",
+	}
+
+	// Check for insurance premium FIRST (before RD to catch HLIC_INST)
+	// Insurance premiums should be classified as "Insurance" method
+	for _, pattern := range insurancePatterns {
+		if strings.Contains(narration, pattern) {
+			// Additional check: if it contains "INST" or "INSTALLMENT", it's likely insurance premium
+			if strings.Contains(narration, "INST") || strings.Contains(narration, "INSTALLMENT") ||
+				strings.Contains(narration, "PREMIUM") {
+				return "Insurance"
+			}
+			// Also return Insurance if it's clearly an insurance company
+			if strings.Contains(narration, "HLIC") || strings.Contains(narration, "HDFC LIFE") ||
+				strings.Contains(narration, "LIC") || strings.Contains(narration, "MAXLIFE") ||
+				strings.Contains(narration, "SBI LIFE") {
+				return "Insurance"
+			}
+		}
+	}
+
+	// Check for dividends (income) - should be classified as "Dividend"
+	for _, pattern := range dividendPatterns {
+		if strings.Contains(narration, pattern) {
+			return "Dividend"
+		}
 	}
 
 	// Check for investments/savings FIRST (RD, FD, SIP) - exclude from EMI and other methods
@@ -82,29 +118,29 @@ func ClassifyMethod(narration string) string {
 	// Also classify them as their own method type for proper tracking
 	// Check RD with word boundaries to avoid false matches (e.g., "PAYTMQRD" in UPI)
 	// Match: " RD ", " RD-", "RD INSTALLMENT", "RD-", or starts with "RD "
-	if (strings.Contains(narration, " RD ") || 
-	    strings.Contains(narration, " RD-") ||
-	    strings.Contains(narration, "RD INSTALLMENT") ||
-	    strings.Contains(narration, "RECURRING DEPOSIT") ||
-	    strings.HasPrefix(narration, "RD ") ||
-	    strings.HasPrefix(narration, "RD-")) &&
-	   !strings.Contains(narration, "PAYTMQRD") && // Exclude UPI transactions with "QRD"
-	   !strings.Contains(narration, "UPI") { // Exclude UPI transactions
+	if (strings.Contains(narration, " RD ") ||
+		strings.Contains(narration, " RD-") ||
+		strings.Contains(narration, "RD INSTALLMENT") ||
+		strings.Contains(narration, "RECURRING DEPOSIT") ||
+		strings.HasPrefix(narration, "RD ") ||
+		strings.HasPrefix(narration, "RD-")) &&
+		!strings.Contains(narration, "PAYTMQRD") && // Exclude UPI transactions with "QRD"
+		!strings.Contains(narration, "UPI") { // Exclude UPI transactions
 		return "RD" // Recurring Deposit
 	}
-	if (strings.Contains(narration, " FD ") || 
-	    strings.Contains(narration, " FD-") ||
-	    strings.Contains(narration, "FIXED DEPOSIT") ||
-	    strings.HasPrefix(narration, "FD ") ||
-	    strings.HasPrefix(narration, "FD-")) &&
-	   !strings.Contains(narration, "UPI") {
+	if (strings.Contains(narration, " FD ") ||
+		strings.Contains(narration, " FD-") ||
+		strings.Contains(narration, "FIXED DEPOSIT") ||
+		strings.HasPrefix(narration, "FD ") ||
+		strings.HasPrefix(narration, "FD-")) &&
+		!strings.Contains(narration, "UPI") {
 		return "FD" // Fixed Deposit
 	}
-	if (strings.Contains(narration, " SIP ") || 
-	    strings.Contains(narration, "SIP ") ||
-	    strings.Contains(narration, "SIP-") ||
-	    strings.HasPrefix(narration, "SIP ")) &&
-	   !strings.Contains(narration, "UPI") {
+	if (strings.Contains(narration, " SIP ") ||
+		strings.Contains(narration, "SIP ") ||
+		strings.Contains(narration, "SIP-") ||
+		strings.HasPrefix(narration, "SIP ")) &&
+		!strings.Contains(narration, "UPI") {
 		return "SIP" // Systematic Investment Plan
 	}
 
@@ -135,7 +171,7 @@ func ClassifyMethod(narration string) string {
 			return "RTGS"
 		}
 	}
-	
+
 	// Check for other investment patterns (but don't set method, let category handle it)
 	isInvestment := false
 	for _, pattern := range investmentPatterns {
@@ -144,15 +180,15 @@ func ClassifyMethod(narration string) string {
 			break
 		}
 	}
-	
+
 	// Check EMI (only if not an investment)
 	// EMI requires explicit loan-related keywords, not just "INSTALLMENT"
 	if !isInvestment {
 		// Check for explicit EMI/LOAN keywords
-		hasLoanKeyword := strings.Contains(narration, "LOAN") || 
-		                  strings.Contains(narration, "EMI") ||
-		                  strings.Contains(narration, "REPAYMENT")
-		
+		hasLoanKeyword := strings.Contains(narration, "LOAN") ||
+			strings.Contains(narration, "EMI") ||
+			strings.Contains(narration, "REPAYMENT")
+
 		// Only classify as EMI if it has loan-related keywords
 		// Don't match standalone "INSTALLMENT" (could be RD, FD, etc.)
 		if hasLoanKeyword {
@@ -199,6 +235,13 @@ func ClassifyMethod(narration string) string {
 		}
 	}
 
+	// Check Dividend (if not already matched above)
+	for _, pattern := range dividendPatterns {
+		if strings.Contains(narration, pattern) {
+			return "Dividend"
+		}
+	}
+
 	// Check Cheque
 	for _, pattern := range checkPatterns {
 		if strings.Contains(narration, pattern) {
@@ -216,7 +259,8 @@ func IsBillPayment(narration string) bool {
 	billPatterns := []string{
 		"BILL", "RECHARGE", "PREPAID", "POSTPAID",
 		"ELECTRICITY", "WATER", "GAS", "PHONE", "INTERNET",
-		"INSURANCE", "PREMIUM", "LIC", "HDFC LIFE", "MAXLIFE",
+		"INSURANCE", "PREMIUM", "LIC", "HDFC LIFE", "HLIC", "HLIC_INST", "HLIC INST",
+		"MAXLIFE", "SBI LIFE", "ICICI PRUDENTIAL", "BAJAJ ALLIANZ",
 		"PVVNL", "IGL", "AIRTEL", "JIO", "VODAFONE",
 	}
 
@@ -231,7 +275,7 @@ func IsBillPayment(narration string) bool {
 // ExtractUPIDetails extracts merchant/payee name from UPI narration
 func ExtractUPIDetails(narration string) (merchant string, payee string) {
 	narration = strings.TrimSpace(narration)
-	
+
 	// UPI format: UPI-MERCHANT NAME-UPIID@BANK-REF-UPI
 	// Extract merchant name (between UPI- and first - or @)
 	re := regexp.MustCompile(`UPI-([^-@]+)`)
@@ -249,4 +293,3 @@ func ExtractUPIDetails(narration string) (merchant string, payee string) {
 
 	return merchant, payee
 }
-
