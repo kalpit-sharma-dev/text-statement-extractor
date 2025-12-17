@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/base64"
 	"fmt"
 	"os"
 	"regexp"
@@ -629,6 +630,14 @@ func ReadAccountStatementFromTxt(filePath string) (*TxtAccountStatement, error) 
 		return nil, fmt.Errorf("error reading file: %w", err)
 	}
 
+	// Process the lines using the shared function
+	statement := processStatementLines(lines)
+
+	return statement, nil
+}
+
+// processStatementLines processes the statement lines and returns the parsed statement
+func processStatementLines(lines []string) *TxtAccountStatement {
 	// Extract account info from first page (usually first 25 lines)
 	headerLines := lines
 	if len(lines) > 25 {
@@ -646,6 +655,26 @@ func ReadAccountStatementFromTxt(filePath string) (*TxtAccountStatement, error) 
 		Transactions:    transactions,
 		Summary:         summary,
 	}
+
+	return statement
+}
+
+// ReadAccountStatementFromBase64 reads and parses the account statement from a base64 encoded string
+func ReadAccountStatementFromBase64(base64String string) (*TxtAccountStatement, error) {
+	// Decode base64 string
+	decodedBytes, err := base64.StdEncoding.DecodeString(base64String)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode base64 string: %w", err)
+	}
+
+	// Convert decoded bytes to string
+	decodedText := string(decodedBytes)
+
+	// Split into lines
+	lines := strings.Split(decodedText, "\n")
+
+	// Process the lines
+	statement := processStatementLines(lines)
 
 	return statement, nil
 }
