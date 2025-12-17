@@ -1,13 +1,14 @@
 package analytics
 
-import "statement_analysis_engine_rules/models"
+import "classify/statement_analysis_engine_rules/models"
 
 // CalculateMerchantSummary calculates merchant-wise summary
 func CalculateMerchantSummary(transactions []models.ClassifiedTransaction) models.MerchantSummary {
 	summary := models.MerchantSummary{}
 
 	for _, txn := range transactions {
-		if txn.IsIncome {
+		// Only count expenses (withdrawals), skip deposits (income)
+		if txn.DepositAmt > 0 || txn.WithdrawalAmt == 0 {
 			continue
 		}
 

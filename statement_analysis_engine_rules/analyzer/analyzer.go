@@ -1,14 +1,17 @@
 package analyzer
 
 import (
-	"statement_analysis_engine_rules/analytics"
-	"statement_analysis_engine_rules/classifier"
-	"statement_analysis_engine_rules/models"
+	"classify/statement_analysis_engine_rules/analytics"
+	"classify/statement_analysis_engine_rules/classifier"
+	"classify/statement_analysis_engine_rules/models"
+	"strings"
 )
 
 // Analyzer is the main analyzer struct
 type Analyzer struct {
-	transactions []models.ClassifiedTransaction
+	transactions        []models.ClassifiedTransaction
+	statementTotalCredits float64 // Optional: official statement total credits
+	statementTotalDebits  float64 // Optional: official statement total debits
 }
 
 // NewAnalyzer creates a new analyzer instance
@@ -16,6 +19,12 @@ func NewAnalyzer() *Analyzer {
 	return &Analyzer{
 		transactions: make([]models.ClassifiedTransaction, 0),
 	}
+}
+
+// SetStatementTotals sets the official statement totals (use these for accurate calculations)
+func (a *Analyzer) SetStatementTotals(totalCredits, totalDebits float64) {
+	a.statementTotalCredits = totalCredits
+	a.statementTotalDebits = totalDebits
 }
 
 // AddTransaction adds a transaction to be analyzed
@@ -45,13 +54,16 @@ func (a *Analyzer) Analyze(
 	a.ClassifyAll()
 
 	// Calculate all analytics
-	accountSummary := analytics.CalculateAccountSummary(
+	// Use statement totals if available, otherwise calculate from transactions
+	accountSummary := analytics.CalculateAccountSummaryWithTotals(
 		accountNo,
 		customerName,
 		statementPeriod,
 		openingBalance,
 		closingBalance,
 		a.transactions,
+		a.statementTotalCredits,
+		a.statementTotalDebits,
 	)
 
 	transactionBreakdown := analytics.CalculateTransactionBreakdown(a.transactions)
@@ -128,10 +140,19 @@ func generateRecommendations(
 	// Insurance recommendation
 	hasInsurance := false
 	for _, txn := range transactions {
-		if txn.Category == "Bills_Utilities" &&
-			(txn.Narration == "LIC" || txn.Narration == "INSURANCE") {
-			hasInsurance = true
-			break
+		// Only check withdrawals (expenses), not deposits
+		if txn.DepositAmt > 0 || txn.WithdrawalAmt == 0 {
+			continue
+		}
+		narration := txn.Narration
+		// Check if narration contains insurance-related keywords
+		if txn.Category == "Bills_Utilities" {
+			if contains(narration, "LIC") || contains(narration, "INSURANCE") ||
+				contains(narration, "PREMIUM") || contains(narration, "HDFC LIFE") ||
+				contains(narration, "MAXLIFE") || contains(narration, "SBI LIFE") {
+				hasInsurance = true
+				break
+			}
 		}
 	}
 	if !hasInsurance {
@@ -161,6 +182,11 @@ func generateRecommendations(
 	return recommendations
 }
 
+// Helper function for string contains (case-insensitive)
+func contains(s, substr string) bool {
+	return strings.Contains(strings.ToUpper(s), strings.ToUpper(substr))
+}
+
 func generateBehaviourInsights(transactions []models.ClassifiedTransaction) []models.BehaviourInsight {
 	insights := make([]models.BehaviourInsight, 0)
 
@@ -171,10 +197,12 @@ func generateBehaviourInsights(transactions []models.ClassifiedTransaction) []mo
 	weekdayCount := 0
 
 	for _, txn := range transactions {
-		if txn.IsIncome {
+		// Only count withdrawals (expenses), skip deposits
+		if txn.DepositAmt > 0 || txn.WithdrawalAmt == 0 {
 			continue
 		}
-		// Simplified - would need actual date parsing
+		// Simplified - would need actual date parsing to determine weekend
+		// For now, count all as weekday (this is a placeholder - needs proper date logic)
 		weekdayCount++
 		weekdaySpend += txn.WithdrawalAmt
 	}

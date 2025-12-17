@@ -1,8 +1,8 @@
 package analytics
 
 import (
-	"statement_analysis_engine_rules/models"
-	"statement_analysis_engine_rules/utils"
+	"classify/statement_analysis_engine_rules/models"
+	"classify/statement_analysis_engine_rules/utils"
 	"time"
 )
 
@@ -40,7 +40,8 @@ func calculateAverageDailyExpense(transactions []models.ClassifiedTransaction) f
 	lastDate := ""
 
 	for _, txn := range transactions {
-		if !txn.IsIncome && txn.WithdrawalAmt > 0 {
+		// Only count withdrawals (expenses), not deposits
+		if txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
 			totalExpense += txn.WithdrawalAmt
 			if firstDate == "" {
 				firstDate = txn.Date
@@ -89,7 +90,8 @@ func calculateUpcomingEMI(transactions []models.ClassifiedTransaction) float64 {
 	// Find recurring EMI payments
 	emiAmount := 0.0
 	for _, txn := range transactions {
-		if txn.Method == "EMI" && txn.IsRecurring {
+		// EMI is always a withdrawal (expense), not a deposit
+		if txn.Method == "EMI" && txn.IsRecurring && txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
 			emiAmount = txn.WithdrawalAmt
 			break
 		}

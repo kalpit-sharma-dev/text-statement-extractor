@@ -1,9 +1,9 @@
 package analytics
 
 import (
+	"classify/statement_analysis_engine_rules/models"
+	"classify/statement_analysis_engine_rules/utils"
 	"sort"
-	"statement_analysis_engine_rules/models"
-	"statement_analysis_engine_rules/utils"
 )
 
 // CalculateMonthlySummary calculates monthly summary
@@ -22,10 +22,23 @@ func CalculateMonthlySummary(transactions []models.ClassifiedTransaction) []mode
 			}
 		}
 
-		if txn.IsIncome {
+		// Count income (deposits)
+		if txn.DepositAmt > 0 && txn.WithdrawalAmt == 0 {
 			monthlyData[month].Income += txn.DepositAmt
-		} else {
+		}
+		
+		// Count expenses (withdrawals)
+		if txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
 			monthlyData[month].Expense += txn.WithdrawalAmt
+		}
+		
+		// Handle edge case where both amounts exist (shouldn't happen, but handle it)
+		if txn.DepositAmt > 0 && txn.WithdrawalAmt > 0 {
+			if txn.DepositAmt > txn.WithdrawalAmt {
+				monthlyData[month].Income += (txn.DepositAmt - txn.WithdrawalAmt)
+			} else {
+				monthlyData[month].Expense += (txn.WithdrawalAmt - txn.DepositAmt)
+			}
 		}
 
 		// Update closing balance (use last transaction's balance for the month)
@@ -49,6 +62,13 @@ func CalculateMonthlySummary(transactions []models.ClassifiedTransaction) []mode
 		months := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
 		idxI := indexOf(months, monthlyList[i].Month)
 		idxJ := indexOf(months, monthlyList[j].Month)
+		// Handle unknown months (indexOf returns -1) - put them at the end
+		if idxI == -1 {
+			return false // Unknown month goes after known months
+		}
+		if idxJ == -1 {
+			return true // Known month goes before unknown months
+		}
 		return idxI < idxJ
 	})
 
@@ -59,7 +79,9 @@ func getTopCategoryForMonth(transactions []models.ClassifiedTransaction, month s
 	categoryMap := make(map[string]float64)
 
 	for _, txn := range transactions {
-		if utils.GetMonthName(txn.Date) == month && !txn.IsIncome {
+		// Only count expenses (withdrawals) for category breakdown
+		if utils.GetMonthName(txn.Date) == month && 
+		   txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
 			categoryMap[txn.Category] += txn.WithdrawalAmt
 		}
 	}

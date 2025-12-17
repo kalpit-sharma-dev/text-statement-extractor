@@ -1,8 +1,8 @@
 package analytics
 
 import (
+	"classify/statement_analysis_engine_rules/models"
 	"sort"
-	"statement_analysis_engine_rules/models"
 )
 
 // CalculateTopExpenses calculates top expenses
@@ -10,7 +10,8 @@ func CalculateTopExpenses(transactions []models.ClassifiedTransaction, limit int
 	expenses := make([]models.TopExpense, 0)
 
 	for _, txn := range transactions {
-		if txn.IsIncome || txn.WithdrawalAmt == 0 {
+		// Only count expenses (withdrawals), skip deposits (income)
+		if txn.DepositAmt > 0 || txn.WithdrawalAmt == 0 {
 			continue
 		}
 
@@ -36,6 +37,9 @@ func CalculateTopExpenses(transactions []models.ClassifiedTransaction, limit int
 	})
 
 	// Take top N
+	if limit <= 0 {
+		return []models.TopExpense{} // Return empty if invalid limit
+	}
 	if limit > len(expenses) {
 		limit = len(expenses)
 	}

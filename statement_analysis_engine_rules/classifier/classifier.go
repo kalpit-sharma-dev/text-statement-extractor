@@ -1,9 +1,9 @@
 package classifier
 
 import (
-	"statement_analysis_engine_rules/models"
-	"statement_analysis_engine_rules/rules"
-	"statement_analysis_engine_rules/utils"
+	"classify/statement_analysis_engine_rules/models"
+	"classify/statement_analysis_engine_rules/rules"
+	"classify/statement_analysis_engine_rules/utils"
 )
 
 // ClassifyTransaction classifies a single transaction

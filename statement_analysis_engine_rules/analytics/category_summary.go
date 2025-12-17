@@ -1,14 +1,15 @@
 package analytics
 
-import "statement_analysis_engine_rules/models"
+import "classify/statement_analysis_engine_rules/models"
 
 // CalculateCategorySummary calculates category-wise summary
 func CalculateCategorySummary(transactions []models.ClassifiedTransaction) models.CategorySummary {
 	summary := models.CategorySummary{}
 
 	for _, txn := range transactions {
-		if txn.IsIncome {
-			continue // Only count expenses
+		// Only count expenses (withdrawals), skip deposits (income)
+		if txn.DepositAmt > 0 || txn.WithdrawalAmt == 0 {
+			continue
 		}
 
 		amount := txn.WithdrawalAmt

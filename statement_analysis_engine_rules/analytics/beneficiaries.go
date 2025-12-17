@@ -1,8 +1,8 @@
 package analytics
 
 import (
+	"classify/statement_analysis_engine_rules/models"
 	"sort"
-	"statement_analysis_engine_rules/models"
 )
 
 // CalculateTopBeneficiaries calculates top beneficiaries
@@ -10,7 +10,9 @@ func CalculateTopBeneficiaries(transactions []models.ClassifiedTransaction, limi
 	beneficiaryMap := make(map[string]map[string]float64) // beneficiary -> method -> amount
 
 	for _, txn := range transactions {
-		if txn.Beneficiary == "" || txn.IsIncome {
+		// Only count withdrawals (expenses) with beneficiaries
+		// Skip if no beneficiary, or if it's a deposit (income), or if no withdrawal amount
+		if txn.Beneficiary == "" || txn.DepositAmt > 0 || txn.WithdrawalAmt == 0 {
 			continue
 		}
 
@@ -31,9 +33,12 @@ func CalculateTopBeneficiaries(transactions []models.ClassifiedTransaction, limi
 	for name, methods := range beneficiaryMap {
 		totalAmount := 0.0
 		primaryMethod := ""
+		maxMethodAmount := 0.0
+		// Find the method with the highest amount (primary method)
 		for method, amount := range methods {
 			totalAmount += amount
-			if amount > 0 {
+			if amount > maxMethodAmount {
+				maxMethodAmount = amount
 				primaryMethod = method
 			}
 		}
@@ -50,6 +55,9 @@ func CalculateTopBeneficiaries(transactions []models.ClassifiedTransaction, limi
 	})
 
 	// Take top N
+	if limit <= 0 {
+		return []models.TopBeneficiary{} // Return empty if invalid limit
+	}
 	if limit > len(beneficiaries) {
 		limit = len(beneficiaries)
 	}

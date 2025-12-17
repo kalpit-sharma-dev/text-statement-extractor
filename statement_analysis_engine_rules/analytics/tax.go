@@ -1,8 +1,8 @@
 package analytics
 
 import (
+	"classify/statement_analysis_engine_rules/models"
 	"math"
-	"statement_analysis_engine_rules/models"
 	"strings"
 )
 
@@ -22,7 +22,15 @@ func CalculateTaxInsights(transactions []models.ClassifiedTransaction) models.Ta
 
 	for _, txn := range transactions {
 		narration := txn.Narration
+		// Investments are typically withdrawals (money going out for investment)
+		// But could also be deposits in some cases (returns, dividends)
+		// For tax purposes, we care about money invested (withdrawals)
 		amount := txn.WithdrawalAmt
+		
+		// Skip if no withdrawal amount (not an investment transaction)
+		if amount == 0 {
+			continue
+		}
 
 		// Check for ELSS
 		if contains(narration, "ELSS") || contains(narration, "MUTUAL FUND") {

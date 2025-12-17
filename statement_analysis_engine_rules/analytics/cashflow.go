@@ -1,8 +1,8 @@
 package analytics
 
 import (
+	"classify/statement_analysis_engine_rules/models"
 	"math"
-	"statement_analysis_engine_rules/models"
 )
 
 // CalculateCashFlowScore calculates cash flow health score
@@ -97,7 +97,8 @@ func CalculateSalaryUtilization(transactions []models.ClassifiedTransaction, sal
 	// Find salary transaction
 	salaryTxnIndex := -1
 	for i, txn := range transactions {
-		if txn.IsIncome && math.Abs(txn.DepositAmt-salaryAmount) < 1000 {
+		// Salary is a deposit (income)
+		if txn.DepositAmt > 0 && txn.WithdrawalAmt == 0 && math.Abs(txn.DepositAmt-salaryAmount) < 1000 {
 			salaryTxnIndex = i
 			break
 		}
@@ -115,7 +116,8 @@ func CalculateSalaryUtilization(transactions []models.ClassifiedTransaction, sal
 	// This is simplified - would need proper date calculations
 	// For now, estimate based on transaction order
 	for i := salaryTxnIndex + 1; i < len(transactions) && i < salaryTxnIndex+20; i++ {
-		if transactions[i].IsIncome {
+		// Only count withdrawals (expenses), skip deposits
+		if transactions[i].DepositAmt > 0 || transactions[i].WithdrawalAmt == 0 {
 			continue
 		}
 		daysAfter := i - salaryTxnIndex
@@ -132,13 +134,22 @@ func CalculateSalaryUtilization(transactions []models.ClassifiedTransaction, sal
 		}
 	}
 
-	// Calculate percentages
-	spent3DaysPercent := (spent3Days / salaryAmount) * 100
-	spent7DaysPercent := (spent7Days / salaryAmount) * 100
-	spent15DaysPercent := (spent15Days / salaryAmount) * 100
+	// Calculate percentages (avoid division by zero)
+	spent3DaysPercent := 0.0
+	spent7DaysPercent := 0.0
+	spent15DaysPercent := 0.0
+	if salaryAmount > 0 {
+		spent3DaysPercent = (spent3Days / salaryAmount) * 100
+		spent7DaysPercent = (spent7Days / salaryAmount) * 100
+		spent15DaysPercent = (spent15Days / salaryAmount) * 100
+	}
 
 	// Estimate days salary lasts
-	daysSalaryLasts := int(salaryAmount / (totalExpense(transactions) / 30))
+	avgDailyExpense := totalExpense(transactions) / 30
+	daysSalaryLasts := 0
+	if avgDailyExpense > 0 {
+		daysSalaryLasts = int(salaryAmount / avgDailyExpense)
+	}
 
 	// Fixed vs variable expenses (simplified)
 	fixedExpenses := 40.0 // Default estimate
@@ -157,7 +168,8 @@ func CalculateSalaryUtilization(transactions []models.ClassifiedTransaction, sal
 func totalExpense(transactions []models.ClassifiedTransaction) float64 {
 	total := 0.0
 	for _, txn := range transactions {
-		if !txn.IsIncome {
+		// Only count withdrawals (expenses), not deposits
+		if txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
 			total += txn.WithdrawalAmt
 		}
 	}

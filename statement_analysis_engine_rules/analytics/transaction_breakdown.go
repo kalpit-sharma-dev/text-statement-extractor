@@ -1,15 +1,30 @@
 package analytics
 
-import "statement_analysis_engine_rules/models"
+import "classify/statement_analysis_engine_rules/models"
 
 // CalculateTransactionBreakdown calculates breakdown by transaction method
 func CalculateTransactionBreakdown(transactions []models.ClassifiedTransaction) models.TransactionBreakdown {
 	breakdown := models.TransactionBreakdown{}
 
 	for _, txn := range transactions {
-		amount := txn.WithdrawalAmt
-		if txn.IsIncome {
+		// Determine amount based on transaction type
+		// For deposits (income), use DepositAmt
+		// For withdrawals (expenses), use WithdrawalAmt
+		var amount float64
+		if txn.DepositAmt > 0 && txn.WithdrawalAmt == 0 {
 			amount = txn.DepositAmt
+		} else if txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
+			amount = txn.WithdrawalAmt
+		} else if txn.DepositAmt > 0 && txn.WithdrawalAmt > 0 {
+			// Both amounts present - use the larger one
+			if txn.DepositAmt > txn.WithdrawalAmt {
+				amount = txn.DepositAmt
+			} else {
+				amount = txn.WithdrawalAmt
+			}
+		} else {
+			// No amount, skip
+			continue
 		}
 
 		switch txn.Method {

@@ -1,8 +1,8 @@
 package analytics
 
 import (
+	"classify/statement_analysis_engine_rules/models"
 	"math"
-	"statement_analysis_engine_rules/models"
 )
 
 // CalculateFraudRisk calculates fraud risk indicators
@@ -12,7 +12,9 @@ func CalculateFraudRisk(transactions []models.ClassifiedTransaction) models.Frau
 
 	// Check for unusual transactions
 	for _, txn := range transactions {
-		if txn.IsIncome {
+		// Only check withdrawals (expenses) for fraud risk
+		// Skip deposits (income) and transactions with no withdrawal amount
+		if txn.DepositAmt > 0 || txn.WithdrawalAmt == 0 {
 			continue
 		}
 
@@ -58,9 +60,30 @@ func CalculateBigTicketMovements(transactions []models.ClassifiedTransaction, th
 	movements := make([]models.BigTicketMovement, 0)
 
 	for _, txn := range transactions {
-		amount := txn.WithdrawalAmt
-		if txn.IsIncome {
+		// Determine amount and type - can be either deposit or withdrawal
+		var amount float64
+		var txnType string
+		
+		if txn.DepositAmt > 0 && txn.WithdrawalAmt == 0 {
+			// Deposit (credit)
 			amount = txn.DepositAmt
+			txnType = "Credit"
+		} else if txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
+			// Withdrawal (debit)
+			amount = txn.WithdrawalAmt
+			txnType = "Debit"
+		} else if txn.DepositAmt > 0 && txn.WithdrawalAmt > 0 {
+			// Both present - use the larger one
+			if txn.DepositAmt > txn.WithdrawalAmt {
+				amount = txn.DepositAmt
+				txnType = "Credit"
+			} else {
+				amount = txn.WithdrawalAmt
+				txnType = "Debit"
+			}
+		} else {
+			// No amount, skip
+			continue
 		}
 
 		if math.Abs(amount) >= threshold {
@@ -80,11 +103,6 @@ func CalculateBigTicketMovements(transactions []models.ClassifiedTransaction, th
 				if len(description) > 50 {
 					description = description[:50] + "..."
 				}
-			}
-
-			txnType := "Debit"
-			if txn.IsIncome {
-				txnType = "Credit"
 			}
 
 			movements = append(movements, models.BigTicketMovement{
