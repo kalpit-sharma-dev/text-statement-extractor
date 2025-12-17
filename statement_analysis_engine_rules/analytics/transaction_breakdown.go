@@ -34,9 +34,17 @@ func CalculateTransactionBreakdown(transactions []models.ClassifiedTransaction) 
 		case "IMPS":
 			breakdown.IMPS.Amount += amount
 			breakdown.IMPS.Count++
+		case "NEFT":
+			breakdown.NEFT.Amount += amount
+			breakdown.NEFT.Count++
 		case "EMI":
 			breakdown.EMI.Amount += amount
 			breakdown.EMI.Count++
+		case "RD", "FD", "SIP":
+			// Investment transactions - don't count in EMI
+			// These are tracked separately or can be added to a new field if needed
+			// For now, they won't be counted in transaction breakdown
+			// (They're investments, not payment methods)
 		case "ACH", "BillPaid":
 			breakdown.BillPaid.Amount += amount
 			breakdown.BillPaid.Count++

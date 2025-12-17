@@ -24,6 +24,7 @@ type TransactionType struct {
 type TransactionBreakdown struct {
 	UPI        TransactionType `json:"UPI"`
 	IMPS       TransactionType `json:"IMPS"`
+	NEFT       TransactionType `json:"NEFT"`
 	EMI        TransactionType `json:"EMI"`
 	BillPaid   TransactionType `json:"BillPaid"`
 	DebitCard  TransactionType `json:"DebitCard"`
@@ -175,7 +176,7 @@ type ClassifyResponse struct {
 	MonthlySummary       []MonthlySummary     `json:"monthlySummary"`
 	CategorySummary      CategorySummary      `json:"categorySummary"`
 	MerchantSummary      MerchantSummary      `json:"merchantSummary"`
-	TransactionTrends    TransactionTrends   `json:"transactionTrends"`
+	TransactionTrends    TransactionTrends    `json:"transactionTrends"`
 	RecommendedProducts  []RecommendedProduct `json:"recommendedProducts"`
 	PredictiveInsights   PredictiveInsights   `json:"predictiveInsights"`
 	CashFlowScore        CashFlowScore        `json:"cashFlowScore"`
@@ -187,4 +188,3 @@ type ClassifyResponse struct {
 	BigTicketMovements   []BigTicketMovement  `json:"bigTicketMovements"`
 	TaxInsights          TaxInsights          `json:"taxInsights"`
 }
-

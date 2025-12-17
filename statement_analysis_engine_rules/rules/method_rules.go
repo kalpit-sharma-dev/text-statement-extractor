@@ -31,10 +31,17 @@ func ClassifyMethod(narration string) string {
 		"RTGS", "REAL TIME GROSS SETTLEMENT",
 	}
 
-	// EMI patterns
+	// Investment/Savings patterns (exclude these from EMI)
+	investmentPatterns := []string{
+		"RD", "FD", "SIP", "RECURRING DEPOSIT", "FIXED DEPOSIT",
+		"MUTUAL FUND", "INVESTMENT", "PPF", "ELSS",
+	}
+	
+	// EMI patterns (loans/repayments - exclude investments)
 	emiPatterns := []string{
-		"EMI", "LOAN", "INSTALLMENT", "REPAYMENT",
+		"EMI", "LOAN", "REPAYMENT",
 		"HOME LOAN", "PERSONAL LOAN", "CAR LOAN", "EDUCATION LOAN",
+		"LOAN INSTALLMENT", "LOAN EMI", "LOAN REPAYMENT",
 	}
 
 	// ACH patterns
@@ -70,6 +77,37 @@ func ClassifyMethod(narration string) string {
 		"CHQ", "CHEQUE", "CHEQUE NO",
 	}
 
+	// Check for investments/savings FIRST (RD, FD, SIP) - exclude from EMI and other methods
+	// These should NOT be classified as EMI even if they contain "INSTALLMENT"
+	// Also classify them as their own method type for proper tracking
+	// Check RD with word boundaries to avoid false matches (e.g., "PAYTMQRD" in UPI)
+	// Match: " RD ", " RD-", "RD INSTALLMENT", "RD-", or starts with "RD "
+	if (strings.Contains(narration, " RD ") || 
+	    strings.Contains(narration, " RD-") ||
+	    strings.Contains(narration, "RD INSTALLMENT") ||
+	    strings.Contains(narration, "RECURRING DEPOSIT") ||
+	    strings.HasPrefix(narration, "RD ") ||
+	    strings.HasPrefix(narration, "RD-")) &&
+	   !strings.Contains(narration, "PAYTMQRD") && // Exclude UPI transactions with "QRD"
+	   !strings.Contains(narration, "UPI") { // Exclude UPI transactions
+		return "RD" // Recurring Deposit
+	}
+	if (strings.Contains(narration, " FD ") || 
+	    strings.Contains(narration, " FD-") ||
+	    strings.Contains(narration, "FIXED DEPOSIT") ||
+	    strings.HasPrefix(narration, "FD ") ||
+	    strings.HasPrefix(narration, "FD-")) &&
+	   !strings.Contains(narration, "UPI") {
+		return "FD" // Fixed Deposit
+	}
+	if (strings.Contains(narration, " SIP ") || 
+	    strings.Contains(narration, "SIP ") ||
+	    strings.Contains(narration, "SIP-") ||
+	    strings.HasPrefix(narration, "SIP ")) &&
+	   !strings.Contains(narration, "UPI") {
+		return "SIP" // Systematic Investment Plan
+	}
+
 	// Check UPI
 	for _, pattern := range upiPatterns {
 		if strings.Contains(narration, pattern) {
@@ -97,11 +135,32 @@ func ClassifyMethod(narration string) string {
 			return "RTGS"
 		}
 	}
-
-	// Check EMI
-	for _, pattern := range emiPatterns {
+	
+	// Check for other investment patterns (but don't set method, let category handle it)
+	isInvestment := false
+	for _, pattern := range investmentPatterns {
 		if strings.Contains(narration, pattern) {
-			return "EMI"
+			isInvestment = true
+			break
+		}
+	}
+	
+	// Check EMI (only if not an investment)
+	// EMI requires explicit loan-related keywords, not just "INSTALLMENT"
+	if !isInvestment {
+		// Check for explicit EMI/LOAN keywords
+		hasLoanKeyword := strings.Contains(narration, "LOAN") || 
+		                  strings.Contains(narration, "EMI") ||
+		                  strings.Contains(narration, "REPAYMENT")
+		
+		// Only classify as EMI if it has loan-related keywords
+		// Don't match standalone "INSTALLMENT" (could be RD, FD, etc.)
+		if hasLoanKeyword {
+			for _, pattern := range emiPatterns {
+				if strings.Contains(narration, pattern) {
+					return "EMI"
+				}
+			}
 		}
 	}
 
