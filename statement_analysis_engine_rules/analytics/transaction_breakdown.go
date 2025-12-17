@@ -64,12 +64,32 @@ func CalculateTransactionBreakdown(transactions []models.ClassifiedTransaction) 
 			// Recurring Deposit - count separately (not in Other)
 			breakdown.RD.Amount += amount
 			breakdown.RD.Count++
+		case "FD":
+			// Fixed Deposit - count separately (not in Other)
+			breakdown.FD.Amount += amount
+			breakdown.FD.Count++
+		case "SIP":
+			// Systematic Investment Plan - count separately (not in Other)
+			breakdown.SIP.Amount += amount
+			breakdown.SIP.Count++
+		case "Interest":
+			// Interest - count separately (not in Other)
+			breakdown.Interest.Amount += amount
+			breakdown.Interest.Count++
+		case "Cheque":
+			// Cheque - count separately (not in Other)
+			breakdown.Cheque.Amount += amount
+			breakdown.Cheque.Count++
+		case "Dividend":
+			// Dividend - count separately (not in Other)
+			breakdown.Dividend.Amount += amount
+			breakdown.Dividend.Count++
 		case "Insurance":
 			// Insurance premium - count in BillPaid (it's a bill payment)
 			breakdown.BillPaid.Amount += amount
 			breakdown.BillPaid.Count++
-		case "FD", "SIP", "Interest", "Cheque", "Dividend", "Other":
-			// Investment and other transaction types - count in Other
+		case "Other":
+			// Explicitly classified as Other
 			breakdown.Other.Amount += amount
 			breakdown.Other.Count++
 		default:

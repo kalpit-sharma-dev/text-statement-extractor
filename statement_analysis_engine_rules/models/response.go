@@ -33,6 +33,11 @@ type TransactionBreakdown struct {
 	NetBanking    TransactionType `json:"NetBanking"`
 	Salary        TransactionType `json:"Salary"`
 	RD            TransactionType `json:"RD"`
+	FD            TransactionType `json:"FD"`
+	SIP           TransactionType `json:"SIP"`
+	Interest      TransactionType `json:"Interest"`
+	Cheque        TransactionType `json:"Cheque"`
+	Dividend      TransactionType `json:"Dividend"`
 	Other         TransactionType `json:"Other"`
 }
 
