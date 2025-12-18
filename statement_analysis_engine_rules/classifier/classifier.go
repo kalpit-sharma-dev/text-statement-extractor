@@ -56,6 +56,49 @@ func ClassifyTransaction(txn models.ClassifiedTransaction) models.ClassifiedTran
 	}
 
 	// Step 6: Priority overrides (high confidence rules)
+	// Detect self-transfers (IMPS/NEFT/RTGS to same account holder)
+	if (txn.Method == "IMPS" || txn.Method == "NEFT" || txn.Method == "RTGS") && txn.Beneficiary != "" {
+		normalizedUpper := strings.ToUpper(normalizedNarration)
+		beneficiaryUpper := strings.ToUpper(txn.Beneficiary)
+		
+		// Self-transfer indicators:
+		// 1. Beneficiary name matches common account holder name pattern
+		// 2. Narration contains beneficiary name (IMPS format: IMPS-REF-NAME-BANK-ACCOUNT)
+		// 3. Account number pattern suggests same account (IDFB bank with similar ref)
+		
+		// Check for explicit self-transfer patterns
+		isSelfTransfer := false
+		
+		// Pattern 1: Check if narration contains the beneficiary name
+		if strings.Contains(normalizedUpper, beneficiaryUpper) {
+			// Check for known account holder names (can be extended)
+			accountHolderPatterns := []string{
+				"KALPIT KUMAR SHARMA", "KALPIT SHARMA", "K K SHARMA",
+			}
+			for _, pattern := range accountHolderPatterns {
+				if strings.Contains(normalizedUpper, pattern) {
+					isSelfTransfer = true
+					break
+				}
+			}
+		}
+		
+		// Pattern 2: Check for IDFB bank pattern (your bank) in IMPS
+		if txn.Method == "IMPS" && strings.Contains(normalizedUpper, "IDFB") {
+			// IMPS to same bank is often a self-transfer
+			if strings.Contains(normalizedUpper, "KALPIT") {
+				isSelfTransfer = true
+			}
+		}
+		
+		if isSelfTransfer {
+			txn.Category = "Self_Transfer"
+			categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "SELF_TRANSFER", txn.Method)
+			categoryResult.Confidence = 0.95
+			categoryResult.Reason = "Self-transfer detected - same account holder name"
+		}
+	}
+	
 	// If Method is EMI, ensure Category is Loan
 	if txn.Method == "EMI" {
 		txn.Category = "Loan"

@@ -295,6 +295,11 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"BIKANERVALA", "BIKANERVALA PRIVATE",
 		"BOMBAY WATCH COMPANY", "BOMBAY WATCH",
 		"VENDING BROTHERS", "BROTHERS PVT",
+		// Local businesses with generic names (from "Other" transactions)
+		"ENTERPRISE", "ENTERPRISES", "INDUSTRIA",
+		// Examples: A Y ENTERPRISE, KALIKA ENTERPRISES, AAYUSH ENTERPRISES, 
+		// DAYALS ENTERPRISES, RUKMANI ENTERPRISES, RAW REAPS ENTERPRISE,
+		// CHANDIGARH INDUSTRIA
 	}
 
 	// Groceries patterns (Online & Offline)
