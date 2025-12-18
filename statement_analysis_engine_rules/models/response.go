@@ -38,6 +38,7 @@ type TransactionBreakdown struct {
 	Interest      TransactionType `json:"Interest"`
 	Cheque        TransactionType `json:"Cheque"`
 	Dividend      TransactionType `json:"Dividend"`
+	Investment    TransactionType `json:"Investment"`
 	Other         TransactionType `json:"Other"`
 }
 

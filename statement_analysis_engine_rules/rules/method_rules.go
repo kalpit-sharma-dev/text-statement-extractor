@@ -35,6 +35,9 @@ func ClassifyMethod(narration string) string {
 	investmentPatterns := []string{
 		"RD", "FD", "SIP", "RECURRING DEPOSIT", "FIXED DEPOSIT",
 		"MUTUAL FUND", "INVESTMENT", "PPF", "ELSS", "RD INSTALLMENT",
+		"INDIAN CLEARING CORPORATION", "INDIAN CLEARING CORPORATION LIMITED",
+		"INDIAN C LEARING CORPORATION", "INDIAN C LEARING CORPORATION LIMITED", // Handle typo with space
+		"NSDL", "CDSL", "CLEARING CORPORATION",
 	}
 
 	// EMI patterns (loans/repayments - exclude investments)
@@ -52,13 +55,13 @@ func ClassifyMethod(narration string) string {
 
 	// ATM Withdrawal patterns (check before Debit Card)
 	atmWithdrawalPatterns := []string{
-		"EAW", "ATW", "ATM WITHDRAWAL", "ATM CASH WITHDRAWAL",
+		"EAW", "ATW", "NWD", "ATM WITHDRAWAL", "ATM CASH WITHDRAWAL",
 		"ELECTRONIC ATM WITHDRAWAL", "ATM CASH",
 	}
 	
 	// Debit Card patterns
 	debitCardPatterns := []string{
-		"POS", "DEBIT CARD", "ATM", "CASH WITHDRAWAL",
+		"DC", "POS", "DEBIT CARD", "ATM", "CASH WITHDRAWAL",
 		"SWIPE", "CARD TRANSACTION", "VISA", "MASTERCARD",
 	}
 
@@ -70,7 +73,7 @@ func ClassifyMethod(narration string) string {
 
 	// Salary patterns
 	salaryPatterns := []string{
-		"SALARY", "SAL FOR", "PAYROLL", "WAGES",
+		"SALARY", "SAL FOR", "PAYROLL", "WAGES", "BONUS",
 	}
 
 	// Interest patterns
@@ -117,6 +120,22 @@ func ClassifyMethod(narration string) string {
 		if strings.Contains(narration, pattern) {
 			return "Dividend"
 		}
+	}
+
+	// Check for Indian Clearing Corporation (investment-related)
+	// This handles stock market investments/clearing transactions
+	// If debited (withdrawal), it's an investment purchase
+	// If credited (deposit), it's investment returns/income
+	// Handle both correct spelling and typo variations (with/without space between C and LEARING/CLEARING)
+	if strings.Contains(narration, "INDIAN CLEARING CORPORATION") ||
+		strings.Contains(narration, "INDIAN CLEARING CORPORATION LIMITED") ||
+		strings.Contains(narration, "INDIAN C LEARING CORPORATION") ||
+		strings.Contains(narration, "INDIAN C LEARING CORPORATION LIMITED") ||
+		strings.Contains(narration, "NSDL") ||
+		strings.Contains(narration, "CDSL") {
+		// Classify as Investment method
+		// Category will be determined by whether it's a deposit (income/returns) or withdrawal (investment)
+		return "Investment"
 	}
 
 	// Check for investments/savings FIRST (RD, FD, SIP) - exclude from EMI and other methods

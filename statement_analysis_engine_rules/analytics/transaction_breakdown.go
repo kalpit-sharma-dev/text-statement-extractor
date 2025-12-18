@@ -84,6 +84,11 @@ func CalculateTransactionBreakdown(transactions []models.ClassifiedTransaction) 
 			// Dividend - count separately (not in Other)
 			breakdown.Dividend.Amount += amount
 			breakdown.Dividend.Count++
+		case "Investment":
+			// Investment transactions (like Indian Clearing Corporation)
+			// Count separately (not in Other)
+			breakdown.Investment.Amount += amount
+			breakdown.Investment.Count++
 		case "Insurance":
 			// Insurance premium - count in BillPaid (it's a bill payment)
 			breakdown.BillPaid.Amount += amount

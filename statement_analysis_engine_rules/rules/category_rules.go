@@ -83,6 +83,9 @@ func ClassifyCategory(narration string, merchant string) string {
 	investmentPatterns := []string{
 		"RD", "FD", "SIP", "MUTUAL FUND", "STOCK", "SHARE",
 		"DEMAT", "INVESTMENT", "NPS", "PPF", "ELSS", "RD INSTALLMENT",
+		"INDIAN CLEARING CORPORATION", "INDIAN CLEARING CORPORATION LIMITED",
+		"INDIAN C LEARING CORPORATION", "INDIAN C LEARING CORPORATION LIMITED", // Handle typo with space
+		"NSDL", "CDSL", "CLEARING CORPORATION",
 	}
 
 	// Dividend patterns (income from investments)
