@@ -192,6 +192,10 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"RELIANCE FRESH", "SPENCERS", "BIG BAZAAR",
 		// Generic
 		"GROCERY", "GROCERIES", "SUPERMARKET", "KIRANA", "GENERAL STORE",
+		// Vegetables and Fruits
+		"VEGETABLE", "VEGETABLES", "VEG", "FRUIT", "FRUITS",
+		"VEGETABLE SHOP", "FRUIT SHOP", "VEGETABLE MARKET",
+		"FRUIT MARKET", "VEGETABLE VENDOR", "FRUIT VENDOR",
 	}
 
 	// Universal Bill Payment Aggregators/Gateways

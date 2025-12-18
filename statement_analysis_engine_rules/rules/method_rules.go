@@ -62,7 +62,7 @@ func ClassifyMethod(narration string) string {
 		"EAW", "ATW", "NWD", "ATM WITHDRAWAL", "ATM CASH WITHDRAWAL",
 		"ELECTRONIC ATM WITHDRAWAL", "ATM CASH",
 	}
-	
+
 	// Debit Card patterns
 	debitCardPatterns := []string{
 		"DC", "POS", "DEBIT CARD", "ATM", "CASH WITHDRAWAL",
@@ -233,9 +233,9 @@ func ClassifyMethod(narration string) string {
 		// Only classify as EMI if it has loan-related keywords
 		// Don't match standalone "INSTALLMENT" (could be RD, FD, etc.)
 		if hasLoanKeyword {
-			for _, pattern := range emiPatterns {
-				if strings.Contains(narration, pattern) {
-					return "EMI"
+	for _, pattern := range emiPatterns {
+		if strings.Contains(narration, pattern) {
+			return "EMI"
 				}
 			}
 		}
@@ -323,7 +323,7 @@ func IsBillPayment(narration string) bool {
 // ExtractUPIDetails extracts merchant/payee name from UPI narration
 func ExtractUPIDetails(narration string) (merchant string, payee string) {
 	narration = strings.TrimSpace(narration)
-
+	
 	// UPI format: UPI-MERCHANT NAME-UPIID@BANK-REF-UPI
 	// Extract merchant name (between UPI- and first - or @)
 	re := regexp.MustCompile(`UPI-([^-@]+)`)

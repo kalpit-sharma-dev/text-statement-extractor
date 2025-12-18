@@ -263,6 +263,13 @@ func ExtractMerchant(tokens []string) string {
 		if strings.Contains(token, "COINSWITCH") {
 			return "CoinSwitch Kuber"
 		}
+		// Vegetables and Fruits detection
+		if strings.Contains(token, "VEGETABLE") || strings.Contains(token, "VEG") {
+			return "Vegetable Shop"
+		}
+		if strings.Contains(token, "FRUIT") || strings.Contains(token, "FRUITS") {
+			return "Fruit Shop"
+		}
 	}
 
 	return ""
