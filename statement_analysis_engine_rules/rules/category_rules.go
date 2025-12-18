@@ -583,6 +583,27 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"AUDIO", "SOUND", "RECORDING",
 		// Parks and recreation (from classification issues)
 		"PARKS", "PARKS",
+		// Fitness and gym (from "Other" transactions)
+		"FITNESS", "GYM", "GYMNASIUM", "YOGA", "ZUMBA",
+		"WAY2FITNESS", "GOLD GYM", "ANYTIME FITNESS",
+		"CROSSFIT", "WORKOUT", "STRENGTH",
+	}
+
+	// Religious and charitable organizations
+	religiousCharitablePatterns := []string{
+		"TEMPLE", "MANDIR", "CHURCH", "MOSQUE", "GURUDWARA",
+		"GAYATRI", "VEDMATA", "SANATAN", "SANATANA",
+		"SAMITI", "TRUST", "CHARITABLE", "DONATION",
+		"RAMAKRISHNA", "ISKCON", "TIRUMALA", "TIRUPATI",
+		"DARGAH", "SHRINE", "RELIGIOUS",
+	}
+
+	// Auto parts and services
+	autoPartsPatterns := []string{
+		"BATTERY", "TYRE", "TYRES", "AUTO PARTS", "AUTOPARTS",
+		"GARAGE", "CAR SERVICE", "CAR REPAIR", "PUNCTURE",
+		"MECHANIC", "OIL CHANGE", "SPARE PARTS", "SPAREPARTS",
+		"CAR WASH", "CARWASH",
 	}
 
 	// Investment patterns (Mutual Funds, Stocks, NPS, Insurance, Crypto)
@@ -752,10 +773,15 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 
 	// Priority 0.7: Check for generic payment gateways with ambiguous merchants
 	// PAYU, RAZORPAY, etc. are just gateways - try to infer from amount
-	if strings.Contains(combined, "PAYU PAYMENTS") || strings.Contains(combined, "PAYU@") {
+	if strings.Contains(combined, "PAYU PAYMENTS") || strings.Contains(combined, "PAYU@") ||
+		strings.Contains(combined, "PAYU@AXISBANK") {
 		// Check for utility/bill amount patterns (round amounts below 500)
 		if amount > 0 && amount < 500 && (int(amount)%10 == 0 || int(amount)%5 == 0) {
 			return returnCategory("Bills_Utilities", 0.50, "Small utility payment via PayU gateway", "PAYU")
+		}
+		// Medium amounts (₹500-₹2000) could be shopping or bills
+		if amount >= 500 && amount <= 2000 {
+			return returnCategory("Shopping", 0.40, "Payment via PayU gateway - likely shopping", "PAYU")
 		}
 		// Otherwise, leave as other or rely on other signals
 	}
@@ -882,6 +908,25 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 			strings.Contains(token, "HOSPITAL") || strings.Contains(token, "HEALTH") {
 			return returnCategory("Healthcare", 0.75, "Healthcare merchant detected in token", token)
 		}
+	}
+
+	// Check for medical professionals (doctors) - often in UPI IDs
+	if strings.Contains(combined, "DR ") || strings.Contains(combined, "DR.") || 
+		strings.Contains(combined, "DOCTOR") {
+		return returnCategory("Healthcare", 0.75, "Medical professional payment", "DR", "DOCTOR")
+	}
+
+	// Check for specific medical specializations in UPI IDs/names
+	if strings.Contains(combined, "SPINEDOC") || strings.Contains(combined, "CARDIO") ||
+		strings.Contains(combined, "ORTHO") || strings.Contains(combined, "DENT") ||
+		strings.Contains(combined, "PHYSIO") || strings.Contains(combined, "NEURO") {
+		return returnCategory("Healthcare", 0.85, "Medical specialist payment", "SPINEDOC", "CARDIO", "ORTHO")
+	}
+
+	// Check for legal/professional services (advocates/lawyers)
+	if strings.Contains(combined, "ADV ") || strings.Contains(combined, "ADVOCATE") ||
+		strings.Contains(combined, "LAWYER") || strings.Contains(combined, "LEGAL") {
+		return returnCategory("Bills_Utilities", 0.75, "Legal/professional services", "ADV", "ADVOCATE", "LAWYER")
 	}
 
 	// Check Bills & Utilities (comprehensive bill payment detection)
@@ -1238,6 +1283,20 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		}
 	}
 
+	// Check Religious and Charitable organizations
+	for _, pattern := range religiousCharitablePatterns {
+		if strings.Contains(combined, pattern) {
+			return returnCategory("Bills_Utilities", 0.70, "Religious/charitable donation", pattern)
+		}
+	}
+
+	// Check Auto Parts and Services
+	for _, pattern := range autoPartsPatterns {
+		if strings.Contains(combined, pattern) {
+			return returnCategory("Shopping", 0.75, "Auto parts/service expense", pattern)
+		}
+	}
+
 	// Check Dividend (income from investments) - should be classified as income category
 	for _, pattern := range dividendPatterns {
 		if strings.Contains(combined, pattern) {
@@ -1292,6 +1351,18 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 	// Check for charges (small amounts with charge keywords)
 	if amount > 0 && utils.IsCharge(originalNarration, amount) {
 		return returnCategory("Bills_Utilities", 0.70, "Bank charge detected", "CHARGE")
+	}
+
+	// Special handling for Standing Instructions (SI) / Recurring subscriptions
+	// Detect monthly/recurring subscription payments via standing instructions
+	if strings.Contains(combined, "DC SI") || strings.Contains(combined, "DEBIT CARD SI") ||
+		strings.Contains(combined, "ME DC SI") {
+		// Check if it's a subscription service pattern
+		if strings.Contains(combined, "MONTHLY") || strings.Contains(combined, "SUBSCRIPTION") {
+			// Could be streaming service, software subscription, etc.
+			// Without merchant info, classify as Bills_Utilities
+			return returnCategory("Bills_Utilities", 0.60, "Standing instruction subscription payment", "SI", "MONTHLY")
+		}
 	}
 
 	// Special handling for ATM Withdrawals

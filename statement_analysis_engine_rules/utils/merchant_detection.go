@@ -6,10 +6,10 @@ import (
 
 // KnownMerchant represents a known merchant with its default category
 type KnownMerchant struct {
-	Patterns []string // All known patterns/aliases
-	Name     string   // Canonical name
-	Category string   // Default category (can be overridden)
-	Confidence float64 // Base confidence for this merchant
+	Patterns   []string // All known patterns/aliases
+	Name       string   // Canonical name
+	Category   string   // Default category (can be overridden)
+	Confidence float64  // Base confidence for this merchant
 }
 
 // KnownMerchants is a comprehensive map of known merchants
@@ -44,6 +44,10 @@ var KnownMerchants = []KnownMerchant{
 	{Patterns: []string{"ZERODHA", "ZERODHA BROKING"}, Name: "Zerodha", Category: "Investment", Confidence: 0.9},
 	{Patterns: []string{"GROWW", "COIN", "UPSTOX"}, Name: "Investment Apps", Category: "Investment", Confidence: 0.85},
 	{Patterns: []string{"INDIAN CLEARING CORPORATION", "NSDL", "CDSL"}, Name: "Clearing Corporation", Category: "Investment", Confidence: 0.9},
+
+	// Fintech/Payment Services (classify as Bills_Utilities for bill payments)
+	{Patterns: []string{"EFPI TECHNOLOGIES", "EFPI@RBL"}, Name: "EFPI Technologies", Category: "Bills_Utilities", Confidence: 0.75},
+	{Patterns: []string{"ALZAPAY TECHNOLOGY", "LYRA@RBL"}, Name: "AlzaPay", Category: "Bills_Utilities", Confidence: 0.75},
 
 	// Shopping
 	{Patterns: []string{"AMAZON", "AMAZONPAY"}, Name: "Amazon", Category: "Shopping", Confidence: 0.9},
@@ -106,4 +110,3 @@ func DetectKnownMerchant(narration string, merchant string) (string, string, flo
 
 	return "", "", 0.0
 }
-
