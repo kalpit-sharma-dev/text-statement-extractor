@@ -77,6 +77,7 @@ type CategorySummary struct {
 	FoodDelivery   float64 `json:"Food_Delivery"`
 	Fuel           float64 `json:"Fuel"`
 	Investments    float64 `json:"Investments"`
+	Loan           float64 `json:"Loan"`
 }
 
 // MerchantSummary represents merchant-wise summary

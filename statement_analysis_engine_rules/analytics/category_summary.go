@@ -32,6 +32,9 @@ func CalculateCategorySummary(transactions []models.ClassifiedTransaction) model
 		case "Investment":
 			// Investment expenses (withdrawals for investments)
 			summary.Investments += amount
+		case "Loan", "Loan_EMI", "LOAN_EMI":
+			// Loan EMI expenses
+			summary.Loan += amount
 		}
 	}
 

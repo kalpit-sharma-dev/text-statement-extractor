@@ -38,6 +38,12 @@ func ClassifyTransaction(txn models.ClassifiedTransaction) models.ClassifiedTran
 		txn.IsIncome = txn.DepositAmt > 0
 	}
 
+	// Priority: If Method is EMI, ensure Category is Loan
+	// This ensures EMI transactions are always classified as Loan expense
+	if txn.Method == "EMI" {
+		txn.Category = "Loan"
+	}
+
 	// Check if bill payment
 	if rules.IsBillPayment(normalizedNarration) {
 		if txn.Category == "Other" {

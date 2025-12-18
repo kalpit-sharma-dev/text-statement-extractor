@@ -197,10 +197,111 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 		"HDFCCARD", "SBICARD", "AXISCARD", "ICICICARD", "KOTAKCARD",
 	}
 	
-	// Loan EMI Patterns
+	// Loan EMI Patterns (comprehensive - banking-industry-grade)
+	// Universal Loan EMI Keywords
+	loanKeywords := []string{
+		"EMI", "LOAN", "INSTALMENT", "INSTALLMENT",
+		"SI", "ECS", "NACH", "AUTO DEBIT", "MANDATE",
+	}
+	
+	// Auto-Debit Modes (Critical Signals)
+	autoDebitPatterns := []string{
+		"ECS EMI", "NACH EMI", "SI EMI", "AUTO EMI", "MANDATE EMI",
+	}
+	
+	// Bank Loan EMI Narrations
+	bankLoanPatterns := []string{
+		// HDFC Bank / HDFC Ltd
+		"ECS EMI HDFC LTD", "HDFC LOAN EMI", "HDFC HOME LOAN EMI",
+		"HDFCBANK EMI", "HDFC LTD EMI", "HDFCLOAN",
+		// ICICI Bank
+		"ICICI LOAN EMI", "ICICI HOME LOAN EMI", "ECS EMI ICICI",
+		"ICICI PERSONAL LOAN EMI", "ICICILOAN",
+		// SBI
+		"SBI LOAN EMI", "SBI HOME LOAN EMI", "ECS EMI SBI",
+		"SBI PERSONAL LOAN EMI", "SBILOAN",
+		// Axis Bank
+		"AXIS LOAN EMI", "AXIS BANK EMI", "NACH EMI AXIS", "AXISLOAN",
+		// Kotak Bank
+		"KOTAK LOAN EMI", "KOTAK BANK EMI", "KOTAKLOAN",
+		// Other Banks
+		"IDFC LOAN EMI", "YES BANK EMI", "PNB LOAN EMI",
+		"IDFCLOAN", "YESBANK", "PNBLOAN",
+	}
+	
+	// NBFC Loan EMI Narrations
+	nbfcLoanPatterns := []string{
+		// Bajaj Finserv
+		"BAJAJ FINSERV EMI", "BAJAJ FIN EMI", "BAJAJ FINANCE",
+		"BAJAJFINSERV", "BAJAJFIN",
+		// Tata Capital
+		"TATA CAPITAL EMI", "TATACAPITAL",
+		// HDB Financial
+		"HDB EMI", "HDB FINANCIAL EMI", "HDBFINANCIAL",
+		// Home Credit
+		"HOME CREDIT EMI", "HOMECREDIT",
+		// Aditya Birla Finance
+		"ADITYA BIRLA EMI", "ABFL EMI", "ADITYABIRLA",
+		// L&T Finance
+		"LT FINANCE EMI", "LTF EMI", "LTFINANCE",
+	}
+	
+	// Loan Type-Specific Narrations
+	loanTypePatterns := []string{
+		// Home Loan
+		"HOME LOAN EMI", "HL EMI", "HOUSING LOAN EMI",
+		// Vehicle Loan
+		"CAR LOAN EMI", "AUTO LOAN EMI", "VEHICLE LOAN EMI",
+		// Personal Loan
+		"PERSONAL LOAN EMI", "PL EMI",
+		// Education Loan
+		"EDUCATION LOAN EMI", "STUDENT LOAN EMI",
+		// Business Loan
+		"BUSINESS LOAN EMI", "MSME LOAN EMI",
+	}
+	
+	// Overdue / Penalty / Recovery Narrations
+	loanOverduePatterns := []string{
+		"OVERDUE LOAN RECOVERED", "EMI RECOVERY", "LOAN PENALTY",
+		"LATE PAYMENT FEE LOAN", "OVERDUE LOAN", "LOAN RECOVERED",
+		"REPAYMENT",
+	}
+	
+	// BillDesk / PayU Based Loan Payments
+	loanGatewayPatterns := []string{
+		"BILLDKHDFCLOAN", "BILLDKBAJAJFINSERV", "PAYUHDFCHOMELOAN",
+		"BILLDKICICILOAN", "BILLDKSBILOAN", "BILLDKAXISLOAN",
+	}
+	
+	// Ambiguous but Real Narrations
+	loanAmbiguousPatterns := []string{
+		"LOAN PAYMENT", "FINANCE PAYMENT", "INSTALLMENT PAID",
+		"MONTHLY INSTALLMENT",
+	}
+	
+	// Combined Loan EMI Patterns (for matching)
 	loanEmiPatterns := []string{
-		"LOAN", "EMI", "HDFCLOAN", "SBILOAN", "BAJAJFINSERV", "BAJAJFIN",
-		"OVERDUE LOAN", "LOAN RECOVERED", "EMI RECOVERY", "REPAYMENT",
+		// Universal keywords
+		"EMI", "LOAN", "INSTALMENT", "INSTALLMENT",
+		// Auto-debit
+		"ECS EMI", "NACH EMI", "SI EMI", "AUTO EMI", "MANDATE EMI",
+		// Banks
+		"HDFC LOAN", "ICICI LOAN", "SBI LOAN", "AXIS LOAN", "KOTAK LOAN",
+		"HDFCLOAN", "ICICILOAN", "SBILOAN", "AXISLOAN", "KOTAKLOAN",
+		"HDFC BANK EMI", "ICICI BANK EMI", "SBI BANK EMI",
+		// NBFCs
+		"BAJAJ FINSERV", "BAJAJ FIN", "BAJAJFINSERV", "BAJAJFIN",
+		"TATA CAPITAL", "HDB FINANCIAL", "HOME CREDIT",
+		"ADITYA BIRLA", "LT FINANCE",
+		// Loan types
+		"HOME LOAN", "CAR LOAN", "AUTO LOAN", "VEHICLE LOAN",
+		"PERSONAL LOAN", "EDUCATION LOAN", "BUSINESS LOAN",
+		// Overdue/Recovery
+		"OVERDUE LOAN", "EMI RECOVERY", "LOAN RECOVERED", "REPAYMENT",
+		// Gateways
+		"BILLDKHDFCLOAN", "BILLDKBAJAJFINSERV", "PAYUHDFCHOMELOAN",
+		// Ambiguous
+		"LOAN PAYMENT", "FINANCE PAYMENT", "INSTALLMENT PAID",
 	}
 	
 	// Housing/Maintenance Patterns
@@ -280,6 +381,102 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 	// Dividend patterns (income from investments)
 	dividendPatterns := []string{
 		"DIV", "DIVIDEND", "DIVIDEND CREDIT", "DIV CR",
+	}
+
+	// Priority 0: Check Loan EMI (HIGHEST PRIORITY - before all other categories)
+	// Loan EMI detection has very high confidence and should be checked first
+	// First check for simple EMI keyword (catches minimal narrations like "EMI 4452581")
+	if strings.Contains(combined, "EMI") {
+		// If narration contains "EMI" and looks like a loan account number pattern
+		// or has loan-related keywords, classify as Loan
+		if strings.Contains(combined, "LOAN") || strings.Contains(combined, "ECS") ||
+			strings.Contains(combined, "NACH") || strings.Contains(combined, "SI") ||
+			strings.Contains(combined, "MANDATE") || strings.Contains(combined, "INSTALLMENT") ||
+			strings.Contains(combined, "INSTALMENT") {
+			return "Loan"
+		}
+		// Check for loan account number pattern (numbers after EMI)
+		// Pattern: "EMI" followed by numbers (like "EMI 4452581")
+		emiPattern := regexp.MustCompile(`EMI\s*\d+`)
+		if emiPattern.MatchString(combined) {
+			return "Loan"
+		}
+	}
+	
+	hasLoanKeyword := false
+	for _, keyword := range loanKeywords {
+		if strings.Contains(combined, keyword) {
+			hasLoanKeyword = true
+			break
+		}
+	}
+	
+	if hasLoanKeyword {
+		// Check for auto-debit patterns (highest confidence)
+		for _, pattern := range autoDebitPatterns {
+			if strings.Contains(combined, pattern) {
+				return "Loan" // Loan EMI category
+			}
+		}
+		
+		// Check for bank/NBFC names (high confidence)
+		for _, pattern := range bankLoanPatterns {
+			if strings.Contains(combined, pattern) {
+				return "Loan"
+			}
+		}
+		for _, pattern := range nbfcLoanPatterns {
+			if strings.Contains(combined, pattern) {
+				return "Loan"
+			}
+		}
+		
+		// Check for loan type patterns
+		for _, pattern := range loanTypePatterns {
+			if strings.Contains(combined, pattern) {
+				return "Loan"
+			}
+		}
+		
+		// Check for overdue/recovery patterns
+		for _, pattern := range loanOverduePatterns {
+			if strings.Contains(combined, pattern) {
+				return "Loan"
+			}
+		}
+		
+		// Check for gateway-based loan payments
+		for _, pattern := range loanGatewayPatterns {
+			if strings.Contains(combined, pattern) {
+				return "Loan"
+			}
+		}
+		
+		// Check for ambiguous loan patterns (if EMI or LOAN keyword present)
+		if strings.Contains(combined, "EMI") || strings.Contains(combined, "LOAN") {
+			for _, pattern := range loanAmbiguousPatterns {
+				if strings.Contains(combined, pattern) {
+					return "Loan"
+				}
+			}
+			// If EMI or LOAN keyword + ECS/NACH/SI, it's likely a loan
+			if strings.Contains(combined, "ECS") || strings.Contains(combined, "NACH") ||
+				strings.Contains(combined, "SI") || strings.Contains(combined, "MANDATE") {
+				return "Loan"
+			}
+		}
+		
+		// Check tokens for loan-related patterns
+		for _, token := range tokens {
+			if strings.Contains(token, "EMI") || strings.Contains(token, "LOAN") {
+				// Check if token contains bank/NBFC name
+				if strings.Contains(token, "HDFC") || strings.Contains(token, "ICICI") ||
+					strings.Contains(token, "SBI") || strings.Contains(token, "AXIS") ||
+					strings.Contains(token, "KOTAK") || strings.Contains(token, "BAJAJ") {
+					return "Loan"
+				}
+			}
+		}
 	}
 
 	// Priority 1: Check for POS indicator (dining vs delivery distinction)
