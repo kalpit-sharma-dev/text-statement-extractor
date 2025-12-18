@@ -122,6 +122,10 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		// POS + restaurant chain (dining, not delivery)
 		"POS DOMINOS", "POS MCDONALDS", "POS KFC",
 		"POS PIZZAHUT", "POS BURGERKING", "POS SUBWAY",
+		// Restaurants/Cafes (from "Other" transactions)
+		"EATSOME", "MEGAPOLISSANGRIA", "SANGRIA",
+		"SNACKS CENT", "SNACKS", "DAIRY AND SWEE",
+		"GODAVARI SNACKS", "GODAVARI",
 	}
 
 	// Travel patterns (comprehensive)
@@ -179,6 +183,10 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"ELECTRONICS", "CROMA", "RELIANCE DIGITAL",
 		"Vijay Sales", "GREAT EASTERN", "SHOPPERS STOP",
 		"SIMPL", "SIMPL TECHNOLOGI", "GETSIMPL", // Simpl buy now pay later
+		// Clothing stores (from "Other" transactions)
+		"NEW LOOK", "RANGOLI HOSIERY", "NEW BOMBAY GENTS PAR",
+		"MEGA INNERWEARS", "GIFT GALLERY", "INNERWEARS",
+		"HOSIERY", "GENTS PAR", "GENTS", "CLOTHING",
 	}
 
 	// Groceries patterns (Online & Offline)
@@ -196,6 +204,8 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"VEGETABLE", "VEGETABLES", "VEG", "FRUIT", "FRUITS",
 		"VEGETABLE SHOP", "FRUIT SHOP", "VEGETABLE MARKET",
 		"FRUIT MARKET", "VEGETABLE VENDOR", "FRUIT VENDOR",
+		// Dairy and local stores (from "Other" transactions)
+		"ANKIT DAIRY", "DAIRY", "DAIRY AND SWEE", "DAIRY AND SWEET",
 	}
 
 	// Universal Bill Payment Aggregators/Gateways
@@ -376,6 +386,8 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 	housingPatterns := []string{
 		"MAINTENANCE", "SOCIETY", "APARTMENT", "ASSOCIATION",
 		"HOUSING", "SOCIETY MAINTENANCE",
+		"RENT", "RENT FOR MONTH", "HOUSE RENT", "RENTAL",
+		"MONTHLY RENT", "RENT PAYMENT",
 	}
 	
 	// Tax Payment Patterns
@@ -417,6 +429,9 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"PLAYSTORE", "GOOGLE PLAY",
 		"YOUTUBE", "YOUTUBE PREMIUM", "YOUTUBEPREMIUM", "YT",
 		"YOUTUBE MUSIC", "YOUTUBEMUSIC",
+		// Gaming (from "Other" transactions)
+		"GAMING", "KORAGAMING", "GAME BUSINESS", "GAMING BUSINESS",
+		"JD DIGITAL", "DIGITAL", "ARTS", "VRT ARTS",
 	}
 
 	// Investment patterns (Mutual Funds, Stocks, NPS, Insurance, Crypto)
