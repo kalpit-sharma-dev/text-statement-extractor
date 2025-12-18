@@ -206,6 +206,8 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"MUSKAN BAKERS", "MUSKAN BAKERS AND CO",
 		"ROSIER FOODS", "ROSIER",
 		"PANCHAITEA", "PANCHAI TEA", "TEA",
+		// Beverage vendors (from 2025 data)
+		"LASSI WALE", "LASSI", "JUICE", "JUICE WALE",
 	}
 
 	// Travel patterns (comprehensive)
@@ -277,6 +279,10 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"JAIN AUTO", "AUTO AND ACCESS", "AUTO ACCESS",
 		"AUTO PARTS", "AUTO ACCESSORIES",
 		"ASB AUTOMOBILES", "AUTOMOBILES", "AUTO MOBILES",
+		// Auto services and vehicle maintenance (from 2025 data)
+		"AUTO CARE", "RIDE N REPAIR", "RIDE AND REPAIR",
+		"SCOOTER AGENCY", "SHIVA SCOOTER", "VEHICLE SERVICE",
+		"BIKE SERVICE", "SCOOTER SERVICE", "CAR SERVICE",
 		// Jewellery stores
 		"JEWELLERS", "JEWELLERY", "JEWELRY", "KAMLA JI JEWELLERS", "KUMAR JEWELLERS",
 		// Shoes
@@ -300,6 +306,9 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		// Examples: A Y ENTERPRISE, KALIKA ENTERPRISES, AAYUSH ENTERPRISES, 
 		// DAYALS ENTERPRISES, RUKMANI ENTERPRISES, RAW REAPS ENTERPRISE,
 		// CHANDIGARH INDUSTRIA
+		// Home services (from 2025 data)
+		"INTERIORS", "TULSI INTERIORS", "INTERIOR DESIGN",
+		"FURNITURE", "HOME DECOR", "FURNISHING",
 	}
 
 	// Groceries patterns (Online & Offline)
@@ -322,6 +331,8 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"ANKIT DAIRY", "DAIRY", "DAIRY AND SWEE", "DAIRY AND SWEET",
 		// Smart bazar / marketplaces
 		"SMART BAZAR", "SMART BAZAAR", "MAYUR SMART BAZAR",
+		// Provision stores (from 2025 data)
+		"PROVISION", "PROVISIONS", "PROVISION STOR", "PROVISION STORE",
 		// Agricultural/farm products
 		"KISANKONNECT", "KISAN KONNECT", "FARM", "AGRICULTURAL",
 		// Local traders and markets (from classification issues)
@@ -549,6 +560,10 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		// Bank charges and fees (from classification issues)
 		"DC INTL POS TXN MARKUP", "INTL POS TXN MARKUP", "POS TXN MARKUP",
 		"BANK CHARGES", "SERVICE CHARGE", "ANNUAL FEE", "MAINTENANCE CHARGE",
+		// Software & Technology subscriptions (from 2025 data)
+		"CLAUDE.AI", "CLAUDE AI", "ANTHROPIC", "CURSOR", "AI POWERED IDE",
+		"GOOGLE CLOUD", "GOOGLECLOUD", "AWS", "AZURE", "CLOUD COMPUTING",
+		"SOFTWARE SUBSCRIPTION", "SAAS",
 	}
 
 	// Healthcare patterns
@@ -565,6 +580,9 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		// Pharmacies and medical stores (from classification issues)
 		"CHEMISTS",
 		"MEDICO",
+		// Medical imaging and health services (from 2025 data)
+		"MOLECULAR IMAGING", "IMAGING", "RADIOLOGY", "SCAN",
+		"AROGYA", "AROGYALAXMI", // "Arogya" = Health in Sanskrit
 	}
 
 	// Education patterns
@@ -599,6 +617,9 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"FITNESS", "GYM", "GYMNASIUM", "YOGA", "ZUMBA",
 		"WAY2FITNESS", "GOLD GYM", "ANYTIME FITNESS",
 		"CROSSFIT", "WORKOUT", "STRENGTH",
+		// Audio content platforms (from 2025 data)
+		"KUKUFM", "KUKU FM", "AUDIBLE", "PODCAST",
+		"QUICK TV", "QUICKTV",
 	}
 
 	// Religious and charitable organizations
