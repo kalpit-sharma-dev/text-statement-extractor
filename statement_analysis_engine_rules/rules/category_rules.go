@@ -6,14 +6,39 @@ import (
 	"strings"
 )
 
+// CategoryResult contains category classification with metadata
+type CategoryResult struct {
+	Category       string
+	Confidence     float64
+	MatchedKeywords []string
+	Gateway        string
+	Channel        string
+	RuleVersion    string
+	Reason         string
+}
+
 // ClassifyCategory classifies the transaction category based on narration
 // Enhanced with tokenization and gateway detection
 func ClassifyCategory(narration string, merchant string) string {
-	return ClassifyCategoryWithAmount(narration, merchant, 0.0)
+	result := ClassifyCategoryWithMetadata(narration, merchant, 0.0)
+	return result.Category
 }
 
 // ClassifyCategoryWithAmount classifies the transaction category with amount for charge detection
 func ClassifyCategoryWithAmount(narration string, merchant string, amount float64) string {
+	result := ClassifyCategoryWithMetadata(narration, merchant, amount)
+	return result.Category
+}
+
+// ClassifyCategoryWithMetadata classifies category and returns metadata (for explainability)
+func ClassifyCategoryWithMetadata(narration string, merchant string, amount float64) CategoryResult {
+	result := CategoryResult{
+		Category:        "Other",
+		Confidence:      0.0,
+		MatchedKeywords: make([]string, 0),
+		RuleVersion:     utils.RuleVersion,
+	}
+	
 	originalNarration := narration
 	narration = strings.ToUpper(narration)
 	merchant = strings.ToUpper(merchant)
@@ -21,6 +46,45 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 
 	// Tokenize narration for better pattern matching
 	tokens := utils.Tokenize(originalNarration)
+	
+	// Extract gateway (separate concept from category)
+	gateway := utils.ExtractGateway(originalNarration)
+	result.Gateway = gateway
+	
+	// Extract channel (payment method - will be set by caller)
+	
+	// Track matched keywords for explainability
+	matchedKeywords := make([]string, 0)
+	
+	// Helper function to return CategoryResult with category
+	returnCategory := func(category string, confidence float64, reason string, keywords ...string) CategoryResult {
+		resultCopy := result
+		resultCopy.Category = category
+		resultCopy.Confidence = confidence
+		resultCopy.Reason = reason
+		resultCopy.MatchedKeywords = append(matchedKeywords, keywords...)
+		// Calculate final confidence
+		hasGateway := gateway != ""
+		hasMerchant := merchant != "" && merchant != "UNKNOWN"
+		amountPattern, hasAmountPattern := utils.DetectAmountPattern(amount)
+		if hasAmountPattern {
+			resultCopy.MatchedKeywords = append(resultCopy.MatchedKeywords, amountPattern)
+		}
+		finalConfidence := utils.CalculateConfidence(
+			resultCopy.MatchedKeywords,
+			hasGateway,
+			hasMerchant,
+			hasAmountPattern,
+			false, // recurrence would be detected separately
+		)
+		// Use provided confidence if higher, otherwise use calculated
+		if confidence > finalConfidence {
+			resultCopy.Confidence = confidence
+		} else {
+			resultCopy.Confidence = finalConfidence
+		}
+		return resultCopy
+	}
 
 	// Food Delivery patterns (comprehensive - ONLINE ONLY, NOT POS)
 	foodDeliveryPatterns := []string{
@@ -41,7 +105,7 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 		// If narration suggests food delivery through wallet
 		for _, token := range tokens {
 			if strings.Contains(token, "SWIGGY") || strings.Contains(token, "ZOMATO") {
-				return "Food_Delivery"
+				return returnCategory("Food_Delivery", 0.85, "Food delivery app detected via wallet", "SWIGGY", "ZOMATO", wallet)
 			}
 		}
 	}
@@ -393,13 +457,13 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 			strings.Contains(combined, "NACH") || strings.Contains(combined, "SI") ||
 			strings.Contains(combined, "MANDATE") || strings.Contains(combined, "INSTALLMENT") ||
 			strings.Contains(combined, "INSTALMENT") {
-			return "Loan"
+			return returnCategory("Loan", 0.95, "EMI with loan keywords detected", "EMI", "LOAN")
 		}
 		// Check for loan account number pattern (numbers after EMI)
 		// Pattern: "EMI" followed by numbers (like "EMI 4452581")
 		emiPattern := regexp.MustCompile(`EMI\s*\d+`)
 		if emiPattern.MatchString(combined) {
-			return "Loan"
+			return returnCategory("Loan", 0.90, "EMI with account number pattern detected", "EMI")
 		}
 	}
 	
@@ -415,40 +479,40 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 		// Check for auto-debit patterns (highest confidence)
 		for _, pattern := range autoDebitPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Loan" // Loan EMI category
+				return returnCategory("Loan", 0.95, "Auto-debit loan pattern detected: "+pattern, pattern)
 			}
 		}
 		
 		// Check for bank/NBFC names (high confidence)
 		for _, pattern := range bankLoanPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Loan"
+				return returnCategory("Loan", 0.90, "Bank loan pattern detected: "+pattern, pattern)
 			}
 		}
 		for _, pattern := range nbfcLoanPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Loan"
+				return returnCategory("Loan", 0.90, "NBFC loan pattern detected: "+pattern, pattern)
 			}
 		}
 		
 		// Check for loan type patterns
 		for _, pattern := range loanTypePatterns {
 			if strings.Contains(combined, pattern) {
-				return "Loan"
+				return returnCategory("Loan", 0.85, "Loan type pattern detected: "+pattern, pattern)
 			}
 		}
 		
 		// Check for overdue/recovery patterns
 		for _, pattern := range loanOverduePatterns {
 			if strings.Contains(combined, pattern) {
-				return "Loan"
+				return returnCategory("Loan", 0.85, "Loan overdue/recovery pattern detected: "+pattern, pattern)
 			}
 		}
 		
 		// Check for gateway-based loan payments
 		for _, pattern := range loanGatewayPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Loan"
+				return returnCategory("Loan", 0.90, "Gateway-based loan payment detected: "+pattern, pattern)
 			}
 		}
 		
@@ -456,13 +520,13 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 		if strings.Contains(combined, "EMI") || strings.Contains(combined, "LOAN") {
 			for _, pattern := range loanAmbiguousPatterns {
 				if strings.Contains(combined, pattern) {
-					return "Loan"
+					return returnCategory("Loan", 0.75, "Ambiguous loan pattern detected: "+pattern, pattern)
 				}
 			}
 			// If EMI or LOAN keyword + ECS/NACH/SI, it's likely a loan
 			if strings.Contains(combined, "ECS") || strings.Contains(combined, "NACH") ||
 				strings.Contains(combined, "SI") || strings.Contains(combined, "MANDATE") {
-				return "Loan"
+				return returnCategory("Loan", 0.85, "EMI/LOAN with auto-debit indicator detected", "EMI", "LOAN", "ECS/NACH/SI")
 			}
 		}
 		
@@ -473,7 +537,7 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 				if strings.Contains(token, "HDFC") || strings.Contains(token, "ICICI") ||
 					strings.Contains(token, "SBI") || strings.Contains(token, "AXIS") ||
 					strings.Contains(token, "KOTAK") || strings.Contains(token, "BAJAJ") {
-					return "Loan"
+					return returnCategory("Loan", 0.80, "Loan keyword with bank/NBFC name detected in token: "+token, token)
 				}
 			}
 		}
@@ -486,20 +550,20 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 		// Check if it's a restaurant/cafe (dining)
 		for _, pattern := range diningPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Dining"
+				return returnCategory("Dining", 0.80, "POS transaction at restaurant/cafe", "POS", pattern)
 			}
 		}
 		// Check if it's grocery (POS GROCERY)
 		for _, pattern := range groceriesPatterns {
 			if strings.Contains(combined, "POS") && strings.Contains(combined, pattern) {
-				return "Groceries"
+				return returnCategory("Groceries", 0.80, "POS grocery transaction", "POS", pattern)
 			}
 		}
 		// Check if it's shopping (POS RETAIL, POS STORE, etc.)
 		if strings.Contains(combined, "POS RETAIL") || strings.Contains(combined, "POS STORE") ||
 			strings.Contains(combined, "POS PURCHASE") || strings.Contains(combined, "POS AMAZON") ||
 			strings.Contains(combined, "POS FLIPKART") {
-			return "Shopping"
+			return returnCategory("Shopping", 0.80, "POS retail/shopping transaction", "POS")
 		}
 	}
 
@@ -508,7 +572,7 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 	if !hasPOS {
 		for _, pattern := range foodDeliveryPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Food_Delivery"
+				return returnCategory("Food_Delivery", 0.90, "Food delivery app detected (online)", pattern)
 			}
 		}
 		// Also check tokens for food delivery apps
@@ -518,7 +582,7 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 				strings.Contains(token, "DOMINOS") || strings.Contains(token, "MCDONALDS") {
 				// Verify it's not POS
 				if !strings.Contains(combined, "POS") {
-					return "Food_Delivery"
+					return returnCategory("Food_Delivery", 0.85, "Food delivery app detected in token (online)", token)
 				}
 			}
 		}
@@ -530,7 +594,7 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 			// Make sure it's not a delivery gateway
 			if !strings.Contains(combined, "PAYU") && !strings.Contains(combined, "RAZP") &&
 				!strings.Contains(combined, "ZOMATO") && !strings.Contains(combined, "SWIGGY") {
-				return "Dining"
+				return returnCategory("Dining", 0.75, "Restaurant/cafe detected (non-POS)", pattern)
 			}
 		}
 	}
@@ -538,7 +602,7 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 	// Check Fuel (separate category, before Travel)
 	for _, pattern := range fuelPatterns {
 		if strings.Contains(combined, pattern) {
-			return "Fuel" // Fuel is a separate category
+			return returnCategory("Fuel", 0.85, "Fuel expense detected", pattern)
 		}
 	}
 	// Also check tokens for fuel patterns
@@ -546,14 +610,14 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 		if strings.Contains(token, "IOCL") || strings.Contains(token, "BPCL") ||
 			strings.Contains(token, "HPCL") || strings.Contains(token, "PETROL") ||
 			strings.Contains(token, "DIESEL") {
-			return "Fuel" // Fuel is a separate category
+			return returnCategory("Fuel", 0.85, "Fuel expense detected in token", token)
 		}
 	}
 	
 	// Check Travel (comprehensive patterns)
 	for _, pattern := range travelPatterns {
 		if strings.Contains(combined, pattern) {
-			return "Travel"
+			return returnCategory("Travel", 0.85, "Travel expense detected", pattern)
 		}
 	}
 	// Also check tokens for travel apps
@@ -562,28 +626,28 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 			strings.Contains(token, "IRCTC") || strings.Contains(token, "MMT") ||
 			strings.Contains(token, "GOIBIBO") || strings.Contains(token, "REDBUS") ||
 			strings.Contains(token, "OYO") {
-			return "Travel"
+			return returnCategory("Travel", 0.80, "Travel app detected in token", token)
 		}
 	}
 
 	// Check Shopping (enhanced with tokenization)
 	for _, pattern := range shoppingPatterns {
 		if strings.Contains(combined, pattern) {
-			return "Shopping"
+			return returnCategory("Shopping", 0.80, "Shopping expense detected", pattern)
 		}
 	}
 	// Also check tokens for shopping-related merchants
 	for _, token := range tokens {
 		if strings.Contains(token, "SIMPL") || strings.Contains(token, "GETSIMPL") ||
 			strings.Contains(token, "AMAZON") || strings.Contains(token, "FLIPKART") {
-			return "Shopping"
+			return returnCategory("Shopping", 0.75, "Shopping merchant detected in token", token)
 		}
 	}
 
 	// Check Groceries
 	for _, pattern := range groceriesPatterns {
 		if strings.Contains(combined, pattern) {
-			return "Groceries"
+			return returnCategory("Groceries", 0.75, "Grocery expense detected", pattern)
 		}
 	}
 
@@ -613,102 +677,102 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 		// Electricity
 		for _, pattern := range electricityPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Bills_Utilities"
+				return returnCategory("Bills_Utilities", 0.90, "Electricity bill payment detected", pattern)
 			}
 		}
 		
 		// Gas
 		for _, pattern := range gasPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Bills_Utilities"
+				return returnCategory("Bills_Utilities", 0.90, "Gas bill payment detected", pattern)
 			}
 		}
 		
 		// Water
 		for _, pattern := range waterPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Bills_Utilities"
+				return returnCategory("Bills_Utilities", 0.90, "Water bill payment detected", pattern)
 			}
 		}
 		
 		// Telecom
 		for _, pattern := range telecomPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Bills_Utilities"
+				return returnCategory("Bills_Utilities", 0.90, "Telecom bill payment detected", pattern)
 			}
 		}
 		
 		// DTH
 		for _, pattern := range dthPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Bills_Utilities"
+				return returnCategory("Bills_Utilities", 0.90, "DTH bill payment detected", pattern)
 			}
 		}
 		
 		// Toll/Fastag
 		for _, pattern := range tollPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Bills_Utilities"
+				return returnCategory("Bills_Utilities", 0.85, "Toll/Fastag payment detected", pattern)
 			}
 		}
 		
 		// Government payments
 		for _, pattern := range governmentPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Bills_Utilities"
+				return returnCategory("Bills_Utilities", 0.85, "Government payment detected", pattern)
 			}
 		}
 		
 		// Insurance
 		for _, pattern := range insurancePatterns {
 			if strings.Contains(combined, pattern) {
-				return "Bills_Utilities"
+				return returnCategory("Bills_Utilities", 0.90, "Insurance premium payment detected", pattern)
 			}
 		}
 		
 		// Credit Card
 		for _, pattern := range creditCardPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Bills_Utilities"
+				return returnCategory("Bills_Utilities", 0.90, "Credit card bill payment detected", pattern)
 			}
 		}
 		
 		// Loan EMI
 		for _, pattern := range loanEmiPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Bills_Utilities"
+				return returnCategory("Bills_Utilities", 0.90, "Loan EMI payment detected", pattern)
 			}
 		}
 		
 		// Housing/Maintenance
 		for _, pattern := range housingPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Bills_Utilities"
+				return returnCategory("Bills_Utilities", 0.85, "Housing/maintenance bill detected", pattern)
 			}
 		}
 		
 		// Tax payments
 		for _, pattern := range taxPatterns {
 			if strings.Contains(combined, pattern) {
-				return "Bills_Utilities"
+				return returnCategory("Bills_Utilities", 0.85, "Tax payment detected", pattern)
 			}
 		}
 		
 		// Default: if bill payment gateway detected but no specific category, still Bills_Utilities
-		return "Bills_Utilities"
+		return returnCategory("Bills_Utilities", 0.75, "Bill payment gateway detected", "BILL_PAYMENT")
 	}
 	
 	// Legacy check for backward compatibility
 	for _, pattern := range billsPatterns {
 		if strings.Contains(combined, pattern) {
-			return "Bills_Utilities"
+			return returnCategory("Bills_Utilities", 0.80, "Bill payment pattern detected", pattern)
 		}
 	}
 
 	// Check for "MAHARASHTRA STATE EL" pattern (can be split across tokens or have variations)
 	if strings.Contains(combined, "MAHARASHTRA") && 
 		(strings.Contains(combined, "STATE") || strings.Contains(combined, "EL")) {
-		return "Bills_Utilities"
+		return returnCategory("Bills_Utilities", 0.85, "Maharashtra State Electricity detected", "MAHARASHTRA", "EL")
 	}
 	
 	// Check tokens for compressed utility names
@@ -717,7 +781,7 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 		if decoded != token {
 			// If decoding found a match, check if it's a utility
 			if strings.Contains(decoded, "Gas") || strings.Contains(decoded, "Electricity") {
-				return "Bills_Utilities"
+				return returnCategory("Bills_Utilities", 0.80, "Utility detected via merchant decoding", decoded)
 			}
 		}
 	}
@@ -725,45 +789,66 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 	// Check Healthcare
 	for _, pattern := range healthcarePatterns {
 		if strings.Contains(combined, pattern) {
-			return "Healthcare"
+			return returnCategory("Healthcare", 0.75, "Healthcare expense detected", pattern)
 		}
 	}
 
 	// Check Education
 	for _, pattern := range educationPatterns {
 		if strings.Contains(combined, pattern) {
-			return "Education"
+			return returnCategory("Education", 0.75, "Education expense detected", pattern)
 		}
 	}
 
 	// Check Entertainment
 	for _, pattern := range entertainmentPatterns {
 		if strings.Contains(combined, pattern) {
-			return "Entertainment"
+			return returnCategory("Entertainment", 0.75, "Entertainment expense detected", pattern)
 		}
 	}
 
 	// Check Dividend (income from investments) - should be classified as income category
 	for _, pattern := range dividendPatterns {
 		if strings.Contains(combined, pattern) {
-			return "Investment" // Dividends are investment income
+			return returnCategory("Investment", 0.90, "Dividend income detected", pattern)
 		}
 	}
 
 	// Check Investment
 	for _, pattern := range investmentPatterns {
 		if strings.Contains(combined, pattern) {
-			return "Investment"
+			return returnCategory("Investment", 0.85, "Investment detected", pattern)
 		}
 	}
 
 	// Check for charges (small amounts with charge keywords)
 	if amount > 0 && utils.IsCharge(originalNarration, amount) {
-		return "Bills_Utilities" // Charges are typically utility-related
+		return returnCategory("Bills_Utilities", 0.70, "Bank charge detected", "CHARGE")
 	}
 
-	// Default category
-	return "Other"
+	// Default category (don't over-classify - keep UNKNOWN/Other for ambiguous cases)
+	result.Category = "Other"
+	result.Confidence = 0.1
+	result.Reason = "No matching patterns found - classified as Other"
+	
+	// Calculate final confidence
+	hasGateway := gateway != ""
+	hasMerchant := merchant != "" && merchant != "UNKNOWN"
+	amountPattern, hasAmountPattern := utils.DetectAmountPattern(amount)
+	if hasAmountPattern {
+		matchedKeywords = append(matchedKeywords, amountPattern)
+	}
+	
+	result.MatchedKeywords = matchedKeywords
+	result.Confidence = utils.CalculateConfidence(
+		matchedKeywords,
+		hasGateway,
+		hasMerchant,
+		hasAmountPattern,
+		false, // recurrence pattern would be detected separately
+	)
+	
+	return result
 }
 
 // ExtractMerchantName extracts merchant name from narration
