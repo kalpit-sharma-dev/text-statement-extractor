@@ -737,6 +737,29 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		}
 	}
 
+	// Priority 0.5: Check for Rent payments (high confidence)
+	// Rent appears explicitly in narration, especially in IMPS/NEFT
+	if strings.Contains(combined, "RENT") || strings.Contains(combined, "-RENT") {
+		return returnCategory("Bills_Utilities", 0.90, "Rent payment detected", "RENT")
+	}
+
+	// Priority 0.6: Check for CRED bill payment app
+	// CRED is used for credit card bill payments
+	if strings.Contains(combined, "CREDPAY") || strings.Contains(combined, "PAYMENT ON CRED") ||
+		strings.Contains(combined, "CRED.UBCP") || strings.Contains(combined, "PWCUBCPUPI") {
+		return returnCategory("Bills_Utilities", 0.85, "CRED bill payment detected", "CRED")
+	}
+
+	// Priority 0.7: Check for generic payment gateways with ambiguous merchants
+	// PAYU, RAZORPAY, etc. are just gateways - try to infer from amount
+	if strings.Contains(combined, "PAYU PAYMENTS") || strings.Contains(combined, "PAYU@") {
+		// Check for utility/bill amount patterns (round amounts below 500)
+		if amount > 0 && amount < 500 && (int(amount)%10 == 0 || int(amount)%5 == 0) {
+			return returnCategory("Bills_Utilities", 0.50, "Small utility payment via PayU gateway", "PAYU")
+		}
+		// Otherwise, leave as other or rely on other signals
+	}
+
 	// Priority 1: Check for POS indicator (dining vs delivery distinction)
 	// POS + restaurant name = Dining (NOT Food Delivery)
 	hasPOS := strings.Contains(combined, "POS")
@@ -1269,6 +1292,31 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 	// Check for charges (small amounts with charge keywords)
 	if amount > 0 && utils.IsCharge(originalNarration, amount) {
 		return returnCategory("Bills_Utilities", 0.70, "Bank charge detected", "CHARGE")
+	}
+
+	// Special handling for ATM Withdrawals
+	// Keep ATM withdrawals as "Other" since we don't know what the cash was used for
+	if strings.Contains(combined, "ATW") || strings.Contains(combined, "EAW") || 
+		strings.Contains(combined, "ATM WITHDRAWAL") || strings.Contains(combined, "CASH WITHDRAWAL") {
+		return returnCategory("Other", 0.95, "ATM cash withdrawal - usage unknown", "ATM")
+	}
+
+	// Special handling for Person-to-Person (P2P) transfers
+	// Large UPI transfers to individuals (not merchants) - likely personal transfers
+	if strings.Contains(combined, "UPI") && amount > 5000 {
+		// Check if it doesn't have known merchant patterns
+		hasKnownMerchantPattern := strings.Contains(combined, "@") || 
+			strings.Contains(combined, "PAY") && (strings.Contains(combined, "AMAZON") || 
+			strings.Contains(combined, "GOOGLE") || strings.Contains(combined, "PAYTM"))
+		
+		// If no known merchant pattern and has common name patterns
+		hasNamePattern := strings.Contains(combined, "MR ") || strings.Contains(combined, "MRS ") || 
+			strings.Contains(combined, "MS ") || strings.Contains(combined, "KUMAR") || 
+			strings.Contains(combined, "SHARMA") || strings.Contains(combined, "SINGH")
+		
+		if hasNamePattern && !hasKnownMerchantPattern {
+			return returnCategory("Other", 0.70, "Large P2P transfer - purpose unclear", "P2P")
+		}
 	}
 
 	// Default category (don't over-classify - keep UNKNOWN/Other for ambiguous cases)

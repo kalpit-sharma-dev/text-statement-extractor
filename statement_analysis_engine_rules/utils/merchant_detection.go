@@ -27,6 +27,7 @@ var KnownMerchants = []KnownMerchant{
 	{Patterns: []string{"MAKEMYTRIP", "MMT"}, Name: "MakeMyTrip", Category: "Travel", Confidence: 0.9},
 	{Patterns: []string{"GOIBIBO", "YATRA", "CLEARTRIP"}, Name: "Travel Booking", Category: "Travel", Confidence: 0.85},
 	{Patterns: []string{"OYO", "OYOROOMS"}, Name: "Oyo", Category: "Travel", Confidence: 0.85},
+	{Patterns: []string{"INDIGO", "INDIGO AIRLINES", "INDIGO."}, Name: "IndiGo Airlines", Category: "Travel", Confidence: 0.9},
 
 	// Fuel
 	{Patterns: []string{"IOCL", "INDIANOIL"}, Name: "Indian Oil", Category: "Fuel", Confidence: 0.9},
@@ -55,6 +56,8 @@ var KnownMerchants = []KnownMerchant{
 	{Patterns: []string{"POOJA STATIONERY"}, Name: "Pooja Stationery", Category: "Shopping", Confidence: 0.8},
 	{Patterns: []string{"BIKANERVALA", "BIKANERVALA PRIVATE"}, Name: "Bikanervala", Category: "Shopping", Confidence: 0.8},
 	{Patterns: []string{"BOMBAY WATCH COMPANY"}, Name: "Bombay Watch Company", Category: "Shopping", Confidence: 0.8},
+	{Patterns: []string{"BATTERY", "AUTO BATTERY", "ANIKET BATTERY"}, Name: "Auto Parts Shop", Category: "Shopping", Confidence: 0.75},
+	{Patterns: []string{"ENTERPRISES"}, Name: "General Store/Enterprise", Category: "Shopping", Confidence: 0.5},
 
 	// Groceries
 	{Patterns: []string{"BIGBASKET", "BBNOW"}, Name: "BigBasket", Category: "Groceries", Confidence: 0.9},
@@ -68,17 +71,21 @@ var KnownMerchants = []KnownMerchant{
 	{Patterns: []string{"MUSKAN BAKERS", "MUSKAN BAKERS AND CO"}, Name: "Muskan Bakers", Category: "Dining", Confidence: 0.75},
 	{Patterns: []string{"ROSIER FOODS", "ROSIER"}, Name: "Rosier Foods", Category: "Dining", Confidence: 0.75},
 	{Patterns: []string{"PANCHAITEA", "PANCHAI TEA"}, Name: "Panchai Tea", Category: "Dining", Confidence: 0.75},
+	{Patterns: []string{"CATERERS", "CATERING", "BALAJI CATERERS", "SHRI BALAJI CATERERS"}, Name: "Catering Service", Category: "Dining", Confidence: 0.8},
+	{Patterns: []string{"DAGDUSHET COUNTER"}, Name: "Dagdushet Temple Counter", Category: "Dining", Confidence: 0.7},
 
 	// Healthcare
 	{Patterns: []string{"NOBLE CHEMISTS", "NOBLE CHEMIST"}, Name: "Noble Chemists", Category: "Healthcare", Confidence: 0.8},
 	{Patterns: []string{"KAIWALYA MEDICO", "KAIWALYA"}, Name: "Kaiwalya Medico", Category: "Healthcare", Confidence: 0.8},
 	{Patterns: []string{"APOLLO", "FORTIS", "MAX"}, Name: "Hospital Chains", Category: "Healthcare", Confidence: 0.9},
+	{Patterns: []string{"WAY2FITNESS", "FITNESS", "GYM"}, Name: "Fitness Center", Category: "Healthcare", Confidence: 0.85},
 
 	// Entertainment
 	{Patterns: []string{"SONY PICTURES", "SONYPICTURESNETWORK"}, Name: "Sony Pictures", Category: "Entertainment", Confidence: 0.9},
 	{Patterns: []string{"ISTHARA PARKS", "ISTHARA PARKS PRIVAT"}, Name: "Isthara Parks", Category: "Entertainment", Confidence: 0.8},
 	{Patterns: []string{"NETFLIX", "AMAZON PRIME", "DISNEY", "HOTSTAR"}, Name: "Streaming Services", Category: "Entertainment", Confidence: 0.9},
 	{Patterns: []string{"ZEE5", "ZEE 5"}, Name: "Zee5", Category: "Entertainment", Confidence: 0.85},
+	{Patterns: []string{"ARCHAEOLOGICAL SURVE", "ARCHAEOLOGICAL", "MUSEUM"}, Name: "Tourism/Heritage Site", Category: "Entertainment", Confidence: 0.75},
 
 	// Education
 	{Patterns: []string{"PHYSICSWALLAH", "PHYSICSWALLAH PVT LT"}, Name: "PhysicsWallah", Category: "Education", Confidence: 0.9},
