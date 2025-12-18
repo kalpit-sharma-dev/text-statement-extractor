@@ -72,7 +72,92 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 		"SUPERMARKET", "KIRANA", "GENERAL STORE",
 	}
 
-	// Bills & Utilities patterns
+	// Universal Bill Payment Aggregators/Gateways
+	billGateways := []string{
+		"BILLDESK", "BILLDK", "PAYU", "RAZORPAY", "RAZP",
+		"CCAVENUE", "PAYTM", "AMAZONPAY", "PHONEPE", "GPAY",
+		"PAYGOV", "BBPS", "WHDF", "SBIPG", "AXISPG", "ICICIPG",
+		"KOTAKPG", "YESPG",
+	}
+	
+	// Electricity Bill Patterns
+	electricityPatterns := []string{
+		"ELECTRICITY", "BSESR", "BSES", "TATAPOWER", "TORRENTPOWER",
+		"MSEB", "MSEDCL", "UPPCL", "DVVNL", "BSESYAMUNA", "BSESRAJDHANI",
+		"MAHARASHTRA STATE EL", "MAHARASHTRA STATE ELECTRICITY",
+		"EL", "POWER", "DISCOM",
+	}
+	
+	// Gas (PNG/LPG) Patterns
+	gasPatterns := []string{
+		"GAS", "INDRAPRASTHAGA", "IGL", "MGL", "ADANIGAS", "GUJGAS",
+		"HPGAS", "BPCL GAS", "LPG",
+	}
+	
+	// Water Bill Patterns
+	waterPatterns := []string{
+		"WATER", "DELHIJALBOARD", "BWSSB", "MCGM", "JAL BOARD",
+		"WATER BOARD", "WATER SUPPLY",
+	}
+	
+	// Telecom & Internet Patterns
+	telecomPatterns := []string{
+		"PHONE", "MOBILE", "BROADBAND", "INTERNET", "AIRTEL", "JIO",
+		"VODAFONE", "IDEA", "BSNL", "ACTFIBERNET", "HATHWAY", "TIKONA",
+		"RECHARGE", "PREPAID", "POSTPAID", "TELECOM",
+	}
+	
+	// DTH/TV Patterns
+	dthPatterns := []string{
+		"DTH", "CABLE", "TATASKY", "AIRTELDTH", "DISH", "SUNTV",
+		"VIDEOCON D2H", "D2H",
+	}
+	
+	// Transport & Toll Patterns
+	tollPatterns := []string{
+		"FASTAG", "NHAI", "TOLL", "PAYTMFASTAG", "ICICIFASTAG",
+		"HDFCBANKFASTAG", "AXISFASTAG", "SBIFASTAG",
+	}
+	
+	// Government Payment Patterns
+	governmentPatterns := []string{
+		"PAYGOV", "GOVT", "GOVERNMENT", "GST", "INCOMETAX", "PASSPORT",
+		"CHALLAN", "TRAFFIC CHALLAN", "ROAD TAX", "PROPERTY TAX",
+		"PROFESSIONAL TAX",
+	}
+	
+	// Insurance Premium Patterns
+	insurancePatterns := []string{
+		"INSURANCE", "PREMIUM", "LIC", "HDFC LIFE", "HLIC", "HLIC_INST", "HLIC INST",
+		"MAXLIFE", "SBI LIFE", "ICICI PRUDENTIAL", "BAJAJ ALLIANZ",
+		"STANDARDLIFE", "SBILIFE", "ICICIPRULIFE",
+	}
+	
+	// Credit Card Payment Patterns
+	creditCardPatterns := []string{
+		"CREDITCARD", "CREDIT CARD", "CARDBILL", "CARDPAYMENT",
+		"HDFCCARD", "SBICARD", "AXISCARD", "ICICICARD", "KOTAKCARD",
+	}
+	
+	// Loan EMI Patterns
+	loanEmiPatterns := []string{
+		"LOAN", "EMI", "HDFCLOAN", "SBILOAN", "BAJAJFINSERV", "BAJAJFIN",
+		"OVERDUE LOAN", "LOAN RECOVERED", "EMI RECOVERY", "REPAYMENT",
+	}
+	
+	// Housing/Maintenance Patterns
+	housingPatterns := []string{
+		"MAINTENANCE", "SOCIETY", "APARTMENT", "ASSOCIATION",
+		"HOUSING", "SOCIETY MAINTENANCE",
+	}
+	
+	// Tax Payment Patterns
+	taxPatterns := []string{
+		"TAX", "GST PAYMENT", "INCOME TAX", "PROPERTY TAX",
+		"PROFESSIONAL TAX", "ROAD TAX", "TRAFFIC CHALLAN",
+	}
+	
+	// Combined Bills & Utilities patterns (for backward compatibility)
 	billsPatterns := []string{
 		"ELECTRICITY", "WATER", "GAS", "PHONE", "INTERNET",
 		"MOBILE", "BROADBAND", "DTH", "CABLE", "INSURANCE",
@@ -165,27 +250,118 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 		}
 	}
 
-	// Check Bills & Utilities (enhanced with gateway detection)
-	gateway := utils.ExtractGateway(narration)
-	if gateway == "BillDesk" || strings.Contains(combined, "BILLDK") {
-		// BillDesk is primarily for bill payments
-		// Check if it's insurance (has insurance keywords) or utility
-		if utils.HasKeyword(narration, []string{"INSURANCE", "PREMIUM", "LIC", "LIFE"}) {
-			return "Bills_Utilities" // Insurance is a bill
+	// Check Bills & Utilities (comprehensive bill payment detection)
+	// Step 1: Check for bill payment gateways/aggregators
+	isBillPayment := false
+	for _, gw := range billGateways {
+		if strings.Contains(combined, gw) {
+			isBillPayment = true
+			break
 		}
-		// Check for utility patterns in tokens
-		for _, token := range tokens {
-			if strings.Contains(token, "IGL") || strings.Contains(token, "PVVNL") ||
-				strings.Contains(token, "AIRTEL") || strings.Contains(token, "JIO") ||
-				strings.Contains(token, "EL") || strings.Contains(token, "MSEDCL") ||
-				strings.Contains(token, "MAHARASHTRA") && strings.Contains(token, "STATE") {
+	}
+	
+	// Step 2: Check for generic bill keywords
+	if strings.Contains(combined, "BILL") || strings.Contains(combined, "BBPS") ||
+		strings.Contains(combined, "ECS BILL") || strings.Contains(combined, "NACH BILL") ||
+		strings.Contains(combined, "AUTO BILL") || strings.Contains(combined, "FUNDSTRANSFER-BILL") ||
+		strings.Contains(combined, "ONLINE BILL") || strings.Contains(combined, "PAYMENT TO BILLER") ||
+		strings.Contains(combined, "UTILITY PAYMENT") {
+		isBillPayment = true
+	}
+	
+	// Step 3: If bill payment detected, classify by specific category
+	if isBillPayment {
+		// Check for specific utility types
+		
+		// Electricity
+		for _, pattern := range electricityPatterns {
+			if strings.Contains(combined, pattern) {
 				return "Bills_Utilities"
 			}
 		}
-		// Default for BillDesk is bill payment
+		
+		// Gas
+		for _, pattern := range gasPatterns {
+			if strings.Contains(combined, pattern) {
+				return "Bills_Utilities"
+			}
+		}
+		
+		// Water
+		for _, pattern := range waterPatterns {
+			if strings.Contains(combined, pattern) {
+				return "Bills_Utilities"
+			}
+		}
+		
+		// Telecom
+		for _, pattern := range telecomPatterns {
+			if strings.Contains(combined, pattern) {
+				return "Bills_Utilities"
+			}
+		}
+		
+		// DTH
+		for _, pattern := range dthPatterns {
+			if strings.Contains(combined, pattern) {
+				return "Bills_Utilities"
+			}
+		}
+		
+		// Toll/Fastag
+		for _, pattern := range tollPatterns {
+			if strings.Contains(combined, pattern) {
+				return "Bills_Utilities"
+			}
+		}
+		
+		// Government payments
+		for _, pattern := range governmentPatterns {
+			if strings.Contains(combined, pattern) {
+				return "Bills_Utilities"
+			}
+		}
+		
+		// Insurance
+		for _, pattern := range insurancePatterns {
+			if strings.Contains(combined, pattern) {
+				return "Bills_Utilities"
+			}
+		}
+		
+		// Credit Card
+		for _, pattern := range creditCardPatterns {
+			if strings.Contains(combined, pattern) {
+				return "Bills_Utilities"
+			}
+		}
+		
+		// Loan EMI
+		for _, pattern := range loanEmiPatterns {
+			if strings.Contains(combined, pattern) {
+				return "Bills_Utilities"
+			}
+		}
+		
+		// Housing/Maintenance
+		for _, pattern := range housingPatterns {
+			if strings.Contains(combined, pattern) {
+				return "Bills_Utilities"
+			}
+		}
+		
+		// Tax payments
+		for _, pattern := range taxPatterns {
+			if strings.Contains(combined, pattern) {
+				return "Bills_Utilities"
+			}
+		}
+		
+		// Default: if bill payment gateway detected but no specific category, still Bills_Utilities
 		return "Bills_Utilities"
 	}
-
+	
+	// Legacy check for backward compatibility
 	for _, pattern := range billsPatterns {
 		if strings.Contains(combined, pattern) {
 			return "Bills_Utilities"
