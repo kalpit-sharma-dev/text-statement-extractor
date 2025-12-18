@@ -188,6 +188,41 @@ func ExtractMerchant(tokens []string) string {
 		"BROKING":        "Broking",
 		"HSL":            "HSL Securities",
 		"SEC":            "Securities",
+		// Investment - Crypto Exchanges (Indian)
+		"WAZIRX":               "WazirX",
+		"WAZIRXIN":             "WazirX",
+		"ZANMAI":               "WazirX (Zanmai Labs)",
+		"ZANMAILABS":           "WazirX (Zanmai Labs)",
+		"ZANMAI LABS":          "WazirX (Zanmai Labs)",
+		"COINDCX":              "CoinDCX",
+		"NEBULAS":              "CoinDCX (Nebulas Technologies)",
+		"NEBULASTECHNOLOGIES":  "CoinDCX (Nebulas Technologies)",
+		"NEBULAS TECHNOLOGIES": "CoinDCX (Nebulas Technologies)",
+		"DCX":                  "CoinDCX",
+		"COINSWITCH":           "CoinSwitch Kuber",
+		"COINSWITCHKUBER":      "CoinSwitch Kuber",
+		"BITCIPHER":            "CoinSwitch Kuber (Bitcipher Labs)",
+		"BITCIPHER LABS":       "CoinSwitch Kuber (Bitcipher Labs)",
+		"ZEBPAY":               "ZebPay",
+		"ZEBITSERVICE":         "ZebPay (Zeb IT Service)",
+		"ZEB IT SERVICE":       "ZebPay (Zeb IT Service)",
+		"UNOCOIN":              "Unocoin",
+		"UNOCOMMERCE":          "Unocoin",
+		// Investment - Crypto Exchanges (International)
+		"BINANCE":    "Binance",
+		"BINANCEPAY": "Binance",
+		"BIFINANCE":  "Binance",
+		"COINBASE":   "Coinbase",
+		"CBPAY":      "Coinbase",
+		"CB PAY":     "Coinbase",
+		"KRAKEN":     "Kraken",
+		"PAYWARD":    "Kraken (Payward)",
+		"CRYPTOCOM":  "Crypto.com",
+		"FORIS":      "Crypto.com (Foris)",
+		"KUCOIN":     "KuCoin",
+		"MEKGLOBAL":  "KuCoin (Mek Global)",
+		"MEK GLOBAL": "KuCoin (Mek Global)",
+		"BITSTAMP":   "Bitstamp",
 	}
 
 	// Check each token against known patterns
@@ -208,6 +243,25 @@ func ExtractMerchant(tokens []string) string {
 		}
 		if strings.Contains(token, "INDRAPRASTHA") || strings.Contains(token, "INDRAPRASTHAGA") {
 			return "Indraprastha Gas"
+		}
+		// Crypto exchange detection
+		if strings.Contains(token, "ZANMAI") {
+			return "WazirX (Zanmai Labs)"
+		}
+		if strings.Contains(token, "NEBULAS") {
+			return "CoinDCX (Nebulas Technologies)"
+		}
+		if strings.Contains(token, "BITCIPHER") {
+			return "CoinSwitch Kuber (Bitcipher Labs)"
+		}
+		if strings.Contains(token, "WAZIRX") {
+			return "WazirX"
+		}
+		if strings.Contains(token, "COINDCX") {
+			return "CoinDCX"
+		}
+		if strings.Contains(token, "COINSWITCH") {
+			return "CoinSwitch Kuber"
 		}
 	}
 
@@ -297,6 +351,11 @@ func DecodeCompressedMerchant(compressed string) string {
 		"INDIANCLEARINGCORPORATION":         "Indian Clearing Corporation",
 		"INDIANCCLEARINGCORPORATION":        "Indian Clearing Corporation",
 		"INDIANCCLEARINGCORPORATIONLIMITED": "Indian Clearing Corporation Limited",
+		// Crypto Exchanges
+		"ZANMAILABS":          "WazirX (Zanmai Labs)",
+		"NEBULASTECHNOLOGIES": "CoinDCX (Nebulas Technologies)",
+		"BITCIPHERLABS":       "CoinSwitch Kuber (Bitcipher Labs)",
+		"ZEBITSERVICE":        "ZebPay (Zeb IT Service)",
 	}
 
 	// Direct match

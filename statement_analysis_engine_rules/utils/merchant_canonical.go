@@ -53,6 +53,65 @@ var MerchantCanonicalMap = map[string]CanonicalMerchant{
 		Name:     "Zerodha",
 		Category: "Investment",
 	},
+	
+	// Crypto Exchanges (Indian)
+	"WAZIRX": {
+		Aliases:  []string{"WAZIRX", "WAZIRXIN", "ZANMAI", "ZANMAI LABS", "ZANMAILABS", "ZANMAI LABS PRIVATE LIMITED"},
+		Name:     "WazirX",
+		Category: "Investment",
+	},
+	"COINDCX": {
+		Aliases:  []string{"COINDCX", "NEBULAS", "NEBULAS TECHNOLOGIES", "NEBULASTECHNOLOGIES", "DCX"},
+		Name:     "CoinDCX",
+		Category: "Investment",
+	},
+	"COINSWITCH": {
+		Aliases:  []string{"COINSWITCH", "COINSWITCHKUBER", "BITCIPHER", "BITCIPHER LABS"},
+		Name:     "CoinSwitch Kuber",
+		Category: "Investment",
+	},
+	"ZEBPAY": {
+		Aliases:  []string{"ZEBPAY", "ZEB IT SERVICE", "ZEBITSERVICE"},
+		Name:     "ZebPay",
+		Category: "Investment",
+	},
+	"UNOCOIN": {
+		Aliases:  []string{"UNOCOIN", "UNOCOMMERCE"},
+		Name:     "Unocoin",
+		Category: "Investment",
+	},
+	
+	// Crypto Exchanges (International)
+	"BINANCE": {
+		Aliases:  []string{"BINANCE", "BINANCEPAY", "BIFINANCE"},
+		Name:     "Binance",
+		Category: "Investment",
+	},
+	"COINBASE": {
+		Aliases:  []string{"COINBASE", "CB PAY", "CBPAY"},
+		Name:     "Coinbase",
+		Category: "Investment",
+	},
+	"KRAKEN": {
+		Aliases:  []string{"KRAKEN", "PAYWARD"},
+		Name:     "Kraken",
+		Category: "Investment",
+	},
+	"CRYPTOCOM": {
+		Aliases:  []string{"CRYPTOCOM", "FORIS"},
+		Name:     "Crypto.com",
+		Category: "Investment",
+	},
+	"KUCOIN": {
+		Aliases:  []string{"KUCOIN", "MEK GLOBAL", "MEKGLOBAL"},
+		Name:     "KuCoin",
+		Category: "Investment",
+	},
+	"BITSTAMP": {
+		Aliases:  []string{"BITSTAMP"},
+		Name:     "Bitstamp",
+		Category: "Investment",
+	},
 }
 
 // CanonicalizeMerchant normalizes merchant name using canonicalization map

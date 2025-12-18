@@ -413,7 +413,7 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"PLAYSTORE", "GOOGLE PLAY",
 	}
 
-	// Investment patterns (Mutual Funds, Stocks, NPS, Insurance)
+	// Investment patterns (Mutual Funds, Stocks, NPS, Insurance, Crypto)
 	investmentPatterns := []string{
 		// Mutual Funds
 		"MUTUAL FUND", "MF SIP", "SIP INSTALLMENT",
@@ -438,6 +438,28 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		// Insurance (Investment-type)
 		"HDFCLIFE", "ICICIPRULIFE", "SBILIFE", "LIC",
 		"MAXLIFE", "INSURANCE PREMIUM",
+		// Crypto Exchanges (Indian)
+		"WAZIRX", "WAZIRXIN", "ZANMAI", "ZANMAI LABS", "ZANMAILABS",
+		"COINDCX", "NEBULAS", "NEBULAS TECHNOLOGIES", "NEBULASTECHNOLOGIES", "DCX",
+		"COINSWITCH", "COINSWITCHKUBER", "BITCIPHER", "BITCIPHER LABS",
+		"ZEBPAY", "ZEB IT SERVICE", "ZEBITSERVICE",
+		"UNOCOIN", "UNOCOMMERCE",
+		// Crypto Exchanges (International)
+		"BINANCE", "BINANCEPAY", "BIFINANCE",
+		"COINBASE", "CB PAY", "CBPAY",
+		"KRAKEN", "PAYWARD",
+		"CRYPTOCOM", "FORIS",
+		"KUCOIN", "MEK GLOBAL", "MEKGLOBAL",
+		"BITSTAMP",
+		// Crypto Gateway Combinations
+		"PAYUWAZIRX", "PAYUZANMAI", "PAYUCOINDCX", "PAYUNEBULAS",
+		"RAZPZANMAILABS", "RAZPNEBULASTECHNOLOGIES", "RAZPCOINSWITCH", "RAZPBITCIPHER",
+		"CCAVENUEBITCIPHER", "CCAVENUEZANMAI",
+		// Crypto Transfer Patterns
+		"FUND TRANSFER TO ZANMAI", "NEFT TO NEBULAS", "IMPS BITCIPHER",
+		"IMPS FROM ZANMAI", "NEFT FROM COINDCX", "CRYPTO WITHDRAWAL",
+		// Crypto Generic Patterns (only if combined with known entities)
+		"CRYPTO", "CRYPTOCURRENCY", "DIGITAL ASSET", "VIRTUAL ASSET",
 		// Generic
 		"INVESTMENT",
 	}
