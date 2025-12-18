@@ -4,6 +4,7 @@ import (
 	"classify/statement_analysis_engine_rules/models"
 	"classify/statement_analysis_engine_rules/rules"
 	"classify/statement_analysis_engine_rules/utils"
+	"strings"
 )
 
 // ClassifyTransaction classifies a single transaction
@@ -61,6 +62,27 @@ func ClassifyTransaction(txn models.ClassifiedTransaction) models.ClassifiedTran
 		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "EMI")
 		categoryResult.Confidence = 0.95 // High confidence for EMI
 		categoryResult.Reason = "EMI method detected - classified as Loan expense"
+	}
+	
+	// If Method is Insurance, check if it's investment-type insurance
+	// Investment-type insurance (ULIP, Endowment) should be Investment, not Bills_Utilities
+	if txn.Method == "Insurance" {
+		normalizedUpper := strings.ToUpper(normalizedNarration)
+		investmentInsuranceKeywords := []string{
+			"ULIP", "ENDOWMENT", "WHOLE LIFE", "MONEY BACK",
+			"RETIREMENT", "PENSION PLAN", "SAVINGS PLAN",
+		}
+		for _, keyword := range investmentInsuranceKeywords {
+			if strings.Contains(normalizedUpper, keyword) {
+				// Override category to Investment for investment-type insurance
+				txn.Category = "Investment"
+				categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "INSURANCE", keyword)
+				categoryResult.Confidence = 0.90
+				categoryResult.Reason = "Investment-type insurance premium detected - classified as Investment expense"
+				break
+			}
+		}
+		// If not investment-type, keep as Bills_Utilities (default classification)
 	}
 
 	// Check if bill payment
