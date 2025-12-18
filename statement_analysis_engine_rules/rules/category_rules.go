@@ -27,7 +27,7 @@ func ClassifyCategory(narration string, merchant string) string {
 	// Travel patterns
 	travelPatterns := []string{
 		"UBER", "OLA", "RAPIDO", "MAKE MY TRIP", "MMT",
-		"GOIBIBO", "CLEARTRIP", "IRCTC", "BOOKING",
+		"GOIBIBO", "CLEARTRIP", "IRCTC", "IRCTCIPAY", "RAZPIRCTCIPAY", "BOOKING",
 		"TRAVEL", "FLIGHT", "HOTEL", "CAB", "TAXI",
 		"FUEL", "PETROL", "DIESEL", "BPCL", "HPCL",
 		"IOCL", "SHELL", "RELIANCE", "PETROL PUMP",
