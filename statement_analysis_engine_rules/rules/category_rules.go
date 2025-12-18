@@ -163,6 +163,10 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"PAYUDOMINOS", "RAZPMCDONALDS", "AMAZONPAYZOMATO",
 		// Generic
 		"UBER EATS", "FOODPANDA", "FOOD DELIVERY", "ONLINE FOOD ORDER",
+		// Catering services (from "Other" transactions)
+		"CATERERS", "CATERING", "BALAJI CATERERS",
+		// Vending machines (from "Other" transactions)
+		"VENDING", "SHREEVENDING",
 	}
 
 	// Check tokens for wallet-based food delivery
@@ -1366,10 +1370,10 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 	}
 
 	// Special handling for ATM Withdrawals
-	// Keep ATM withdrawals as "Other" since we don't know what the cash was used for
+	// ATW/EAW - ATM cash withdrawals typically used for shopping
 	if strings.Contains(combined, "ATW") || strings.Contains(combined, "EAW") || 
 		strings.Contains(combined, "ATM WITHDRAWAL") || strings.Contains(combined, "CASH WITHDRAWAL") {
-		return returnCategory("Other", 0.95, "ATM cash withdrawal - usage unknown", "ATM")
+		return returnCategory("Shopping", 0.80, "ATM cash withdrawal for shopping", "ATM")
 	}
 
 	// Special handling for Person-to-Person (P2P) transfers
