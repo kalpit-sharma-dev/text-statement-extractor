@@ -415,6 +415,8 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"MOVIE", "CINEMA", "THEATER", "NETFLIX", "AMAZON PRIME",
 		"DISNEY", "HOTSTAR", "SPOTIFY", "MUSIC", "GAME",
 		"PLAYSTORE", "GOOGLE PLAY",
+		"YOUTUBE", "YOUTUBE PREMIUM", "YOUTUBEPREMIUM", "YT",
+		"YOUTUBE MUSIC", "YOUTUBEMUSIC",
 	}
 
 	// Investment patterns (Mutual Funds, Stocks, NPS, Insurance, Crypto)
