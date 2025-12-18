@@ -22,10 +22,17 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 	// Tokenize narration for better pattern matching
 	tokens := utils.Tokenize(originalNarration)
 
-	// Food Delivery patterns
+	// Food Delivery patterns (comprehensive - ONLINE ONLY, NOT POS)
 	foodDeliveryPatterns := []string{
-		"SWIGGY", "ZOMATO", "UBER EATS", "FOODPANDA",
-		"FAASOS", "DOMINOS", "PIZZA HUT", "FOOD DELIVERY",
+		// Primary Food Apps
+		"ZOMATO", "ZOMATOONLINE", "ZOMATOINDIA", "ZOMATOORDER", "ZMT",
+		"SWIGGY", "SWIGGYINSTAMART", "SWIGGYONLINE", "SWIGGYORDER",
+		"FAASOS", "EATSURE", "BOX8", "REVOLVEEATSURE",
+		// Gateway combinations (key indicator for online delivery)
+		"PAYUZOMATO", "RAZPZOMATO", "PAYUSWIGGY", "RAZPSWIGGY",
+		"PAYUDOMINOS", "RAZPMCDONALDS", "AMAZONPAYZOMATO",
+		// Generic
+		"UBER EATS", "FOODPANDA", "FOOD DELIVERY", "ONLINE FOOD ORDER",
 	}
 
 	// Check tokens for wallet-based food delivery
@@ -39,25 +46,70 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 		}
 	}
 
-	// Dining patterns
+	// Dining patterns (POS signals - restaurants, cafes, NOT delivery)
 	diningPatterns := []string{
+		// POS indicators (key signal for dining vs delivery)
+		"POS RESTAURANT", "POS CAFE", "POS DINING",
+		// Restaurant/Cafe names (when not with delivery gateways)
 		"RESTAURANT", "CAFE", "HOTEL", "DINING",
 		"FOOD COURT", "EATERY", "BAKERY", "COFFEE",
 		"STARBUCKS", "CAFE COFFEE DAY", "CCD",
+		"BARBEQUENATION",
+		// POS + restaurant chain (dining, not delivery)
+		"POS DOMINOS", "POS MCDONALDS", "POS KFC",
+		"POS PIZZAHUT", "POS BURGERKING", "POS SUBWAY",
 	}
 
-	// Travel patterns
+	// Travel patterns (comprehensive)
 	travelPatterns := []string{
-		"UBER", "OLA", "RAPIDO", "MAKE MY TRIP", "MMT",
-		"GOIBIBO", "CLEARTRIP", "IRCTC", "IRCTCIPAY", "RAZPIRCTCIPAY", "BOOKING",
-		"TRAVEL", "FLIGHT", "HOTEL", "CAB", "TAXI",
-		"FUEL", "PETROL", "DIESEL", "BPCL", "HPCL",
-		"IOCL", "SHELL", "RELIANCE", "PETROL PUMP",
+		// Cab & Local Travel
+		"UBER", "UBERTRIP", "UBERINDIA", "UBERBV", "PAYUUBER",
+		"OLA", "OLACABS", "OLAMONEY", "OLATRIP", "RAPIDO",
+		// Railways
+		"IRCTC", "IRCTCIPAY", "RAZPIRCTC", "PAYUIRCTC", "RAZPIRCTCIPAY",
+		// Bus Booking
+		"REDBUS", "ABHIBUS", "YATRAGENIE",
+		// Flight Booking
+		"MAKEMYTRIP", "MMT", "MMTFLIGHT", "MMTHOTEL",
+		"GOIBIBO", "GOIBIBOFLIGHT", "IBIBO",
+		"YATRA", "YATRADOTCOM", "CLEARTRIP",
+		// Hotels / Stays
+		"OYO", "OYOROOMS", "TREEBO", "FABHOTELS", "AIRBNB",
+		// Generic
+		"TRAVEL", "FLIGHT", "HOTEL", "CAB", "TAXI", "BOOKING",
+		"ONLINE TRAVEL PAYMENT",
+	}
+	
+	// Fuel / Petrol / Diesel / EV patterns (separate from travel)
+	fuelPatterns := []string{
+		// PSU Oil Companies
+		"IOCL", "INDIANOIL", "INDIAN OIL",
+		"BPCL", "BHARATPETROLEUM", "BHARAT PET",
+		"HPCL", "HINDUSTANPETROLEUM", "HIND PET",
+		// Private Fuel Companies
+		"RELIANCE PETROLEUM", "RELIANCE PETROL", "RELIANCE",
+		"SHELL", "ESSAR", "NAYARA ENERGY",
+		// EV Charging
+		"TATA POWER EV", "ATHER ENERGY",
+		// FASTag (Fuel/Toll mix)
+		"FASTAG", "ICICIFASTAG", "HDFCBANKFASTAG",
+		"PAYTMFASTAG", "NHAI",
+		// Generic
+		"PETROL", "DIESEL", "FUEL", "PETROL PUMP", "SERVICE STATION",
+		"GAS STATION",
 	}
 
-	// Shopping patterns
+	// Shopping patterns (E-commerce & Retail)
 	shoppingPatterns := []string{
-		"AMAZON", "FLIPKART", "MYNTRA", "NYkaa",
+		// E-commerce platforms
+		"AMAZON", "AMAZONPAY", "FLIPKART", "FLIPKARTIN",
+		"MYNTRA", "AJIO", "MEESHO", "NYkaa",
+		// Retail / POS
+		"POS AMAZON", "POS FLIPKART", "POS RETAIL",
+		"POS STORE", "POS PURCHASE",
+		// Fashion / Lifestyle
+		"ZARA", "HNM", "PANTALOONS", "LIFESTYLE",
+		// Generic shopping
 		"SHOPPING", "MALL", "STORE", "SHOP",
 		"JEWELLERY", "TANISHQ", "MALABAR", "PC JEWELLER",
 		"ELECTRONICS", "CROMA", "RELIANCE DIGITAL",
@@ -65,11 +117,17 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 		"SIMPL", "SIMPL TECHNOLOGI", "GETSIMPL", // Simpl buy now pay later
 	}
 
-	// Groceries patterns
+	// Groceries patterns (Online & Offline)
 	groceriesPatterns := []string{
-		"GROCERY", "BIG BAZAAR", "DMART", "RELIANCE FRESH",
-		"SPENCERS", "MORE", "FOOD BAZAAR", "HYPERCITY",
-		"SUPERMARKET", "KIRANA", "GENERAL STORE",
+		// Online Groceries
+		"BIGBASKET", "BBNOW", "GROFERS", "BLINKIT",
+		"JIO MART", "JIOMART", "AMAZONFRESH",
+		// Offline Grocery / Kirana
+		"POS GROCERY", "POS SUPERMARKET",
+		"DMART", "RELIANCE SMART", "MORE SUPERMARKET",
+		"RELIANCE FRESH", "SPENCERS", "BIG BAZAAR",
+		// Generic
+		"GROCERY", "GROCERIES", "SUPERMARKET", "KIRANA", "GENERAL STORE",
 	}
 
 	// Universal Bill Payment Aggregators/Gateways
@@ -190,17 +248,33 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 		"PLAYSTORE", "GOOGLE PLAY",
 	}
 
-	// Investment patterns
+	// Investment patterns (Mutual Funds, Stocks, NPS, Insurance)
 	investmentPatterns := []string{
-		"RD", "FD", "SIP", "MUTUAL FUND", "STOCK", "SHARE",
-		"DEMAT", "INVESTMENT", "NPS", "PPF", "ELSS", "RD INSTALLMENT",
+		// Mutual Funds
+		"MUTUAL FUND", "MF SIP", "SIP INSTALLMENT",
+		"GROWW", "COIN", "UPSTOX", "KITE",
+		// Stocks / Trading
+		"NSE", "BSE", "STOCK PURCHASE", "SECURITIES BUY",
+		"STOCK", "SHARE", "DEMAT",
+		// NPS / Pension
+		"BILLDKNPSTRUST", "NATIONAL PENSION SYSTEM",
+		"NPS CONTRIBUTION", "NPS", "PPF", "ELSS",
+		// Recurring Deposits / Fixed Deposits
+		"RD", "FD", "SIP", "RD INSTALLMENT",
+		// Clearing Corporations
 		"INDIAN CLEARING CORPORATION", "INDIAN CLEARING CORPORATION LIMITED",
 		"INDIAN C LEARING CORPORATION", "INDIAN C LEARING CORPORATION LIMITED", // Handle typo with space
 		"NSDL", "CDSL", "CLEARING CORPORATION",
+		// Stock Broking Companies
 		"ZERODHA", "ZERODHA BROKING", "ZERODHA BROKING LTD", "ZERODHABROKING",
-		"BROKING", "BROKING LTD", "HSL SEC", "HSL", "SEC", // Stock broking companies
+		"BROKING", "BROKING LTD", "HSL SEC", "HSL", "SEC",
 		"ANGEL BROKING", "ICICI SECURITIES", "HDFC SECURITIES", "KOTAK SECURITIES",
 		"SHAREKHAN", "MOTILAL OSWAL", "IIFL", "5PAISA",
+		// Insurance (Investment-type)
+		"HDFCLIFE", "ICICIPRULIFE", "SBILIFE", "LIC",
+		"MAXLIFE", "INSURANCE PREMIUM",
+		// Generic
+		"INVESTMENT",
 	}
 
 	// Dividend patterns (income from investments)
@@ -208,23 +282,89 @@ func ClassifyCategoryWithAmount(narration string, merchant string, amount float6
 		"DIV", "DIVIDEND", "DIVIDEND CREDIT", "DIV CR",
 	}
 
-	// Check Food Delivery
-	for _, pattern := range foodDeliveryPatterns {
-		if strings.Contains(combined, pattern) {
-			return "Food_Delivery"
+	// Priority 1: Check for POS indicator (dining vs delivery distinction)
+	// POS + restaurant name = Dining (NOT Food Delivery)
+	hasPOS := strings.Contains(combined, "POS")
+	if hasPOS {
+		// Check if it's a restaurant/cafe (dining)
+		for _, pattern := range diningPatterns {
+			if strings.Contains(combined, pattern) {
+				return "Dining"
+			}
+		}
+		// Check if it's grocery (POS GROCERY)
+		for _, pattern := range groceriesPatterns {
+			if strings.Contains(combined, "POS") && strings.Contains(combined, pattern) {
+				return "Groceries"
+			}
+		}
+		// Check if it's shopping (POS RETAIL, POS STORE, etc.)
+		if strings.Contains(combined, "POS RETAIL") || strings.Contains(combined, "POS STORE") ||
+			strings.Contains(combined, "POS PURCHASE") || strings.Contains(combined, "POS AMAZON") ||
+			strings.Contains(combined, "POS FLIPKART") {
+			return "Shopping"
 		}
 	}
 
-	// Check Dining
+	// Priority 2: Check Food Delivery (ONLINE only, not POS)
+	// Exclude POS transactions from food delivery
+	if !hasPOS {
+		for _, pattern := range foodDeliveryPatterns {
+			if strings.Contains(combined, pattern) {
+				return "Food_Delivery"
+			}
+		}
+		// Also check tokens for food delivery apps
+		for _, token := range tokens {
+			if strings.Contains(token, "ZOMATO") || strings.Contains(token, "SWIGGY") ||
+				strings.Contains(token, "FAASOS") || strings.Contains(token, "EATSURE") ||
+				strings.Contains(token, "DOMINOS") || strings.Contains(token, "MCDONALDS") {
+				// Verify it's not POS
+				if !strings.Contains(combined, "POS") {
+					return "Food_Delivery"
+				}
+			}
+		}
+	}
+
+	// Priority 3: Check Dining (non-POS restaurants/cafes)
 	for _, pattern := range diningPatterns {
 		if strings.Contains(combined, pattern) {
-			return "Dining"
+			// Make sure it's not a delivery gateway
+			if !strings.Contains(combined, "PAYU") && !strings.Contains(combined, "RAZP") &&
+				!strings.Contains(combined, "ZOMATO") && !strings.Contains(combined, "SWIGGY") {
+				return "Dining"
+			}
 		}
 	}
 
-	// Check Travel
+	// Check Fuel (separate category, before Travel)
+	for _, pattern := range fuelPatterns {
+		if strings.Contains(combined, pattern) {
+			return "Fuel" // Fuel is a separate category
+		}
+	}
+	// Also check tokens for fuel patterns
+	for _, token := range tokens {
+		if strings.Contains(token, "IOCL") || strings.Contains(token, "BPCL") ||
+			strings.Contains(token, "HPCL") || strings.Contains(token, "PETROL") ||
+			strings.Contains(token, "DIESEL") {
+			return "Fuel" // Fuel is a separate category
+		}
+	}
+	
+	// Check Travel (comprehensive patterns)
 	for _, pattern := range travelPatterns {
 		if strings.Contains(combined, pattern) {
+			return "Travel"
+		}
+	}
+	// Also check tokens for travel apps
+	for _, token := range tokens {
+		if strings.Contains(token, "UBER") || strings.Contains(token, "OLA") ||
+			strings.Contains(token, "IRCTC") || strings.Contains(token, "MMT") ||
+			strings.Contains(token, "GOIBIBO") || strings.Contains(token, "REDBUS") ||
+			strings.Contains(token, "OYO") {
 			return "Travel"
 		}
 	}

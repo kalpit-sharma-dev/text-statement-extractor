@@ -97,29 +97,92 @@ func ExtractMerchant(tokens []string) string {
 		"MSEDCL":   "Maharashtra State Electricity",
 		"EL":       "Electricity",
 
-		// Travel
+		// Fuel / Petrol / Diesel
+		"IOCL":               "Indian Oil",
+		"INDIANOIL":          "Indian Oil",
+		"BPCL":               "Bharat Petroleum",
+		"BHARATPETROLEUM":    "Bharat Petroleum",
+		"HPCL":               "Hindustan Petroleum",
+		"HINDUSTANPETROLEUM": "Hindustan Petroleum",
+		"SHELL":              "Shell",
+		"ESSAR":              "Essar",
+		"NAYARA":             "Nayara Energy",
+		"PETROL":             "Petrol",
+		"DIESEL":             "Diesel",
+
+		// Travel - Cab
+		"UBER":     "Uber",
+		"UBERTRIP": "Uber",
+		"OLA":      "Ola",
+		"OLACABS":  "Ola Cabs",
+		"RAPIDO":   "Rapido",
+		// Travel - Railways
 		"IRCTC":         "IRCTC",
 		"IRCTCIPAY":     "IRCTC",
 		"RAZPIRCTCIPAY": "IRCTC",
-		"UBER":          "Uber",
-		"OLA":           "Ola",
+		// Travel - Bus
+		"REDBUS":     "RedBus",
+		"ABHIBUS":    "AbhiBus",
+		"YATRAGENIE": "Yatra Genie",
+		// Travel - Flight
+		"MAKEMYTRIP": "MakeMyTrip",
+		"MMT":        "MakeMyTrip",
+		"GOIBIBO":    "Goibibo",
+		"YATRA":      "Yatra",
+		"CLEARTRIP":  "Cleartrip",
+		// Travel - Hotels
+		"OYO":       "OYO",
+		"OYOROOMS":  "OYO Rooms",
+		"TREEBO":    "Treebo",
+		"FABHOTELS": "FabHotels",
+		"AIRBNB":    "Airbnb",
 
-		// Food
-		"SWIGGY":  "Swiggy",
-		"ZOMATO":  "Zomato",
-		"DOMINOS": "Dominos",
+		// Food Delivery
+		"SWIGGY":          "Swiggy",
+		"SWIGGYINSTAMART": "Swiggy Instamart",
+		"ZOMATO":          "Zomato",
+		"ZOMATOONLINE":    "Zomato",
+		"ZOMATOORDER":     "Zomato",
+		"FAASOS":          "Faasos",
+		"EATSURE":         "EatSure",
+		"BOX8":            "Box8",
+		"DOMINOS":         "Dominos",
+		"MCDONALDS":       "McDonald's",
+		"KFC":             "KFC",
+		"BURGERKING":      "Burger King",
+		"SUBWAY":          "Subway",
+		"PIZZAHUT":        "Pizza Hut",
 
-		// Shopping
-		"AMAZON":   "Amazon",
-		"FLIPKART": "Flipkart",
-		"MYNTRA":   "Myntra",
-		"SIMPL":    "Simpl",
-		"GETSIMPL": "Simpl",
+		// Shopping - E-commerce
+		"AMAZON":     "Amazon",
+		"FLIPKART":   "Flipkart",
+		"FLIPKARTIN": "Flipkart",
+		"MYNTRA":     "Myntra",
+		"AJIO":       "Ajio",
+		"MEESHO":     "Meesho",
+		"SIMPL":      "Simpl",
+		"GETSIMPL":   "Simpl",
+		// Shopping - Fashion/Lifestyle
+		"ZARA":       "Zara",
+		"HNM":        "H&M",
+		"PANTALOONS": "Pantaloons",
+		"LIFESTYLE":  "Lifestyle",
 
-		// Investment
-		"NSDL":           "NSDL",
-		"CDSL":           "CDSL",
-		"NPS":            "National Pension System",
+		// Investment - Mutual Funds
+		"GROWW":  "Groww",
+		"COIN":   "Coin",
+		"UPSTOX": "Upstox",
+		"KITE":   "Zerodha Kite",
+		// Investment - Stocks/Trading
+		"NSE": "NSE",
+		"BSE": "BSE",
+		// Investment - Clearing Corporations
+		"NSDL": "NSDL",
+		"CDSL": "CDSL",
+		// Investment - NPS/Pension
+		"NPS":      "National Pension System",
+		"NPSTRUST": "NPS Trust",
+		// Investment - Stock Broking
 		"ZERODHA":        "Zerodha",
 		"ZERODHABROKING": "Zerodha Broking",
 		"BROKING":        "Broking",

@@ -15,18 +15,23 @@ func CalculateCategorySummary(transactions []models.ClassifiedTransaction) model
 		amount := txn.WithdrawalAmt
 
 		switch txn.Category {
-		case "Food_Delivery":
-			summary.FoodDelivery += amount
-		case "Dining":
-			summary.Dining += amount
-		case "Travel":
-			summary.Travel += amount
 		case "Shopping":
 			summary.Shopping += amount
-		case "Groceries":
-			summary.Groceries += amount
 		case "Bills_Utilities":
 			summary.BillsUtilities += amount
+		case "Travel":
+			summary.Travel += amount
+		case "Dining":
+			summary.Dining += amount
+		case "Groceries":
+			summary.Groceries += amount
+		case "Food_Delivery":
+			summary.FoodDelivery += amount
+		case "Fuel":
+			summary.Fuel += amount
+		case "Investment":
+			// Investment expenses (withdrawals for investments)
+			summary.Investments += amount
 		}
 	}
 

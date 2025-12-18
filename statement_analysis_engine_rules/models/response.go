@@ -69,12 +69,14 @@ type MonthlySummary struct {
 
 // CategorySummary represents category-wise summary
 type CategorySummary struct {
-	FoodDelivery   float64 `json:"Food_Delivery"`
-	Dining         float64 `json:"Dining"`
-	Travel         float64 `json:"Travel"`
 	Shopping       float64 `json:"Shopping"`
-	Groceries      float64 `json:"Groceries"`
 	BillsUtilities float64 `json:"Bills_Utilities"`
+	Travel         float64 `json:"Travel"`
+	Dining         float64 `json:"Dining"`
+	Groceries      float64 `json:"Groceries"`
+	FoodDelivery   float64 `json:"Food_Delivery"`
+	Fuel           float64 `json:"Fuel"`
+	Investments    float64 `json:"Investments"`
 }
 
 // MerchantSummary represents merchant-wise summary
