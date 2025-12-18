@@ -143,6 +143,9 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"YATRA", "YATRADOTCOM", "CLEARTRIP",
 		// Hotels / Stays
 		"OYO", "OYOROOMS", "TREEBO", "FABHOTELS", "AIRBNB",
+		// Moving/Relocation services (from "Other" transactions)
+		"PACKER", "MOVER", "PACKER MOVER", "PACKING", "MOVING",
+		"RELOCATION", "SHIFTING",
 		// Generic
 		"TRAVEL", "FLIGHT", "HOTEL", "CAB", "TAXI", "BOOKING",
 		"ONLINE TRAVEL PAYMENT",
@@ -187,6 +190,9 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"NEW LOOK", "RANGOLI HOSIERY", "NEW BOMBAY GENTS PAR",
 		"MEGA INNERWEARS", "GIFT GALLERY", "INNERWEARS",
 		"HOSIERY", "GENTS PAR", "GENTS", "CLOTHING",
+		// Auto parts/accessories (from "Other" transactions)
+		"JAIN AUTO", "AUTO AND ACCESS", "AUTO ACCESS",
+		"AUTO PARTS", "AUTO ACCESSORIES",
 	}
 
 	// Groceries patterns (Online & Offline)
@@ -407,6 +413,12 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"BILLDK", "WHDF", // BillDesk gateway indicators
 		"MAHARASHTRA STATE EL", "MAHARASHTRA STATE ELECTRICITY",
 		"MSEDCL", "MAHARASHTRA STATE", "EL", // Electricity board patterns
+		// Wallets (typically used for bills/recharges)
+		"MOBIKWIK",
+		// Business services (often bill payments)
+		"BUSINESS SOL", "BUSINESS SERVICE", "EROCKET",
+		// Farm/agricultural services (often bill payments)
+		"FARMWORK", "FARM WORK", "AGRICULTURAL",
 	}
 
 	// Healthcare patterns
@@ -432,6 +444,9 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		// Gaming (from "Other" transactions)
 		"GAMING", "KORAGAMING", "GAME BUSINESS", "GAMING BUSINESS",
 		"JD DIGITAL", "DIGITAL", "ARTS", "VRT ARTS",
+		// Audio services (from "Other" transactions)
+		"AUDIOKRAFT", "AUDIOKRAFTSERVICE", "AUDIO SERVICE",
+		"AUDIO", "SOUND", "RECORDING",
 	}
 
 	// Investment patterns (Mutual Funds, Stocks, NPS, Insurance, Crypto)
