@@ -20,8 +20,12 @@ func ClassifyTransaction(txn models.ClassifiedTransaction) models.ClassifiedTran
 		txn.Merchant = ""
 	}
 
-	// Classify category
-	txn.Category = rules.ClassifyCategory(normalizedNarration, txn.Merchant)
+	// Classify category (with amount for charge detection)
+	amount := txn.DepositAmt
+	if txn.WithdrawalAmt > 0 {
+		amount = txn.WithdrawalAmt
+	}
+	txn.Category = rules.ClassifyCategoryWithAmount(normalizedNarration, txn.Merchant, amount)
 
 	// Extract beneficiary
 	txn.Beneficiary = rules.ExtractBeneficiary(normalizedNarration, txn.Method)

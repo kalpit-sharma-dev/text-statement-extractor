@@ -1,20 +1,42 @@
 package rules
 
 import (
+	"classify/statement_analysis_engine_rules/utils"
 	"regexp"
 	"strings"
 )
 
 // ClassifyCategory classifies the transaction category based on narration
+// Enhanced with tokenization and gateway detection
 func ClassifyCategory(narration string, merchant string) string {
+	return ClassifyCategoryWithAmount(narration, merchant, 0.0)
+}
+
+// ClassifyCategoryWithAmount classifies the transaction category with amount for charge detection
+func ClassifyCategoryWithAmount(narration string, merchant string, amount float64) string {
+	originalNarration := narration
 	narration = strings.ToUpper(narration)
 	merchant = strings.ToUpper(merchant)
 	combined := narration + " " + merchant
+
+	// Tokenize narration for better pattern matching
+	tokens := utils.Tokenize(originalNarration)
 
 	// Food Delivery patterns
 	foodDeliveryPatterns := []string{
 		"SWIGGY", "ZOMATO", "UBER EATS", "FOODPANDA",
 		"FAASOS", "DOMINOS", "PIZZA HUT", "FOOD DELIVERY",
+	}
+
+	// Check tokens for wallet-based food delivery
+	wallet := utils.DetectWallet(tokens)
+	if wallet != "" {
+		// If narration suggests food delivery through wallet
+		for _, token := range tokens {
+			if strings.Contains(token, "SWIGGY") || strings.Contains(token, "ZOMATO") {
+				return "Food_Delivery"
+			}
+		}
 	}
 
 	// Dining patterns
@@ -40,6 +62,7 @@ func ClassifyCategory(narration string, merchant string) string {
 		"JEWELLERY", "TANISHQ", "MALABAR", "PC JEWELLER",
 		"ELECTRONICS", "CROMA", "RELIANCE DIGITAL",
 		"Vijay Sales", "GREAT EASTERN", "SHOPPERS STOP",
+		"SIMPL", "SIMPL TECHNOLOGI", "GETSIMPL", // Simpl buy now pay later
 	}
 
 	// Groceries patterns
@@ -57,6 +80,9 @@ func ClassifyCategory(narration string, merchant string) string {
 		"MAXLIFE", "SBI LIFE", "ICICI PRUDENTIAL", "BAJAJ ALLIANZ",
 		"PVVNL", "IGL", "AIRTEL", "JIO", "VODAFONE", "BSNL",
 		"RECHARGE", "PREPAID", "POSTPAID", "BILL",
+		"BILLDK", "WHDF", // BillDesk gateway indicators
+		"MAHARASHTRA STATE EL", "MAHARASHTRA STATE ELECTRICITY",
+		"MSEDCL", "MAHARASHTRA STATE", "EL", // Electricity board patterns
 	}
 
 	// Healthcare patterns
@@ -86,6 +112,10 @@ func ClassifyCategory(narration string, merchant string) string {
 		"INDIAN CLEARING CORPORATION", "INDIAN CLEARING CORPORATION LIMITED",
 		"INDIAN C LEARING CORPORATION", "INDIAN C LEARING CORPORATION LIMITED", // Handle typo with space
 		"NSDL", "CDSL", "CLEARING CORPORATION",
+		"ZERODHA", "ZERODHA BROKING", "ZERODHA BROKING LTD", "ZERODHABROKING",
+		"BROKING", "BROKING LTD", "HSL SEC", "HSL", "SEC", // Stock broking companies
+		"ANGEL BROKING", "ICICI SECURITIES", "HDFC SECURITIES", "KOTAK SECURITIES",
+		"SHAREKHAN", "MOTILAL OSWAL", "IIFL", "5PAISA",
 	}
 
 	// Dividend patterns (income from investments)
@@ -114,9 +144,16 @@ func ClassifyCategory(narration string, merchant string) string {
 		}
 	}
 
-	// Check Shopping
+	// Check Shopping (enhanced with tokenization)
 	for _, pattern := range shoppingPatterns {
 		if strings.Contains(combined, pattern) {
+			return "Shopping"
+		}
+	}
+	// Also check tokens for shopping-related merchants
+	for _, token := range tokens {
+		if strings.Contains(token, "SIMPL") || strings.Contains(token, "GETSIMPL") ||
+			strings.Contains(token, "AMAZON") || strings.Contains(token, "FLIPKART") {
 			return "Shopping"
 		}
 	}
@@ -128,10 +165,47 @@ func ClassifyCategory(narration string, merchant string) string {
 		}
 	}
 
-	// Check Bills & Utilities
+	// Check Bills & Utilities (enhanced with gateway detection)
+	gateway := utils.ExtractGateway(narration)
+	if gateway == "BillDesk" || strings.Contains(combined, "BILLDK") {
+		// BillDesk is primarily for bill payments
+		// Check if it's insurance (has insurance keywords) or utility
+		if utils.HasKeyword(narration, []string{"INSURANCE", "PREMIUM", "LIC", "LIFE"}) {
+			return "Bills_Utilities" // Insurance is a bill
+		}
+		// Check for utility patterns in tokens
+		for _, token := range tokens {
+			if strings.Contains(token, "IGL") || strings.Contains(token, "PVVNL") ||
+				strings.Contains(token, "AIRTEL") || strings.Contains(token, "JIO") ||
+				strings.Contains(token, "EL") || strings.Contains(token, "MSEDCL") ||
+				strings.Contains(token, "MAHARASHTRA") && strings.Contains(token, "STATE") {
+				return "Bills_Utilities"
+			}
+		}
+		// Default for BillDesk is bill payment
+		return "Bills_Utilities"
+	}
+
 	for _, pattern := range billsPatterns {
 		if strings.Contains(combined, pattern) {
 			return "Bills_Utilities"
+		}
+	}
+
+	// Check for "MAHARASHTRA STATE EL" pattern (can be split across tokens or have variations)
+	if strings.Contains(combined, "MAHARASHTRA") && 
+		(strings.Contains(combined, "STATE") || strings.Contains(combined, "EL")) {
+		return "Bills_Utilities"
+	}
+	
+	// Check tokens for compressed utility names
+	for _, token := range tokens {
+		decoded := utils.DecodeCompressedMerchant(token)
+		if decoded != token {
+			// If decoding found a match, check if it's a utility
+			if strings.Contains(decoded, "Gas") || strings.Contains(decoded, "Electricity") {
+				return "Bills_Utilities"
+			}
 		}
 	}
 
@@ -168,6 +242,11 @@ func ClassifyCategory(narration string, merchant string) string {
 		if strings.Contains(combined, pattern) {
 			return "Investment"
 		}
+	}
+
+	// Check for charges (small amounts with charge keywords)
+	if amount > 0 && utils.IsCharge(originalNarration, amount) {
+		return "Bills_Utilities" // Charges are typically utility-related
 	}
 
 	// Default category

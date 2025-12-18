@@ -38,6 +38,10 @@ func ClassifyMethod(narration string) string {
 		"INDIAN CLEARING CORPORATION", "INDIAN CLEARING CORPORATION LIMITED",
 		"INDIAN C LEARING CORPORATION", "INDIAN C LEARING CORPORATION LIMITED", // Handle typo with space
 		"NSDL", "CDSL", "CLEARING CORPORATION",
+		"ZERODHA", "ZERODHA BROKING", "ZERODHA BROKING LTD", "ZERODHABROKING",
+		"BROKING", "BROKING LTD", "HSL SEC", "HSL", "SEC", // Stock broking companies
+		"ANGEL BROKING", "ICICI SECURITIES", "HDFC SECURITIES", "KOTAK SECURITIES",
+		"SHAREKHAN", "MOTILAL OSWAL", "IIFL", "5PAISA",
 	}
 
 	// EMI patterns (loans/repayments - exclude investments)
@@ -135,6 +139,18 @@ func ClassifyMethod(narration string) string {
 		strings.Contains(narration, "CDSL") {
 		// Classify as Investment method
 		// Category will be determined by whether it's a deposit (income/returns) or withdrawal (investment)
+		return "Investment"
+	}
+
+	// Check for stock broking companies (Zerodha, etc.)
+	// These are investment-related transactions
+	if strings.Contains(narration, "ZERODHA") ||
+		strings.Contains(narration, "ZERODHA BROKING") ||
+		strings.Contains(narration, "ZERODHA BROKING LTD") ||
+		strings.Contains(narration, "ZERODHABROKING") ||
+		strings.Contains(narration, "HSL SEC") ||
+		strings.Contains(narration, "HSL") && strings.Contains(narration, "SEC") {
+		// Classify as Investment method
 		return "Investment"
 	}
 
