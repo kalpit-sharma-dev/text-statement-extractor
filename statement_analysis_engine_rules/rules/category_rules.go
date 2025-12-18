@@ -546,6 +546,9 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"BUSINESS SOL", "BUSINESS SERVICE", "EROCKET",
 		// Farm/agricultural services (often bill payments)
 		"FARMWORK", "FARM WORK", "AGRICULTURAL",
+		// Bank charges and fees (from classification issues)
+		"DC INTL POS TXN MARKUP", "INTL POS TXN MARKUP", "POS TXN MARKUP",
+		"BANK CHARGES", "SERVICE CHARGE", "ANNUAL FEE", "MAINTENANCE CHARGE",
 	}
 
 	// Healthcare patterns
