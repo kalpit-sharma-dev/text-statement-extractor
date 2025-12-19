@@ -87,30 +87,35 @@ func ExtractBeneficiary(narration string, method string) string {
 	return ""
 }
 
-// IsRecurringPayment checks if transaction appears to be recurring
+// IsRecurringPayment checks if transaction explicitly indicates recurring payment
 func IsRecurringPayment(narration string, amount float64, date string, previousTransactions []string) bool {
 	narration = strings.ToUpper(narration)
 
-	// Check for recurring keywords
-	recurringKeywords := []string{
-		"INSTALLMENT", "EMI", "SIP", "RECURRING",
-		"MONTHLY", "PREMIUM", "SUBSCRIPTION",
+	// Only flag as recurring if EXPLICIT recurring keywords are present in narration
+	// These are keywords that explicitly indicate a recurring/subscription payment
+	explicitRecurringKeywords := []string{
+		"INSTALLMENT", "INSTALMENT", "EMI", "SIP", "RECURRING",
+		"SUBSCRIPTION", "AUTO DEBIT", "AUTODEBIT", "STANDING INSTRUCTION",
+		"SI DEBIT", "NACH", "ECS",
+		// Specific recurring patterns
+		"RD INSTALLMENT", "FD INSTALLMENT", "LOAN INSTALLMENT",
 	}
 
-	for _, keyword := range recurringKeywords {
+	for _, keyword := range explicitRecurringKeywords {
 		if strings.Contains(narration, keyword) {
 			return true
 		}
 	}
 
-	// Check if same amount and similar narration appeared before
-	// This is a simple check - can be enhanced with date-based logic
-	for _, prevNarration := range previousTransactions {
-		if strings.Contains(prevNarration, narration) || strings.Contains(narration, prevNarration) {
-			// Similar narration found - likely recurring
-			return true
-		}
+	// Check for insurance premium (explicit recurring)
+	if strings.Contains(narration, "PREMIUM") && 
+	   (strings.Contains(narration, "INSURANCE") || strings.Contains(narration, "POLICY")) {
+		return true
 	}
+
+	// Note: Removed the generic "MONTHLY" keyword and similarity checks
+	// These caused false positives for regular frequent payments
+	// Pattern-based recurring detection is now handled by CalculateRecurringPayments()
 
 	return false
 }

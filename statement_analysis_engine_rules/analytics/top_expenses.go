@@ -15,6 +15,27 @@ func CalculateTopExpenses(transactions []models.ClassifiedTransaction, limit int
 			continue
 		}
 
+		// Skip investment-related categories and self-transfers
+		// These are not regular "expenses" and shouldn't appear in top expenses
+		excludedCategories := []string{
+			"Investment",
+			"Investments", 
+			"Self_Transfer",
+			"RD",
+			"FD",
+			"SIP",
+		}
+		shouldExclude := false
+		for _, excluded := range excludedCategories {
+			if txn.Category == excluded {
+				shouldExclude = true
+				break
+			}
+		}
+		if shouldExclude {
+			continue
+		}
+
 		merchant := txn.Merchant
 		if merchant == "" {
 			merchant = txn.Beneficiary

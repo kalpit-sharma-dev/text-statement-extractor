@@ -126,18 +126,33 @@ func CanonicalizeMerchant(merchant string) (string, string) {
 		return canonical.Name, canonical.Category
 	}
 	
-	// Check aliases
+	// Check aliases with stricter matching
+	// For short aliases (<=4 chars), require exact word match to avoid false positives
 	for _, canonical := range MerchantCanonicalMap {
 		for _, alias := range canonical.Aliases {
-			if strings.Contains(upper, alias) || strings.Contains(alias, upper) {
-				return canonical.Name, canonical.Category
+			// For short aliases, require exact match or word boundary
+			if len(alias) <= 4 {
+				// Exact match only for short aliases
+				if upper == alias {
+					return canonical.Name, canonical.Category
+				}
+				// Or match with word boundaries (space or dash)
+				if strings.Contains(" "+upper+" ", " "+alias+" ") ||
+				   strings.Contains("-"+upper+"-", "-"+alias+"-") {
+					return canonical.Name, canonical.Category
+				}
+			} else {
+				// For longer aliases, allow contains matching
+				if strings.Contains(upper, alias) {
+					return canonical.Name, canonical.Category
+				}
 			}
 		}
 	}
 	
-	// Partial match (fuzzy)
+	// Partial match (fuzzy) - only for longer keys (>= 5 chars)
 	for key, canonical := range MerchantCanonicalMap {
-		if strings.Contains(upper, key) || strings.Contains(key, upper) {
+		if len(key) >= 5 && strings.Contains(upper, key) {
 			return canonical.Name, canonical.Category
 		}
 	}

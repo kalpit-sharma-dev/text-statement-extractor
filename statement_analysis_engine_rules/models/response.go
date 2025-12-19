@@ -10,6 +10,7 @@ type AccountSummary struct {
 	ClosingBalance      float64 `json:"closingBalance"`
 	TotalIncome         float64 `json:"totalIncome"`
 	TotalExpense        float64 `json:"totalExpense"`
+	TotalInvestments    float64 `json:"totalInvestments"`
 	NetSavings          float64 `json:"netSavings"`
 	SavingsRatePercent  float64 `json:"savingsRatePercent"`
 }

@@ -1422,9 +1422,25 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 	}
 
 	// Check Investment
-	// Priority 1: Check for large transfers to investment accounts (IMPS, UPI, NetBanking)
+	// Priority 1: Check for large transfers to investment accounts (IMPS, UPI, NetBanking, RTGS, NEFT)
 	// These are high-confidence investment indicators
 	if amount >= 10000 {
+		// RTGS/NEFT to brokerage/investment accounts (large transfers to banks)
+		// These should NEVER be classified as utility bills
+		if strings.Contains(combined, "RTGS") || strings.Contains(combined, "NEFT") {
+			// RTGS/NEFT to HDFC Bank (common for brokerage accounts like Zerodha, Upstox)
+			if strings.Contains(combined, "HDFC") || strings.Contains(combined, "HDFCR") {
+				return returnCategory("Investment", 0.95, "Large RTGS/NEFT transfer to brokerage/investment account detected", "RTGS/NEFT", "HDFC")
+			}
+			// RTGS/NEFT to IDFB/IDFC (investment account transfers)
+			if strings.Contains(combined, "IDFB") || strings.Contains(combined, "IDFC") {
+				return returnCategory("Investment", 0.95, "Large RTGS/NEFT transfer to investment account detected", "RTGS/NEFT", "IDFB")
+			}
+			// Large RTGS/NEFT transfers are generally for investments/deposits, not utility bills
+			if amount >= 50000 {
+				return returnCategory("Investment", 0.90, "Large RTGS/NEFT transfer detected (likely investment/deposit)", "RTGS/NEFT")
+			}
+		}
 		// IMPS to investment accounts (IDFC First Bank, etc.)
 		if strings.Contains(combined, "IMPS") {
 			if strings.Contains(combined, "IDFB") || strings.Contains(combined, "IDFC") ||
@@ -1576,11 +1592,32 @@ func ExtractMerchantName(narration string) string {
 		return merchant
 	}
 
-	// Try to extract from IMPS/NEFT format
-	re = regexp.MustCompile(`(?:IMPS|NEFT|RTGS)[- ]+([^-]+)`)
+	// Try to extract from IMPS/NEFT/RTGS format
+	// Pattern: RTGS DR-BANKCODE-BENEFICIARY NAME-REF or IMPS-REF-BENEFICIARY-BANK
+	// First try: Extract beneficiary name (skip bank code)
+	re = regexp.MustCompile(`(?:IMPS|NEFT|RTGS)\s+(?:DR|CR)?-?([A-Z]{4}\d+)-([A-Z\s]+?)-`)
 	matches = re.FindStringSubmatch(narration)
-	if len(matches) > 1 {
-		return strings.TrimSpace(matches[1])
+	if len(matches) > 2 {
+		beneficiary := strings.TrimSpace(matches[2])
+		// Clean up
+		beneficiary = strings.TrimSuffix(beneficiary, " ")
+		if len(beneficiary) > 0 && len(beneficiary) < 50 {
+			return beneficiary
+		}
+	}
+
+	// Alternative: IMPS-REF-NAME-BANK format
+	re = regexp.MustCompile(`(?:IMPS|NEFT)-(\d+)-([A-Z\s]+?)-[A-Z]{4}`)
+	matches = re.FindStringSubmatch(narration)
+	if len(matches) > 2 {
+		beneficiary := strings.TrimSpace(matches[2])
+		// Remove MR/MRS/MS prefix
+		beneficiary = strings.TrimPrefix(beneficiary, "MR ")
+		beneficiary = strings.TrimPrefix(beneficiary, "MRS ")
+		beneficiary = strings.TrimPrefix(beneficiary, "MS ")
+		if len(beneficiary) > 0 && len(beneficiary) < 50 {
+			return beneficiary
+		}
 	}
 
 	return "Unknown"

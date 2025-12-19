@@ -36,15 +36,44 @@ func CalculateAccountSummaryWithTotals(
 ) models.AccountSummary {
 	totalIncome := 0.0
 	totalExpense := 0.0
+	totalInvestments := 0.0
+
+	// Investment categories/methods to exclude from expenses
+	// These represent wealth accumulation, savings, or money movement (not consumption)
+	investmentCategories := map[string]bool{
+		"Investment":    true,
+		"Investments":   true,
+		"Self_Transfer": true, // Transfers to own accounts (savings/investment accounts)
+	}
+	investmentMethods := map[string]bool{
+		"RD":         true,
+		"FD":         true,
+		"SIP":        true,
+		"Investment": true,
+	}
 
 	// If statement totals are provided, use them (they're the official bank totals)
 	// Check if both are >= 0 (meaning they were explicitly set, even if one is 0)
 	// We use a threshold check: if credits > 0 OR debits > 0, assume they were provided
 	// This handles cases where one might legitimately be 0
 	if statementTotalCredits > 0 || statementTotalDebits > 0 {
-		// Use official statement totals (even if one is 0, that's valid)
+		// Use official statement totals for income
 		totalIncome = statementTotalCredits
-		totalExpense = statementTotalDebits
+		
+		// For expense vs investment breakdown, we need to calculate from transactions
+		// because bank statement doesn't separate investments from expenses
+		for _, txn := range transactions {
+			if txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
+				// Check if it's an investment
+				isInvestment := investmentCategories[txn.Category] || investmentMethods[txn.Method]
+				
+				if isInvestment {
+					totalInvestments += txn.WithdrawalAmt
+				} else {
+					totalExpense += txn.WithdrawalAmt
+				}
+			}
+		}
 	} else {
 		// Calculate from transactions
 		for _, txn := range transactions {
@@ -54,10 +83,17 @@ func CalculateAccountSummaryWithTotals(
 				totalIncome += txn.DepositAmt
 			}
 
-			// Count withdrawals as expenses
+			// Count withdrawals - separate into expenses vs investments
 			// Only count if WithdrawalAmt > 0 and DepositAmt == 0 (to avoid double counting)
 			if txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
-				totalExpense += txn.WithdrawalAmt
+				// Check if it's an investment
+				isInvestment := investmentCategories[txn.Category] || investmentMethods[txn.Method]
+				
+				if isInvestment {
+					totalInvestments += txn.WithdrawalAmt
+				} else {
+					totalExpense += txn.WithdrawalAmt
+				}
 			}
 
 			// If a transaction has both (shouldn't happen, but handle it):
@@ -68,25 +104,33 @@ func CalculateAccountSummaryWithTotals(
 					totalIncome += (txn.DepositAmt - txn.WithdrawalAmt)
 				} else {
 					// Net withdrawal
-					totalExpense += (txn.WithdrawalAmt - txn.DepositAmt)
+					netWithdrawal := txn.WithdrawalAmt - txn.DepositAmt
+					isInvestment := investmentCategories[txn.Category] || investmentMethods[txn.Method]
+					if isInvestment {
+						totalInvestments += netWithdrawal
+					} else {
+						totalExpense += netWithdrawal
+					}
 				}
 			}
 		}
 	}
 
-	// Net Savings = Total Income - Total Expense
-	// Opening balance is NOT included in this calculation
-	// Opening balance is just the starting point, not part of income/expense
-	netSavings := totalIncome - totalExpense
+	// Net Savings = Total Income - Total Expense - Total Investments
+	// This shows how much money is left after expenses and investments
+	// Positive = surplus, Negative = deficit
+	// Note: Opening balance is NOT included - it's just the starting point
+	netSavings := totalIncome - totalExpense - totalInvestments
 
-	// Savings Rate = (Net Savings / Total Income) * 100
-	// This shows what percentage of income is saved
-	// If expenses > income, savings rate will be negative (which is valid)
+	// Savings Rate = ((Total Income - Total Expense) / Total Income) * 100
+	// This shows what percentage of income is NOT spent on operational expenses
+	// Investments are considered savings (wealth accumulation), not expenses
+	// So savings rate = (Income - Operational Expenses) / Income
 	savingsRate := 0.0
 	if totalIncome > 0 {
-		savingsRate = (netSavings / totalIncome) * 100
-	} else if totalIncome == 0 && totalExpense > 0 {
-		// If no income but there are expenses, savings rate cannot be calculated meaningfully
+		savingsRate = ((totalIncome - totalExpense) / totalIncome) * 100
+	} else if totalIncome == 0 && (totalExpense > 0 || totalInvestments > 0) {
+		// If no income but there are expenses/investments, savings rate cannot be calculated meaningfully
 		// Set to a large negative number to indicate expenses without income
 		savingsRate = -999.0
 	}
@@ -106,6 +150,7 @@ func CalculateAccountSummaryWithTotals(
 		ClosingBalance:      closingBalance,
 		TotalIncome:         totalIncome,
 		TotalExpense:        totalExpense,
+		TotalInvestments:    totalInvestments,
 		NetSavings:          netSavings,
 		SavingsRatePercent:  savingsRate,
 	}
