@@ -113,6 +113,70 @@ func isTransactionLine(line string) bool {
 	return matched
 }
 
+// Helper function to convert 2-digit year to 4-digit year based on statement period
+// Example: "24" -> "2024", "25" -> "2025"
+// Uses the statement period to determine the correct century
+func convertDateToFullYear(dateStr string, statementPeriod StatementPeriod) string {
+	// dateStr format: DD/MM/YY
+	if len(dateStr) != 8 {
+		return dateStr
+	}
+	
+	parts := strings.Split(dateStr, "/")
+	if len(parts) != 3 {
+		return dateStr
+	}
+	
+	day := parts[0]
+	month := parts[1]
+	year := parts[2]
+	
+	// Convert 2-digit year to 4-digit
+	// Determine century from statement period
+	// If statement period starts with 2024, use 2000s
+	// If year is 00-50, assume 2000-2050
+	// If year is 51-99, assume 1951-1999 (for old statements)
+	var fullYear string
+	yearInt, err := strconv.Atoi(year)
+	if err != nil {
+		return dateStr
+	}
+	
+	// Extract year from statement period (if available)
+	// Format: "01/04/2024"
+	var statementStartYear int
+	if statementPeriod.FromDate != "" && len(statementPeriod.FromDate) == 10 {
+		// Extract year from DD/MM/YYYY format
+		periodParts := strings.Split(statementPeriod.FromDate, "/")
+		if len(periodParts) == 3 {
+			statementStartYear, _ = strconv.Atoi(periodParts[2])
+		}
+	}
+	
+	// Determine the century
+	if statementStartYear > 0 {
+		// Use the statement year's century
+		century := (statementStartYear / 100) * 100 // 2024 -> 2000
+		fullYear = fmt.Sprintf("%d", century+yearInt)
+		
+		// Handle year wraparound (e.g., statement from Apr 2024 to Mar 2025)
+		// If the resulting year is more than 1 year before statement start, it's next century
+		resultYear, _ := strconv.Atoi(fullYear)
+		if statementStartYear-resultYear > 50 {
+			fullYear = fmt.Sprintf("%d", century+100+yearInt)
+		}
+	} else {
+		// Fallback: use 2000-2099 for years 00-99
+		if yearInt <= 99 {
+			fullYear = fmt.Sprintf("20%02d", yearInt)
+		} else {
+			fullYear = year
+		}
+	}
+	
+	return fmt.Sprintf("%s/%s/%s", day, month, fullYear)
+}
+
 // Helper function to check if line is a continuation of narration (no date, but has content)
 func isNarrationContinuation(line string) bool {
 	trimmed := strings.TrimSpace(line)
@@ -320,19 +384,19 @@ func extractStatementPeriod(lines []string) StatementPeriod {
 	return period
 }
 
-// Parse a transaction line with context (previous balance)
-func parseTransactionLineWithContext(line string, previousBalance float64) *TxtTransaction {
-	return parseTransactionLine(line, previousBalance)
+// Parse a transaction line with context (previous balance and statement period)
+func parseTransactionLineWithContext(line string, previousBalance float64, statementPeriod StatementPeriod) *TxtTransaction {
+	return parseTransactionLine(line, previousBalance, statementPeriod)
 }
 
 // Parse a transaction line
-func parseTransactionLine(line string, previousBalance float64) *TxtTransaction {
+func parseTransactionLine(line string, previousBalance float64, statementPeriod StatementPeriod) *TxtTransaction {
 	// Use original line (not trimmed) to preserve fixed-width positions
 	if !isTransactionLine(line) {
 		return nil
 	}
 
-	// Extract date (first 8 characters)
+	// Extract date (first 8 characters in DD/MM/YY format)
 	if len(line) < 8 {
 		return nil
 	}
@@ -340,6 +404,9 @@ func parseTransactionLine(line string, previousBalance float64) *TxtTransaction 
 	if date == "" {
 		return nil
 	}
+	
+	// Convert 2-digit year to 4-digit year
+	date = convertDateToFullYear(date, statementPeriod)
 
 	// Find the reference number (typically 14-16 digits, but can vary)
 	// Reference number is usually after narration, before value date
@@ -395,6 +462,8 @@ func parseTransactionLine(line string, previousBalance float64) *TxtTransaction 
 	if len(valueDateMatches) > 1 {
 		// Second date is value date (first is transaction date)
 		valueDate = valueDateMatches[1]
+		// Convert 2-digit year to 4-digit year
+		valueDate = convertDateToFullYear(valueDate, statementPeriod)
 	}
 
 	// Find all amounts (numbers with commas and decimals)
@@ -590,12 +659,12 @@ func parseTransactionLine(line string, previousBalance float64) *TxtTransaction 
 }
 
 // Extract transactions from the file
-func extractTransactions(lines []string) []TxtTransaction {
-	return extractTransactionsWithOpeningBalance(lines, 0.0)
+func extractTransactions(lines []string, statementPeriod StatementPeriod) []TxtTransaction {
+	return extractTransactionsWithOpeningBalance(lines, 0.0, statementPeriod)
 }
 
 // Extract transactions from the file with opening balance
-func extractTransactionsWithOpeningBalance(lines []string, openingBalance float64) []TxtTransaction {
+func extractTransactionsWithOpeningBalance(lines []string, openingBalance float64, statementPeriod StatementPeriod) []TxtTransaction {
 	var transactions []TxtTransaction
 	var currentTxn *TxtTransaction
 	var previousBalance float64 = openingBalance // Track previous balance to determine deposit vs withdrawal
@@ -620,8 +689,8 @@ func extractTransactionsWithOpeningBalance(lines []string, openingBalance float6
 				transactions = append(transactions, *currentTxn)
 			}
 
-			// Parse new transaction with previous balance context
-			currentTxn = parseTransactionLineWithContext(trimmed, previousBalance)
+			// Parse new transaction with previous balance context and statement period
+			currentTxn = parseTransactionLineWithContext(trimmed, previousBalance, statementPeriod)
 		} else if currentTxn != nil && isNarrationContinuation(trimmed) {
 			// This is a continuation of the narration
 			currentTxn.Narration += " " + trimmed
@@ -753,8 +822,8 @@ func processStatementLines(lines []string) *TxtAccountStatement {
 	// Extract summary first to get opening balance
 	summary := extractSummary(lines)
 
-	// Extract transactions with opening balance context
-	transactions := extractTransactionsWithOpeningBalance(lines, summary.OpeningBalance)
+	// Extract transactions with opening balance context and statement period for date conversion
+	transactions := extractTransactionsWithOpeningBalance(lines, summary.OpeningBalance, statementPeriod)
 
 	statement := &TxtAccountStatement{
 		AccountInfo:     accountInfo,

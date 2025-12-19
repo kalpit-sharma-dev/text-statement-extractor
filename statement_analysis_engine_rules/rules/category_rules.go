@@ -146,8 +146,21 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 	if knownMerchantName != "" {
 		// Known merchant is strongest signal - use it unless overridden by higher priority rules
 		// Continue to check other patterns but merchant takes precedence
-		// Early return for high-confidence merchant matches (unless overridden by Loan/EMI)
-		if knownMerchantConfidence >= 0.9 && !strings.Contains(combined, "EMI") && !strings.Contains(combined, "LOAN") {
+		// Early return for high-confidence merchant matches (unless overridden by Loan/EMI or large amounts to utilities)
+		// EXCEPTION: Large payments to gas utilities (> ₹25,000) should NOT return early - they need amount-based classification
+		isLargeGasPayment := false
+		if amount > 25000 && knownMerchantCategory == "Bills_Utilities" {
+			// Check if it's a gas utility company (IGL, MGL, etc.)
+			gasUtilities := []string{"INDRAPRASTHA GAS", "IGL", "MAHANAGAR GAS", "MGL", "ADANIGAS", "GUJGAS"}
+			for _, gasUtil := range gasUtilities {
+				if strings.Contains(strings.ToUpper(knownMerchantName), gasUtil) {
+					isLargeGasPayment = true
+					break
+				}
+			}
+		}
+		
+		if knownMerchantConfidence >= 0.9 && !strings.Contains(combined, "EMI") && !strings.Contains(combined, "LOAN") && !isLargeGasPayment {
 			return returnCategory(knownMerchantCategory, knownMerchantConfidence, "Known merchant detected: "+knownMerchantName, knownMerchantName)
 		}
 	}
@@ -1040,7 +1053,11 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		for _, pattern := range gasPatterns {
 			if strings.Contains(combined, pattern) {
 				hasActualUtility = true
-				hasBillKeyword = true
+				// Only treat as bill keyword if amount is reasonable for a gas bill (< ₹25,000)
+				// Large amounts to gas companies are likely investments/share purchases
+				if amount == 0 || amount <= 25000 {
+					hasBillKeyword = true
+				}
 				break
 			}
 		}
@@ -1064,8 +1081,10 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		}
 	}
 
-	// Step 4: Check for large transfers (RTGS/IMPS > ₹1,00,000 should NOT be bills)
+	// Step 4: Check for large transfers (> ₹25,000 for gas bills, or > ₹1,00,000 for other bills)
 	// Large transfers are typically investments or transfers, not utility bills
+	// Typical utility bills: Electricity ₹500-₹10K, Gas ₹500-₹5K, Water ₹200-₹2K
+	// Threshold: ₹25,000 for gas (above this is likely share purchase/deposit), ₹1,00,000 for others
 	isLargeTransfer := false
 	largeTransferMethods := []string{"RTGS", "IMPS", "NEFT"}
 	for _, method := range largeTransferMethods {
@@ -1073,6 +1092,10 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 			isLargeTransfer = true
 			break
 		}
+	}
+	// Also check amount - if amount > ₹1,00,000, it's a large transfer regardless of method
+	if amount > 100000 {
+		isLargeTransfer = true
 	}
 
 	// Step 5: Only classify as Bills_Utilities if:
@@ -1097,14 +1120,17 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 					break
 				}
 			}
-			if !hasUtilityPattern {
-				for _, pattern := range gasPatterns {
-					if strings.Contains(combined, pattern) {
+		if !hasUtilityPattern {
+			for _, pattern := range gasPatterns {
+				if strings.Contains(combined, pattern) {
+					// Only treat as utility pattern if amount is reasonable for a gas bill
+					if amount == 0 || amount <= 25000 {
 						hasUtilityPattern = true
-						break
 					}
+					break
 				}
 			}
+		}
 			if !hasUtilityPattern {
 				for _, pattern := range telecomPatterns {
 					if strings.Contains(combined, pattern) {
@@ -1131,12 +1157,17 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		}
 
 		// Gas
-		// IMPORTANT: Large transfers (RTGS/IMPS) should NOT be classified as gas bills
-		// Even if merchant is "Indraprastha Gas Limited", large transfers are investments/transfers
+		// IMPORTANT: Large transfers should NOT be classified as gas bills
+		// Typical gas bills: ₹500-₹5,000. Above ₹25,000 is likely share purchase/investment/deposit
+		// IGL (Indraprastha Gas Limited) is a publicly traded company - large payments are likely share purchases
 		if !isLargeTransfer {
-			for _, pattern := range gasPatterns {
-				if strings.Contains(combined, pattern) {
-					return returnCategory("Bills_Utilities", 0.90, "Gas bill payment detected", pattern)
+			// Additional check: Gas bills are typically small (< ₹25,000)
+			// If amount > ₹25,000, it's likely an investment/share purchase, not a gas bill
+			if amount > 0 && amount <= 25000 {
+				for _, pattern := range gasPatterns {
+					if strings.Contains(combined, pattern) {
+						return returnCategory("Bills_Utilities", 0.90, "Gas bill payment detected", pattern)
+					}
 				}
 			}
 		}
@@ -1237,9 +1268,21 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 
 		// Default: Only classify as Bills_Utilities if we have high confidence
 		// If we have bill keywords but no specific category, it's still likely a bill
+		// EXCEPTION: Large payments (> ₹25,000) to gas utilities should NOT be classified as bills
 		if hasBillKeyword {
+			// Check if this is a large gas utility payment
+			if amount > 25000 {
+				gasUtilityPatterns := []string{"IGL", "INDRAPRASTHAGA", "INDRAPRASTHA GAS", "MGL", "MAHANAGAR GAS", "ADANIGAS", "GUJGAS"}
+				for _, gasPattern := range gasUtilityPatterns {
+					if strings.Contains(combined, gasPattern) {
+						// Skip - don't classify as bill, let it fall through to Investment
+						goto skipBillKeywordCheck
+					}
+				}
+			}
 			return returnCategory("Bills_Utilities", 0.75, "Bill payment keyword detected", "BILL_PAYMENT")
 		}
+		skipBillKeywordCheck:
 		// If only gateway detected without keywords, don't classify as bill (too ambiguous)
 		// Let it fall through to other categories
 	}
@@ -1247,19 +1290,42 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 	// Legacy check for backward compatibility (only if not already excluded)
 	// Only check billsPatterns if we haven't already classified and it's not an excluded merchant
 	if !hasExcludedMerchant {
-		for _, pattern := range billsPatterns {
-			if strings.Contains(combined, pattern) {
-				// Double-check: make sure it's not a false positive
-				// If pattern is too generic (like "UTILITY" which appears in many places), require more context
-				if pattern == "UTILITY" || pattern == "BILL" {
-					// For generic patterns, require additional bill-related context
-					if strings.Contains(combined, "PAYMENT") || strings.Contains(combined, "BILL") ||
-						strings.Contains(combined, "RECHARGE") || hasBillGateway {
+		// IMPORTANT: Check for large amounts to gas utilities FIRST (> ₹25,000)
+		// IGL, MGL, etc. are publicly traded companies - large payments are share purchases, not bills
+		// Skip all bill pattern matching for large gas utility payments
+		isLargeGasUtilityPayment := false
+		if amount > 25000 {
+			gasUtilityPatterns := []string{"IGL", "INDRAPRASTHAGA", "INDRAPRASTHA GAS", "MGL", "MAHANAGAR GAS", "ADANIGAS", "GUJGAS"}
+			for _, gasPattern := range gasUtilityPatterns {
+				if strings.Contains(combined, gasPattern) {
+					isLargeGasUtilityPayment = true
+					break
+				}
+			}
+		}
+		
+		if !isLargeGasUtilityPayment {
+			for _, pattern := range billsPatterns {
+				if strings.Contains(combined, pattern) {
+					// IMPORTANT: Skip large amounts to gas utilities (> ₹25,000) - they're investments, not bills
+					// IGL, MGL, etc. are publicly traded companies - large payments are share purchases
+					if amount > 25000 && (pattern == "GAS" || pattern == "IGL" || pattern == "MGL" || pattern == "INDRAPRASTHAGA") {
+						// Skip this pattern - will be classified as Investment later
+						continue
+					}
+					
+					// Double-check: make sure it's not a false positive
+					// If pattern is too generic (like "UTILITY" which appears in many places), require more context
+					if pattern == "UTILITY" || pattern == "BILL" {
+						// For generic patterns, require additional bill-related context
+						if strings.Contains(combined, "PAYMENT") || strings.Contains(combined, "BILL") ||
+							strings.Contains(combined, "RECHARGE") || hasBillGateway {
+							return returnCategory("Bills_Utilities", 0.80, "Bill payment pattern detected", pattern)
+						}
+					} else {
+						// For specific patterns (like "ELECTRICITY", "AIRTEL", etc.), classify directly
 						return returnCategory("Bills_Utilities", 0.80, "Bill payment pattern detected", pattern)
 					}
-				} else {
-					// For specific patterns (like "ELECTRICITY", "AIRTEL", etc.), classify directly
-					return returnCategory("Bills_Utilities", 0.80, "Bill payment pattern detected", pattern)
 				}
 			}
 		}
@@ -1277,6 +1343,12 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		if decoded != token {
 			// If decoding found a match, check if it's a utility
 			if strings.Contains(decoded, "Gas") || strings.Contains(decoded, "Electricity") {
+				// IMPORTANT: For gas utilities, check amount threshold
+				// Large payments (> ₹25,000) to gas companies are likely share purchases, not bills
+				if strings.Contains(decoded, "Gas") && amount > 25000 {
+					// Skip - will be classified as Investment later
+					continue
+				}
 				return returnCategory("Bills_Utilities", 0.80, "Utility detected via merchant decoding", decoded)
 			}
 		}
@@ -1334,6 +1406,18 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 	for _, pattern := range dividendPatterns {
 		if strings.Contains(combined, pattern) {
 			return returnCategory("Investment", 0.90, "Dividend income detected", pattern)
+		}
+	}
+
+	// Check for large payments to utility companies (likely share purchases/investments, not bills)
+	// IGL (Indraprastha Gas Limited), MGL (Mahanagar Gas Limited), etc. are publicly traded companies
+	// Payments > ₹25,000 to gas companies are likely share purchases/deposits, not gas bills
+	if amount > 25000 {
+		gasCompanies := []string{"IGL", "INDRAPRASTHAGA", "INDRAPRASTHA GAS", "MGL", "MAHANAGAR GAS", "ADANIGAS", "GUJGAS"}
+		for _, company := range gasCompanies {
+			if strings.Contains(combined, company) {
+				return returnCategory("Investment", 0.85, "Large payment to gas utility company (likely share purchase/investment)", company)
+			}
 		}
 	}
 
