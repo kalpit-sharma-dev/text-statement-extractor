@@ -1,0 +1,3278 @@
+Account Number: 08821130001725
+Account Holder: MR. KALPIT KUMAR SHARMA
+Total Transactions: 987
+Opening Balance: 379562.39
+Closing Balance: 40939.84
+Credits Balance: 6431384.97
+Debits Balance: 6770007.52
+=== Classification Analysis Complete ===
+{
+  "accountSummary": {
+    "accountNumberMasked": "XXXXXX1725",
+    "customerName": "MR. KALPIT KUMAR SHARMA",
+    "statementPeriod": "01/04/2024 - 31/03/2025",
+    "year": "0001",
+    "openingBalance": 379562.39,
+    "closingBalance": 40939.84,
+    "totalIncome": 6431384.97,
+    "totalExpense": 6770007.52,
+    "netSavings": -338622.5499999998,
+    "savingsRatePercent": -5.265157529514204
+  },
+  "transactionBreakdown": {
+    "UPI": {
+      "amount": 2299057.819999999,
+      "count": 795
+    },
+    "IMPS": {
+      "amount": 2800818,
+      "count": 25
+    },
+    "NEFT": {
+      "amount": 3075,
+      "count": 5
+    },
+    "RTGS": {
+      "amount": 2000000,
+      "count": 4
+    },
+    "EMI": {
+      "amount": 3774,
+      "count": 1
+    },
+    "BillPaid": {
+      "amount": 34009.72000000001,
+      "count": 49
+    },
+    "DebitCard": {
+      "amount": 27478.600000000002,
+      "count": 8
+    },
+    "ATMWithdrawal": {
+      "amount": 105123.9,
+      "count": 12
+    },
+    "NetBanking": {
+      "amount": 150000,
+      "count": 1
+    },
+    "Salary": {
+      "amount": 3177411,
+      "count": 12
+    },
+    "RD": {
+      "amount": 756000,
+      "count": 48
+    },
+    "FD": {
+      "amount": 0,
+      "count": 0
+    },
+    "SIP": {
+      "amount": 0,
+      "count": 0
+    },
+    "Interest": {
+      "amount": 8166,
+      "count": 3
+    },
+    "Cheque": {
+      "amount": 0,
+      "count": 0
+    },
+    "Dividend": {
+      "amount": 6140.25,
+      "count": 14
+    },
+    "Investment": {
+      "amount": 1815358.2000000002,
+      "count": 9
+    },
+    "Other": {
+      "amount": 14980,
+      "count": 1
+    }
+  },
+  "topBeneficiaries": [
+    {
+      "name": "KALPIT SHARMA",
+      "amount": 800000,
+      "type": "IMPS"
+    },
+    {
+      "name": "XXXXXX3286",
+      "amount": 600000,
+      "type": "UPI"
+    },
+    {
+      "name": "XXXXXX2035",
+      "amount": 150100,
+      "type": "UPI"
+    },
+    {
+      "name": "KAMLA JI JEWELLERS",
+      "amount": 126653,
+      "type": "UPI"
+    },
+    {
+      "name": "GARIMA SHARMA",
+      "amount": 95000,
+      "type": "UPI"
+    }
+  ],
+  "topExpenses": [
+    {
+      "merchant": "Indraprastha Gas Limited",
+      "date": "10/10/24",
+      "amount": 1400000,
+      "category": "Bills_Utilities"
+    },
+    {
+      "merchant": "Indraprastha Gas Limited",
+      "date": "08/10/24",
+      "amount": 200000,
+      "category": "Bills_Utilities"
+    },
+    {
+      "merchant": "Indraprastha Gas Limited",
+      "date": "09/10/24",
+      "amount": 200000,
+      "category": "Bills_Utilities"
+    },
+    {
+      "merchant": "430713979477",
+      "date": "02/11/24",
+      "amount": 200000,
+      "category": "Investment"
+    },
+    {
+      "merchant": "430617967500",
+      "date": "01/11/24",
+      "amount": 200000,
+      "category": "Investment"
+    }
+  ],
+  "monthlySummary": [
+    {
+      "month": "Jan",
+      "income": 519926,
+      "expense": 511544.96,
+      "closingBalance": 42496.28,
+      "topCategory": "Investment",
+      "expenseSpikePercent": -10
+    },
+    {
+      "month": "Feb",
+      "income": 352622,
+      "expense": 237744.66999999998,
+      "closingBalance": 157373.61,
+      "topCategory": "Investment",
+      "expenseSpikePercent": -59
+    },
+    {
+      "month": "Mar",
+      "income": 251173,
+      "expense": 368176.7700000001,
+      "closingBalance": 40369.84,
+      "topCategory": "Investment",
+      "expenseSpikePercent": -36
+    },
+    {
+      "month": "Apr",
+      "income": 688625.5,
+      "expense": 806032.91,
+      "closingBalance": 40939.84,
+      "topCategory": "Investment",
+      "expenseSpikePercent": 48
+    },
+    {
+      "month": "May",
+      "income": 237514,
+      "expense": 227947.95,
+      "closingBalance": 271151.03,
+      "topCategory": "Investment",
+      "expenseSpikePercent": -61
+    },
+    {
+      "month": "Jun",
+      "income": 441379.95,
+      "expense": 218114.09,
+      "closingBalance": 494416.89,
+      "topCategory": "Investment",
+      "expenseSpikePercent": -63
+    },
+    {
+      "month": "Jul",
+      "income": 269116.9,
+      "expense": 323166.2,
+      "closingBalance": 440367.59,
+      "topCategory": "Investment",
+      "expenseSpikePercent": -44
+    },
+    {
+      "month": "Aug",
+      "income": 256367,
+      "expense": 268679.74,
+      "closingBalance": 428054.85,
+      "topCategory": "Investment",
+      "expenseSpikePercent": -54
+    },
+    {
+      "month": "Sep",
+      "income": 453117.71,
+      "expense": 431868.35000000003,
+      "closingBalance": 449304.21,
+      "topCategory": "Investment",
+      "expenseSpikePercent": -25
+    },
+    {
+      "month": "Oct",
+      "income": 2534438.55,
+      "expense": 2402058.23,
+      "closingBalance": 581684.53,
+      "topCategory": "Bills_Utilities",
+      "expenseSpikePercent": 504
+    },
+    {
+      "month": "Nov",
+      "income": 425409,
+      "expense": 874257.0800000001,
+      "closingBalance": 132836.45,
+      "topCategory": "Investment",
+      "expenseSpikePercent": 63
+    },
+    {
+      "month": "Dec",
+      "income": 1695.3600000000001,
+      "expense": 100416.56999999999,
+      "closingBalance": 34115.24,
+      "topCategory": "Investment",
+      "expenseSpikePercent": -83
+    }
+  ],
+  "categorySummary": {
+    "Shopping": 257666.77,
+    "Bills_Utilities": 1917896.47,
+    "Travel": 100132.73,
+    "Dining": 31558.2,
+    "Groceries": 31084.480000000003,
+    "Food_Delivery": 14245.23,
+    "Fuel": 40961,
+    "Investments": 3372865,
+    "Loan": 3774
+  },
+  "merchantSummary": {
+    "Amazon": 14986.84,
+    "Flipkart": 23327,
+    "Swiggy": 167,
+    "Zomato": 13303.23,
+    "Uber": 0
+  },
+  "transactionTrends": {
+    "highestSpendMonth": "Oct",
+    "largestCategory": "Bills_Utilities"
+  },
+  "recommendedProducts": [
+    {
+      "id": 1,
+      "productName": "IndianOil HDFC Bank Credit Card",
+      "type": "Credit Card",
+      "reason": "You spent significant amount on Travel/Fuel. Save 5% on fuel spends.",
+      "icon": "Fuel",
+      "actionLink": "#"
+    }
+  ],
+  "predictiveInsights": {
+    "projected30DaySpend": 557967.6527472526,
+    "predictedLowBalanceDate": "20/12/2025",
+    "upcomingEMIImpact": 3774,
+    "savingsRecommendation": "Consider starting a recurring deposit"
+  },
+  "cashFlowScore": {
+    "score": 30,
+    "status": "Poor",
+    "insight": "Balance decreased. Regular income detected. Your cash flow is Poor."
+  },
+  "salaryUtilization": {
+    "spentFirst3Days": 0,
+    "spentFirst7Days": 0,
+    "spentFirst15Days": 0,
+    "daysSalaryLasts": 0,
+    "fixedExpenses": 0,
+    "variableExpenses": 0
+  },
+  "behaviourInsights": [
+    {
+      "type": "Impulse Buying",
+      "insight": "Great job! Impulse purchases are down by 5% this month."
+    }
+  ],
+  "recurringPayments": [
+    {
+      "name": "FOOD COURT",
+      "amount": 175,
+      "dayOfMonth": 25,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SATISH SO DIWAN CHAN",
+      "amount": 10,
+      "dayOfMonth": 3,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "URVASHI VERMA",
+      "amount": 500,
+      "dayOfMonth": 10,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PAYTM ECOMMERCE",
+      "amount": 2095,
+      "dayOfMonth": 21,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "NAGAR DAIRY",
+      "amount": 130,
+      "dayOfMonth": 13,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "IRCTC ECATERING",
+      "amount": 545,
+      "dayOfMonth": 17,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MRS VATSALA RAMESH B",
+      "amount": 130,
+      "dayOfMonth": 21,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "FINAL TOUCH BEAUTY P",
+      "amount": 230,
+      "dayOfMonth": 30,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SAI SERVICE PRIVATE",
+      "amount": 5000,
+      "dayOfMonth": 18,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SUDHIR KUMAR AGARWAL",
+      "amount": 1850,
+      "dayOfMonth": 23,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "DHABA CAFE AND KITCH",
+      "amount": 1397,
+      "dayOfMonth": 8,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "AGGARWAL SWEETS AND",
+      "amount": 20,
+      "dayOfMonth": 16,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SRI VEDMATA GAYATRI",
+      "amount": 90,
+      "dayOfMonth": 3,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MOBIKWIKMERCHANT",
+      "amount": 261,
+      "dayOfMonth": 8,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "DATTATRAY MADHAV KSH",
+      "amount": 140,
+      "dayOfMonth": 28,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RUCHI",
+      "amount": 100,
+      "dayOfMonth": 2,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "INDIA SPACE LAB",
+      "amount": 250,
+      "dayOfMonth": 3,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "UTTAR PRADESH POWER",
+      "amount": 2330,
+      "dayOfMonth": 7,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "DESH RAJ SO SITALA P",
+      "amount": 80,
+      "dayOfMonth": 5,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MAYUR SUPER MARKET",
+      "amount": 200,
+      "dayOfMonth": 8,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "VIKAS KUMAR",
+      "amount": 1200,
+      "dayOfMonth": 28,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SACHIN MEENA",
+      "amount": 3000,
+      "dayOfMonth": 29,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "433110958005",
+      "amount": 150000,
+      "dayOfMonth": 26,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SARVODAYA HOSPITAL",
+      "amount": 5000,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHYAM MEDICOS",
+      "amount": 110,
+      "dayOfMonth": 16,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "EFPI TECHNOLOGIES PR",
+      "amount": 100,
+      "dayOfMonth": 19,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "KAUSHALENDRA NATH MI",
+      "amount": 120,
+      "dayOfMonth": 5,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MUSKAN BAKERS AND CO",
+      "amount": 90,
+      "dayOfMonth": 22,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHAHAZAHA WIFE OF SH",
+      "amount": 2745,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ABHISHEK ANAND SO SH",
+      "amount": 101,
+      "dayOfMonth": 30,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PAYU",
+      "amount": 6013.62,
+      "dayOfMonth": 23,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "GANESH PANDURANG MOR",
+      "amount": 280,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PATANJALI CHIKITSALY",
+      "amount": 600,
+      "dayOfMonth": 13,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ALZAPAY TECHNOLOGY P",
+      "amount": 300,
+      "dayOfMonth": 19,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "YATRA ONLINE PRIVATE",
+      "amount": 8201,
+      "dayOfMonth": 8,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "DESHRAJSOSITALAPRASA",
+      "amount": 100,
+      "dayOfMonth": 12,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "KETAN DATTATRAYA PAW",
+      "amount": 90,
+      "dayOfMonth": 9,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SUSHANT VISHWANATH D",
+      "amount": 237,
+      "dayOfMonth": 7,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHUBHANGI RAVINDRA S",
+      "amount": 140,
+      "dayOfMonth": 15,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "Swiggy",
+      "amount": 167,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SUDHAKAR SHAHURAJ BI",
+      "amount": 150,
+      "dayOfMonth": 11,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ANSHUL",
+      "amount": 700,
+      "dayOfMonth": 27,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RASSAGAR VEGETABLE A",
+      "amount": 770,
+      "dayOfMonth": 26,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "FUND IDFC FIRST ACCO",
+      "amount": 30000,
+      "dayOfMonth": 20,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MADANSING DUNGARSING",
+      "amount": 210,
+      "dayOfMonth": 29,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "BIKANERVALA VASUNDHA",
+      "amount": 3307.5,
+      "dayOfMonth": 21,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "AYUSH MITTAL",
+      "amount": 1100,
+      "dayOfMonth": 13,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "BAMRADA SONS",
+      "amount": 100,
+      "dayOfMonth": 3,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MADAN SWEETS AND RES",
+      "amount": 412,
+      "dayOfMonth": 12,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "NOORNABI SHAIKH",
+      "amount": 63,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "LALA RAM SO HAPUVA R",
+      "amount": 800,
+      "dayOfMonth": 27,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "NEERAJ KUMAR BHATNAG",
+      "amount": 1000,
+      "dayOfMonth": 3,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "HITKARI STORE",
+      "amount": 40,
+      "dayOfMonth": 16,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "NATIONAL PENSION SYS",
+      "amount": 50000,
+      "dayOfMonth": 9,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PRAMOD S BHALGAT",
+      "amount": 10700,
+      "dayOfMonth": 19,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SANGHA RATAN GAUTAM",
+      "amount": 80,
+      "dayOfMonth": 25,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PAYU PAYMENTS PVT LT",
+      "amount": 1208,
+      "dayOfMonth": 18,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "NADEEM",
+      "amount": 100,
+      "dayOfMonth": 30,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MS SHIVAM TRADERS",
+      "amount": 350,
+      "dayOfMonth": 26,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "NOBLE CHEMISTS",
+      "amount": 164,
+      "dayOfMonth": 2,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MR SANJAY NAMADEV KH",
+      "amount": 60,
+      "dayOfMonth": 8,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "VIJAY BHADHUR RAJAK",
+      "amount": 358,
+      "dayOfMonth": 17,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PRABHAT SHARMA",
+      "amount": 20,
+      "dayOfMonth": 10,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ZebPay",
+      "amount": 862,
+      "dayOfMonth": 31,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PRABHAKAR BASAYYA",
+      "amount": 150,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PANNESH",
+      "amount": 50,
+      "dayOfMonth": 26,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "YOGENDRA SINGH",
+      "amount": 430,
+      "dayOfMonth": 28,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHEETAL CHAUHAN",
+      "amount": 1000,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "NARAYAN SINGH",
+      "amount": 1111,
+      "dayOfMonth": 4,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "CHITRANSH PHARMACY",
+      "amount": 2651,
+      "dayOfMonth": 18,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "NIKHIL RAMESH KALE",
+      "amount": 350,
+      "dayOfMonth": 27,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "411312342696",
+      "amount": 100000,
+      "dayOfMonth": 22,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "INDER SINGH",
+      "amount": 18,
+      "dayOfMonth": 14,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RANJEET SINGH SHEKHA",
+      "amount": 500,
+      "dayOfMonth": 17,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PRADEEP SHUKLA",
+      "amount": 80,
+      "dayOfMonth": 27,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "AMIT KUMAR",
+      "amount": 250,
+      "dayOfMonth": 16,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PRAVIN BHAGAWAN GHAY",
+      "amount": 1700,
+      "dayOfMonth": 18,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "Google Play",
+      "amount": 199,
+      "dayOfMonth": 2,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "CHANDIGARH INDUSTRIA",
+      "amount": 80,
+      "dayOfMonth": 25,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "TEJAS ANANDA GHORPAD",
+      "amount": 1500,
+      "dayOfMonth": 4,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "KANNU SHREE GAUR",
+      "amount": 1000,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHREE CHINTAMANI MED",
+      "amount": 5,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "KALIKA ENTERPRISES",
+      "amount": 100,
+      "dayOfMonth": 8,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "DUNGA RAM",
+      "amount": 160,
+      "dayOfMonth": 18,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ARCHAEOLOGICAL SURVE",
+      "amount": 60,
+      "dayOfMonth": 21,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "BANDWAL M RODULAL",
+      "amount": 456,
+      "dayOfMonth": 25,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SANTOSH WABLE SINHA",
+      "amount": 1000,
+      "dayOfMonth": 22,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "VARUN SATISH KOTIAN",
+      "amount": 1264,
+      "dayOfMonth": 13,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ASHISH",
+      "amount": 300,
+      "dayOfMonth": 9,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "GARIMA SHARMA",
+      "amount": 20000,
+      "dayOfMonth": 20,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PAYTM APP",
+      "amount": 5120,
+      "dayOfMonth": 4,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ASB AUTOMOBILES PRIV",
+      "amount": 9174,
+      "dayOfMonth": 5,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "NANDKISHOR ARJUN GHU",
+      "amount": 5100,
+      "dayOfMonth": 19,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "GAURAV ABROL",
+      "amount": 1970,
+      "dayOfMonth": 20,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "IRCTC",
+      "amount": 1490.75,
+      "dayOfMonth": 28,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RAM SHANTARAM CHAVAN",
+      "amount": 5000,
+      "dayOfMonth": 27,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PARMESHWAR BIRAJDAR",
+      "amount": 60,
+      "dayOfMonth": 30,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SATYA SANATAN",
+      "amount": 1000,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SUNIL GHADAGE",
+      "amount": 8062,
+      "dayOfMonth": 22,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MR AJAY SOMA KHODE",
+      "amount": 2000,
+      "dayOfMonth": 29,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ADITYA SHARMA",
+      "amount": 100,
+      "dayOfMonth": 15,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SUNITA RANI",
+      "amount": 99,
+      "dayOfMonth": 19,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "NOBLE HOSPITALS PVT",
+      "amount": 22,
+      "dayOfMonth": 2,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "GUDIYA",
+      "amount": 300,
+      "dayOfMonth": 31,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "500709961898",
+      "amount": 100000,
+      "dayOfMonth": 7,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "KESHAV GUPTA",
+      "amount": 300,
+      "dayOfMonth": 13,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "KALIKA DAIRY AND SWE",
+      "amount": 160,
+      "dayOfMonth": 26,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "KISANKONNECT",
+      "amount": 230,
+      "dayOfMonth": 30,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RAJAT SHARMA",
+      "amount": 1000,
+      "dayOfMonth": 26,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "VIKAS RAGHAV",
+      "amount": 450,
+      "dayOfMonth": 27,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RAVI SHARMA",
+      "amount": 643,
+      "dayOfMonth": 3,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHREYASH SANTOSH CHA",
+      "amount": 300,
+      "dayOfMonth": 8,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "VIKAS KISAN CHAVANDK",
+      "amount": 160,
+      "dayOfMonth": 13,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHAM GUNDU PATIL",
+      "amount": 50,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MARKETPLACE PR",
+      "amount": 479.83,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PAN KAUR",
+      "amount": 40,
+      "dayOfMonth": 19,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "INTAJAR",
+      "amount": 50,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "DR SEEMA GUPTA KAIL",
+      "amount": 800,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MAX LIFEINSURANCE",
+      "amount": 2966.12,
+      "dayOfMonth": 28,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "KASTURBEN CHANDULAL",
+      "amount": 110,
+      "dayOfMonth": 5,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MUKESH BHAGWANJI CHA",
+      "amount": 1297,
+      "dayOfMonth": 8,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "427023911302",
+      "amount": 100000,
+      "dayOfMonth": 26,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "TASTY TRADING COMPAN",
+      "amount": 1947,
+      "dayOfMonth": 8,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "DAYALS ENTERPRISES",
+      "amount": 60,
+      "dayOfMonth": 22,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ROBIN MENS SALOON",
+      "amount": 150,
+      "dayOfMonth": 2,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "VISHUN SINGH RATHOR",
+      "amount": 145,
+      "dayOfMonth": 8,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "AUTOPE PAYMENT SOLUT",
+      "amount": 1019.05,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RATAN SINGH BHATI",
+      "amount": 50,
+      "dayOfMonth": 19,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MR MANISH GAUTAM",
+      "amount": 2800,
+      "dayOfMonth": 30,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHIROMANI I",
+      "amount": 20,
+      "dayOfMonth": 17,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "KAIWALYA MEDICO",
+      "amount": 475,
+      "dayOfMonth": 25,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PWCUBCPUPI",
+      "amount": 79,
+      "dayOfMonth": 16,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SIMPL",
+      "amount": 503.15,
+      "dayOfMonth": 20,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RAM KUMAR",
+      "amount": 52,
+      "dayOfMonth": 23,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SANTOSH KUMAR GUPTA",
+      "amount": 90,
+      "dayOfMonth": 20,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "COMMODUM GROCERIES P",
+      "amount": 227.12,
+      "dayOfMonth": 11,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "DIVINE CARE PHARMACY",
+      "amount": 182,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MC DONALDS",
+      "amount": 775,
+      "dayOfMonth": 13,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "BABBAN PASWAN",
+      "amount": 30,
+      "dayOfMonth": 7,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "Maharashtra State Electricity Distribution Company",
+      "amount": 1512.64,
+      "dayOfMonth": 9,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RAM BAHADUR PAL",
+      "amount": 100,
+      "dayOfMonth": 3,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "Amazon",
+      "amount": 460.6,
+      "dayOfMonth": 27,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "LAXMAN MAHADEV MAHAL",
+      "amount": 3919,
+      "dayOfMonth": 24,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "VANSAVRAKSHAN SAMITI",
+      "amount": 100,
+      "dayOfMonth": 22,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "Flipkart",
+      "amount": 23327,
+      "dayOfMonth": 27,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RIZWAN SAIFI",
+      "amount": 600,
+      "dayOfMonth": 16,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHOBHA CHAUBEY",
+      "amount": 800,
+      "dayOfMonth": 31,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ANUJ YADAV",
+      "amount": 20,
+      "dayOfMonth": 14,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ATUL KUMAR SINGHAL",
+      "amount": 1500,
+      "dayOfMonth": 30,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RAW REAPS ENTERPRISE",
+      "amount": 567,
+      "dayOfMonth": 15,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "AJAYPURI GURU KAPILM",
+      "amount": 2000,
+      "dayOfMonth": 28,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHARAD SHANTARAM SAI",
+      "amount": 130,
+      "dayOfMonth": 29,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "502420932069",
+      "amount": 100000,
+      "dayOfMonth": 24,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ANKIT DAIRY AND SWEE",
+      "amount": 660,
+      "dayOfMonth": 2,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MS AMIT MEDICOS",
+      "amount": 185,
+      "dayOfMonth": 19,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MAHARASHTRA MOBILE A",
+      "amount": 1923,
+      "dayOfMonth": 21,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MAYUR SMART BAZAR",
+      "amount": 145,
+      "dayOfMonth": 26,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ALPHABULK SUPPLY SOL",
+      "amount": 95,
+      "dayOfMonth": 25,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "CASIO ENTERPRISES",
+      "amount": 15,
+      "dayOfMonth": 31,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "NILIMA MUKESH WAGHMA",
+      "amount": 120,
+      "dayOfMonth": 28,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MANOJ KUMAR",
+      "amount": 1260,
+      "dayOfMonth": 26,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "DAUJI SERVICE STATIO",
+      "amount": 1500,
+      "dayOfMonth": 8,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MOHAMMAD NAUSHAD",
+      "amount": 20,
+      "dayOfMonth": 9,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "XXXXXX7431",
+      "amount": 32000,
+      "dayOfMonth": 7,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "JAY LAKSHMI BANGLORE",
+      "amount": 600,
+      "dayOfMonth": 9,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "GOOGLE INDIA DIGITAL",
+      "amount": 40,
+      "dayOfMonth": 14,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "Indraprastha Gas Limited",
+      "amount": 657.48,
+      "dayOfMonth": 19,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PUSHPENDRA AHIRWAR",
+      "amount": 30000,
+      "dayOfMonth": 3,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MAYUR MEDICAL",
+      "amount": 1470,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SPECIAL CHAT CENTER",
+      "amount": 140,
+      "dayOfMonth": 24,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MUTDAK SARLA BALASAH",
+      "amount": 50,
+      "dayOfMonth": 29,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MUKESH KUMAR SO MAHE",
+      "amount": 3000,
+      "dayOfMonth": 22,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PAYTM UTILITY",
+      "amount": 2602,
+      "dayOfMonth": 15,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "JAI MAA PRASAD BHAND",
+      "amount": 60,
+      "dayOfMonth": 25,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RAKHI",
+      "amount": 101,
+      "dayOfMonth": 16,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "REHAN SATTAR SHAIKH",
+      "amount": 126,
+      "dayOfMonth": 9,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "AAYUSH ENTERPRISES",
+      "amount": 200,
+      "dayOfMonth": 22,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RAKESH GUPTA",
+      "amount": 1100,
+      "dayOfMonth": 8,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SUJIT PAL SINGH S O",
+      "amount": 600,
+      "dayOfMonth": 28,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "DREAM11",
+      "amount": 21,
+      "dayOfMonth": 26,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "XXXXXX3286",
+      "amount": 50000,
+      "dayOfMonth": 23,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ARCHANA",
+      "amount": 150,
+      "dayOfMonth": 5,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "500709961895",
+      "amount": 100000,
+      "dayOfMonth": 7,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MY OUTSPARK",
+      "amount": 199,
+      "dayOfMonth": 11,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "AGGARWAL SWEETS BAK",
+      "amount": 115,
+      "dayOfMonth": 18,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SUNDER SINGH",
+      "amount": 160,
+      "dayOfMonth": 5,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "CHHOGARAM OTARAM CHO",
+      "amount": 180,
+      "dayOfMonth": 15,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ZOHA ONLINE STORE",
+      "amount": 1940,
+      "dayOfMonth": 7,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PAWAN FLOWER SHOP",
+      "amount": 40,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "XXXXXX2035",
+      "amount": 60000,
+      "dayOfMonth": 5,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MR GANESH SUBHASH NA",
+      "amount": 60,
+      "dayOfMonth": 28,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "508500990073",
+      "amount": 150000,
+      "dayOfMonth": 26,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "",
+      "amount": 1483.06,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "JYOTI CARGO PACKERS",
+      "amount": 23500,
+      "dayOfMonth": 4,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHITAL TRADERS",
+      "amount": 1929,
+      "dayOfMonth": 13,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ANUJ TAK",
+      "amount": 376,
+      "dayOfMonth": 20,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PANKAJ KUMAR",
+      "amount": 100,
+      "dayOfMonth": 4,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "KULDEEP",
+      "amount": 13500,
+      "dayOfMonth": 29,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "Ola",
+      "amount": 430.14,
+      "dayOfMonth": 5,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "JITENDRA MEENA",
+      "amount": 466,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "M P TRADERS",
+      "amount": 1941,
+      "dayOfMonth": 17,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ABU ZAHRA TRADING CO",
+      "amount": 1951,
+      "dayOfMonth": 15,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "502420932072",
+      "amount": 100000,
+      "dayOfMonth": 24,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ARVIND",
+      "amount": 80,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHYAM MEDICAL STORE",
+      "amount": 4440,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "XXXXXX0346",
+      "amount": 500,
+      "dayOfMonth": 15,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SUNIL",
+      "amount": 108,
+      "dayOfMonth": 22,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SONY PICTURES NETWOR",
+      "amount": 1100,
+      "dayOfMonth": 28,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MANISH GUPTA",
+      "amount": 100,
+      "dayOfMonth": 16,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RAJENDRA SINGH",
+      "amount": 40,
+      "dayOfMonth": 19,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MUKESH DAS",
+      "amount": 800,
+      "dayOfMonth": 11,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ADV SUDARSHAN MOHAN",
+      "amount": 900,
+      "dayOfMonth": 28,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MR SHASHI KUMAR CHAN",
+      "amount": 420,
+      "dayOfMonth": 13,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MOOL CHAND",
+      "amount": 15,
+      "dayOfMonth": 19,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "GOIBIBO",
+      "amount": 3661,
+      "dayOfMonth": 4,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "AMIT GUPTA",
+      "amount": 70,
+      "dayOfMonth": 13,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ANKIT BHARDWAJ",
+      "amount": 18063,
+      "dayOfMonth": 22,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ANKIT DAIRY SWEETS",
+      "amount": 122,
+      "dayOfMonth": 19,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "YASIN MULUK TASEWALE",
+      "amount": 600,
+      "dayOfMonth": 18,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PHOOL SERVICE STATIO",
+      "amount": 4192,
+      "dayOfMonth": 23,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ROSIER FOODS",
+      "amount": 1962.2,
+      "dayOfMonth": 19,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MAHA GANESH TRADERS",
+      "amount": 350,
+      "dayOfMonth": 4,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "AGGARWAL TRADING COM",
+      "amount": 290,
+      "dayOfMonth": 4,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "FULCHAND YADAV",
+      "amount": 200,
+      "dayOfMonth": 8,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SOMA GUPTA",
+      "amount": 1,
+      "dayOfMonth": 13,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MAGARPATTA CLUBS AND",
+      "amount": 584,
+      "dayOfMonth": 25,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "POTE SARIKA DHONDIBH",
+      "amount": 55,
+      "dayOfMonth": 2,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "P H DIAGNOSTIC CENTR",
+      "amount": 7500,
+      "dayOfMonth": 8,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "HEALTHPLIX TECHNOLOG",
+      "amount": 3329,
+      "dayOfMonth": 4,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "CHANDRA KANT BHARDWA",
+      "amount": 250,
+      "dayOfMonth": 4,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SATISH KUMAR",
+      "amount": 280,
+      "dayOfMonth": 4,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "LIMITED",
+      "amount": 783.34,
+      "dayOfMonth": 11,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ROYAL CHEMIST",
+      "amount": 454,
+      "dayOfMonth": 27,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "DAKE DINESH DNYANOBA",
+      "amount": 522,
+      "dayOfMonth": 26,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "LAXMI RASWANTI GHRUH",
+      "amount": 160,
+      "dayOfMonth": 29,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "INDIGO",
+      "amount": 1750,
+      "dayOfMonth": 19,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "GARIMASHARMA19932OKA",
+      "amount": 10000,
+      "dayOfMonth": 12,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "422819994550",
+      "amount": 49999,
+      "dayOfMonth": 15,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "CHAUDHARY DAIRY",
+      "amount": 75,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHEEBA",
+      "amount": 270,
+      "dayOfMonth": 5,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "BOMBAY WATCH COMPANY",
+      "amount": 390,
+      "dayOfMonth": 16,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ROHIT KUMAR",
+      "amount": 170,
+      "dayOfMonth": 30,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RUDR SHIVA INN PVT L",
+      "amount": 60,
+      "dayOfMonth": 3,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "505621912194",
+      "amount": 100000,
+      "dayOfMonth": 25,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ANUJ NAGAR",
+      "amount": 130,
+      "dayOfMonth": 14,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "507512967870",
+      "amount": 50000,
+      "dayOfMonth": 16,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SUDHA TYAGI",
+      "amount": 15700,
+      "dayOfMonth": 28,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "BALAJI TRADING COMPA",
+      "amount": 5,
+      "dayOfMonth": 13,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PAYTMUSER",
+      "amount": 100,
+      "dayOfMonth": 30,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PRAKASH",
+      "amount": 900,
+      "dayOfMonth": 27,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "DADASAHEB AJINATH HA",
+      "amount": 60,
+      "dayOfMonth": 31,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "426923992837",
+      "amount": 50000,
+      "dayOfMonth": 25,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MAYA BALKRUSHN PANDE",
+      "amount": 1000,
+      "dayOfMonth": 28,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHREEVENDING",
+      "amount": 30,
+      "dayOfMonth": 13,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "LIONS EYE HOSPITAL",
+      "amount": 1000,
+      "dayOfMonth": 27,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "AAPPU SHAHI",
+      "amount": 161,
+      "dayOfMonth": 21,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MS SHYAM MEDICOS",
+      "amount": 300,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ZEPTO",
+      "amount": 164.15,
+      "dayOfMonth": 12,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "AMIT SOHAN LAL DEEWA",
+      "amount": 1060,
+      "dayOfMonth": 20,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MOHD SUFYAN SO ISHTI",
+      "amount": 90,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RAJU FRUIT BHANDAR",
+      "amount": 214,
+      "dayOfMonth": 10,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "CoinSwitch Kuber",
+      "amount": 201.68,
+      "dayOfMonth": 30,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "HEALTHPLIX",
+      "amount": 176,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "DRYFRUIT DESTINATION",
+      "amount": 450,
+      "dayOfMonth": 31,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "M D FRUITS AND VEGET",
+      "amount": 70,
+      "dayOfMonth": 27,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "BIKANERVALA PRIVATE",
+      "amount": 2268,
+      "dayOfMonth": 3,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "DAGDUSHET COUNTER 10",
+      "amount": 60,
+      "dayOfMonth": 21,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ANIKET BATTERY AND T",
+      "amount": 1900,
+      "dayOfMonth": 18,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "BANSAL BIKANER SWEET",
+      "amount": 35,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "NEERAJ KUMAR",
+      "amount": 50,
+      "dayOfMonth": 3,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "Zerodha",
+      "amount": 10000,
+      "dayOfMonth": 21,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RAJAVEERI WO DEVENDR",
+      "amount": 4243,
+      "dayOfMonth": 22,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RINA MAHADEO INGALE",
+      "amount": 203,
+      "dayOfMonth": 21,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "VANDANA PRADIP KAUDA",
+      "amount": 100,
+      "dayOfMonth": 28,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ISTHARA PARKS PRIVAT",
+      "amount": 67,
+      "dayOfMonth": 12,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ZEE5",
+      "amount": 764,
+      "dayOfMonth": 31,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "430617967500",
+      "amount": 200000,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MR RAJU SHARMA",
+      "amount": 250,
+      "dayOfMonth": 11,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PRAVEEN KUMAR",
+      "amount": 16000,
+      "dayOfMonth": 27,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "BABOO MIYAN JABRUDDI",
+      "amount": 30,
+      "dayOfMonth": 31,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHIVAM GUPTA",
+      "amount": 1800,
+      "dayOfMonth": 31,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "GOURAV SHARMA",
+      "amount": 3800,
+      "dayOfMonth": 8,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RUKMANI ENTERPRISES",
+      "amount": 60,
+      "dayOfMonth": 13,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MOHAMMAD SHADAB",
+      "amount": 140,
+      "dayOfMonth": 27,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PANCHAM SUPER MARKET",
+      "amount": 230,
+      "dayOfMonth": 26,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHRI BALAJI CATERERS",
+      "amount": 120,
+      "dayOfMonth": 8,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "CLEARTRIP PRIVATE LI",
+      "amount": 5628,
+      "dayOfMonth": 9,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PAYTM RECHARGES",
+      "amount": 862,
+      "dayOfMonth": 21,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MUNDE DATTA SANGRAM",
+      "amount": 187,
+      "dayOfMonth": 7,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RUPALI DADASO SATPUT",
+      "amount": 50,
+      "dayOfMonth": 2,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "VISHNU ANNA TAKALE",
+      "amount": 185,
+      "dayOfMonth": 21,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "430713979477",
+      "amount": 200000,
+      "dayOfMonth": 2,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "DILIP KUMAR SOMAGGAT",
+      "amount": 100,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "431500915028",
+      "amount": 100000,
+      "dayOfMonth": 10,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "VENDING BROTHERS PVT",
+      "amount": 100,
+      "dayOfMonth": 14,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "AMIT KUMAR SAINI",
+      "amount": 40,
+      "dayOfMonth": 25,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MOHIT KUMAR",
+      "amount": 800,
+      "dayOfMonth": 19,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "XXXXXX8916",
+      "amount": 4924,
+      "dayOfMonth": 23,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "POOJA STATIONERY",
+      "amount": 120,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "RANVEER MEDICAL",
+      "amount": 770,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PEETENDRA TECHNOLOGI",
+      "amount": 1929,
+      "dayOfMonth": 14,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "AKASA AIR FLIGHT BOO",
+      "amount": 4985,
+      "dayOfMonth": 29,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ANKIT KUMAR",
+      "amount": 11000,
+      "dayOfMonth": 27,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SACHIN SINGH CHAUHAN",
+      "amount": 18000,
+      "dayOfMonth": 27,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SHIVALIK HOSPITAL",
+      "amount": 500,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "IRCTC WEB UPI",
+      "amount": 949.05,
+      "dayOfMonth": 18,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MS AGGARWAL SWEET C",
+      "amount": 110,
+      "dayOfMonth": 28,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "JIOHOTSTAR",
+      "amount": 1499,
+      "dayOfMonth": 23,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "UMESH KUMAR",
+      "amount": 500,
+      "dayOfMonth": 29,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "JAVED",
+      "amount": 20,
+      "dayOfMonth": 24,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MOTI RAM",
+      "amount": 50,
+      "dayOfMonth": 10,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SANDEEP SOPANRAO PAW",
+      "amount": 140,
+      "dayOfMonth": 1,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "HRUSHIKESH S MEHATA",
+      "amount": 700,
+      "dayOfMonth": 30,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "SUJATA GAJANAN JADHA",
+      "amount": 20,
+      "dayOfMonth": 7,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MOHAMMAD SHADIM",
+      "amount": 100,
+      "dayOfMonth": 23,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PANCHAITEA",
+      "amount": 25,
+      "dayOfMonth": 14,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "MONA SAIN",
+      "amount": 90,
+      "dayOfMonth": 16,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PALVE MAHESH DNYANDE",
+      "amount": 440,
+      "dayOfMonth": 19,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ANILKUMAR HARISINGH",
+      "amount": 6500,
+      "dayOfMonth": 25,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "VISHAL VIRBHADRA WAL",
+      "amount": 70,
+      "dayOfMonth": 31,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "CHARAN SINGH",
+      "amount": 60,
+      "dayOfMonth": 30,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "WAY2FITNESS STRENGTH",
+      "amount": 2800,
+      "dayOfMonth": 28,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "KAUSHAL KUMAR SHARM",
+      "amount": 3000,
+      "dayOfMonth": 15,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "AGGARWAL FOOD",
+      "amount": 200,
+      "dayOfMonth": 2,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "PARVIOM TECHNOLOGIES",
+      "amount": 500,
+      "dayOfMonth": 9,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "DARSHAN TEOTIA",
+      "amount": 80,
+      "dayOfMonth": 6,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ROBIN MENS SALON",
+      "amount": 230,
+      "dayOfMonth": 15,
+      "pattern": "Monthly"
+    },
+    {
+      "name": "ANUPAMA AMOL TAPDIA",
+      "amount": 300,
+      "dayOfMonth": 11,
+      "pattern": "Monthly"
+    }
+  ],
+  "savingsOpportunities": [
+    {
+      "category": "Switch to Annual Plan",
+      "potentialSave": 1200,
+      "action": "Switch",
+      "difficulty": "Easy",
+      "impact": "High"
+    },
+    {
+      "category": "Reduce Dining Out",
+      "potentialSave": 3000,
+      "action": "Limit",
+      "difficulty": "Medium",
+      "impact": "Medium"
+    }
+  ],
+  "fraudRisk": {
+    "riskLevel": "High",
+    "recentAlerts": [
+      {
+        "amount": 150000,
+        "merchant": ""
+      },
+      {
+        "amount": 150000,
+        "merchant": "Unknown Vendor"
+      },
+      {
+        "amount": 90000,
+        "merchant": "XXXXXX2035"
+      },
+      {
+        "amount": 60000,
+        "merchant": "XXXXXX2035"
+      },
+      {
+        "amount": 45000,
+        "merchant": "Unknown Vendor"
+      }
+    ]
+  },
+  "bigTicketMovements": [
+    {
+      "description": "IB SS FUNDS TRANSFER DR-55000006604781    NB011552...",
+      "amount": 150000,
+      "date": "01/04/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "409612502129",
+      "amount": 150000,
+      "date": "05/04/24",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX2035",
+      "amount": 90000,
+      "date": "05/04/24",
+      "type": "Debit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX2035",
+      "amount": 60000,
+      "date": "06/04/24",
+      "type": "Debit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "NATIONAL PENSION SYS",
+      "amount": 50000,
+      "date": "09/04/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "50400318187027- RD INSTALLMENT-APR 2024",
+      "amount": 45000,
+      "date": "11/04/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "411312862255",
+      "amount": 100000,
+      "date": "22/04/24",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "411312342696",
+      "amount": 100000,
+      "date": "22/04/24",
+      "type": "Debit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "Crypto.com",
+      "amount": 200000,
+      "date": "23/04/24",
+      "type": "Credit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX3286",
+      "amount": 50000,
+      "date": "23/04/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "APR",
+      "amount": 236868,
+      "date": "25/04/24",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX3286",
+      "amount": 50000,
+      "date": "25/04/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX3286",
+      "amount": 50000,
+      "date": "28/04/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX3286",
+      "amount": 50000,
+      "date": "28/04/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX3286",
+      "amount": 50000,
+      "date": "30/04/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "50400318187027- RD INSTALLMENT-MAY 2024   00000000...",
+      "amount": 45000,
+      "date": "10/05/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "MAY",
+      "amount": 236868,
+      "date": "24/05/24",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX3286",
+      "amount": 50000,
+      "date": "24/05/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX3286",
+      "amount": 50000,
+      "date": "29/05/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "PUSHPENDRA AHIRWAR",
+      "amount": 30000,
+      "date": "03/06/24",
+      "type": "Debit",
+      "category": "Other",
+      "impact": "Medium Impact"
+    },
+    {
+      "description": "50400318187027- RD INSTALLMENT-JUN 2024",
+      "amount": 45000,
+      "date": "11/06/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "JUN",
+      "amount": 427956,
+      "date": "28/06/24",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX3286",
+      "amount": 50000,
+      "date": "05/07/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX7431",
+      "amount": 30000,
+      "date": "07/07/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "Medium Impact"
+    },
+    {
+      "description": "50400318187027- RD INSTALLMENT-JUL 2024   00000000...",
+      "amount": 45000,
+      "date": "10/07/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX3286",
+      "amount": 50000,
+      "date": "22/07/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "JUL",
+      "amount": 263146,
+      "date": "25/07/24",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX3286",
+      "amount": 50000,
+      "date": "25/07/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX7431",
+      "amount": 32000,
+      "date": "04/08/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "Medium Impact"
+    },
+    {
+      "description": "50400318187027- RD INSTALLMENT-AUG 2024   00000000...",
+      "amount": 45000,
+      "date": "10/08/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "422819994550",
+      "amount": 49999,
+      "date": "15/08/24",
+      "type": "Debit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "GARIMA SHARMA",
+      "amount": 20000,
+      "date": "16/08/24",
+      "type": "Debit",
+      "category": "Other",
+      "impact": "Low Impact"
+    },
+    {
+      "description": "Zerodha",
+      "amount": 20000,
+      "date": "22/08/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "Low Impact"
+    },
+    {
+      "description": "AUG",
+      "amount": 250946,
+      "date": "23/08/24",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX3286",
+      "amount": 50000,
+      "date": "23/08/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX3286",
+      "amount": 50000,
+      "date": "02/09/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "XXXXXX7431",
+      "amount": 32000,
+      "date": "02/09/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "Medium Impact"
+    },
+    {
+      "description": "KALPIT KUMAR SHARMA",
+      "amount": 100000,
+      "date": "09/09/24",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "KALPIT KUMAR SHARMA",
+      "amount": 100000,
+      "date": "10/09/24",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "50400318187027- RD INSTALLMENT-SEP 2024   00000000...",
+      "amount": 45000,
+      "date": "10/09/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "FUND IDFC FIRST ACCO",
+      "amount": 30000,
+      "date": "20/09/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "Medium Impact"
+    },
+    {
+      "description": "SEP",
+      "amount": 250757,
+      "date": "25/09/24",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "426923992837",
+      "amount": 50000,
+      "date": "25/09/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "427023911302",
+      "amount": 100000,
+      "date": "26/09/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "Flipkart",
+      "amount": 23327,
+      "date": "27/09/24",
+      "type": "Debit",
+      "category": "Shopping",
+      "impact": "Low Impact"
+    },
+    {
+      "description": "ASB AUTOMOBILES PRIV",
+      "amount": 21800,
+      "date": "05/10/24",
+      "type": "Debit",
+      "category": "Shopping",
+      "impact": "Low Impact"
+    },
+    {
+      "description": "Crypto.com",
+      "amount": 1778977.32,
+      "date": "08/10/24",
+      "type": "Credit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "Indraprastha Gas Limited",
+      "amount": 200000,
+      "date": "08/10/24",
+      "type": "Debit",
+      "category": "Bills_Utilities",
+      "impact": "High Impact"
+    },
+    {
+      "description": "Indraprastha Gas Limited",
+      "amount": 200000,
+      "date": "09/10/24",
+      "type": "Debit",
+      "category": "Bills_Utilities",
+      "impact": "High Impact"
+    },
+    {
+      "description": "Indraprastha Gas Limited",
+      "amount": 1400000,
+      "date": "10/10/24",
+      "type": "Debit",
+      "category": "Bills_Utilities",
+      "impact": "High Impact"
+    },
+    {
+      "description": "50400318187027- RD INSTALLMENT-OCT 2024   00000000...",
+      "amount": 45000,
+      "date": "10/10/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "JYOTI CARGO PACKERS",
+      "amount": 23500,
+      "date": "19/10/24",
+      "type": "Debit",
+      "category": "Travel",
+      "impact": "Low Impact"
+    },
+    {
+      "description": "OCT",
+      "amount": 250946,
+      "date": "25/10/24",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "LIONS EYE HOSPITAL",
+      "amount": 20000,
+      "date": "27/10/24",
+      "type": "Debit",
+      "category": "Healthcare",
+      "impact": "Low Impact"
+    },
+    {
+      "description": "GARIMA SHARMA",
+      "amount": 20000,
+      "date": "28/10/24",
+      "type": "Debit",
+      "category": "Other",
+      "impact": "Low Impact"
+    },
+    {
+      "description": "430319642617",
+      "amount": 500000,
+      "date": "29/10/24",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "Maharashtra State Electricity Distribution Company",
+      "amount": 76653,
+      "date": "30/10/24",
+      "type": "Debit",
+      "category": "Shopping",
+      "impact": "High Impact"
+    },
+    {
+      "description": "430510934743",
+      "amount": 100000,
+      "date": "31/10/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "Maharashtra State Electricity Distribution Company",
+      "amount": 50000,
+      "date": "01/11/24",
+      "type": "Debit",
+      "category": "Shopping",
+      "impact": "High Impact"
+    },
+    {
+      "description": "430617967500",
+      "amount": 200000,
+      "date": "01/11/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "430713979477",
+      "amount": 200000,
+      "date": "02/11/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "MRS RITU GUPTA",
+      "amount": 20000,
+      "date": "02/11/24",
+      "type": "Credit",
+      "category": "Bills_Utilities",
+      "impact": "Low Impact"
+    },
+    {
+      "description": "SANJEEV KUMAR SHARMA",
+      "amount": 50000,
+      "date": "05/11/24",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "431500998143",
+      "amount": 100000,
+      "date": "10/11/24",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "431500915028",
+      "amount": 100000,
+      "date": "10/11/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "50400318187027- RD INSTALLMENT-NOV 2024   00000000...",
+      "amount": 45000,
+      "date": "10/11/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "NOV",
+      "amount": 250946,
+      "date": "25/11/24",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "433110958005",
+      "amount": 150000,
+      "date": "26/11/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "433211969783",
+      "amount": 50000,
+      "date": "27/11/24",
+      "type": "Debit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "50400318187027- RD INSTALLMENT-DEC 2024   00000000...",
+      "amount": 45000,
+      "date": "10/12/24",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "DEC",
+      "amount": 255820,
+      "date": "06/01/25",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "500709961895",
+      "amount": 100000,
+      "date": "07/01/25",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "500709961898",
+      "amount": 100000,
+      "date": "07/01/25",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "50400318187027- RD INSTALLMENT-JAN 2025   00000000...",
+      "amount": 45000,
+      "date": "10/01/25",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "JAN",
+      "amount": 251046,
+      "date": "24/01/25",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "502420932069",
+      "amount": 100000,
+      "date": "24/01/25",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "502420932072",
+      "amount": 100000,
+      "date": "24/01/25",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "GARIMA SHARMA",
+      "amount": 20000,
+      "date": "25/01/25",
+      "type": "Debit",
+      "category": "Other",
+      "impact": "Low Impact"
+    },
+    {
+      "description": "504110075569",
+      "amount": 100000,
+      "date": "10/02/25",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "50400318187027- RD INSTALLMENT-FEB 2025   00000000...",
+      "amount": 45000,
+      "date": "10/02/25",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "504814904948",
+      "amount": 50000,
+      "date": "17/02/25",
+      "type": "Debit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "FEB",
+      "amount": 250946,
+      "date": "25/02/25",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "505621912194",
+      "amount": 100000,
+      "date": "25/02/25",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "50400318187027- RD INSTALLMENT-MAR 2025",
+      "amount": 45000,
+      "date": "11/03/25",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "507512967870",
+      "amount": 50000,
+      "date": "16/03/25",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "MAR",
+      "amount": 251166,
+      "date": "25/03/25",
+      "type": "Credit",
+      "category": "Other",
+      "impact": "High Impact"
+    },
+    {
+      "description": "508500990073",
+      "amount": 150000,
+      "date": "26/03/25",
+      "type": "Debit",
+      "category": "Investment",
+      "impact": "High Impact"
+    },
+    {
+      "description": "GARIMA SHARMA",
+      "amount": 20000,
+      "date": "31/03/25",
+      "type": "Debit",
+      "category": "Other",
+      "impact": "Low Impact"
+    }
+  ],
+  "taxInsights": {
+    "potentialSave": 30000,
+    "missedDeductions": [
+      "Invest in ELSS (Section 80C)"
+    ]
+  }
+}
+
+=== Summary ===
+Total Transactions: 987
+Account: XXXXXX1725
+Customer: MR. KALPIT KUMAR SHARMA
+Opening Balance: 379562.39
+Closing Balance: 40939.84
+Total Income: 6431384.97
+Total Expense: 6770007.52
+Net Savings: -338622.55
+Savings Rate: -5.27%
+
+=== Transaction Breakdown ===
+UPI: 2299057.82 (795 transactions)
+IMPS: 2800818.00 (25 transactions)
+NEFT: 3075.00 (5 transactions)
+RTGS: 2000000.00 (4 transactions)
+EMI: 3774.00 (1 transactions)
+BillPaid: 34009.72 (49 transactions)
+DebitCard: 27478.60 (8 transactions)
+ATMWithdrawal: 105123.90 (12 transactions)
+NetBanking: 150000.00 (1 transactions)
+Salary: 3177411.00 (12 transactions)
+RD: 756000.00 (48 transactions)
+FD: 0.00 (0 transactions)
+SIP: 0.00 (0 transactions)
+Interest: 8166.00 (3 transactions)
+Cheque: 0.00 (0 transactions)
+Dividend: 6140.25 (14 transactions)
+Investment: 1815358.20 (9 transactions)
+Other: 14980.00 (1 transactions)
+
+Total in Breakdown: 987 (should match Total Transactions: 987)
+
+=== Other Transactions (with Narrations) ===
+1. Date: 13/09/24 | Method: Other | Amount: 14980.00
+   Narration: BAJAJS/2400024039550395-50200036340148 Account Branch : VIMAN NAGAR Address        : SHOP NO.2 & 3,FLORENCE BUILDING, VI...
+
+Total Other transactions printed: 1
+
+=== Top Expenses ===
+1. Indraprastha Gas Limited - 1400000.00 (Bills_Utilities)
+2. Indraprastha Gas Limited - 200000.00 (Bills_Utilities)
+3. Indraprastha Gas Limited - 200000.00 (Bills_Utilities)
+4. 430713979477 - 200000.00 (Investment)
+5. 430617967500 - 200000.00 (Investment)
+
+=== Expense Category Verification ===
+Total Expense Transactions: 895
+
+--- Investment ---
+  Count: 99 transactions
+  Total: 3372865.00
+  Average: 34069.34 per transaction
+  Sample Transactions:
+    1. Date: 01/04/24 | Amount: 150000.00 | Method: NetBanking
+       Narration: IB SS FUNDS TRANSFER DR-55000006604781    NB01155249657008
+    2. Date: 02/04/24 | Amount: 10000.00 | Method: RD
+       Narration: 50400334918713- RD INSTALLMENT-APR 2024
+    3. Date: 02/04/24 | Amount: 3000.00 | Method: RD
+       Narration: 50400334918831- RD INSTALLMENT-APR 2024
+
+--- Bills_Utilities ---
+  Count: 85 transactions
+  Total: 1917896.47
+  Average: 22563.49 per transaction
+  Sample Transactions:
+    1. Date: 20/04/24 | Amount: 3407.00 | Method: UPI
+       Narration: UPI-PVVNL ELECTRICITY BI-PAYTM-PTMBBP@PA YTM-YESB0PTMUPI-447761388635-OID2334806...
+       Merchant: Maharashtra State Electricity Distribution Company
+    2. Date: 21/04/24 | Amount: 817.00 | Method: Insurance
+       Narration: 50200000003402   20815953 HLIC INST       000000000000000
+    3. Date: 23/04/24 | Amount: 500.00 | Method: UPI
+       Narration: UPI-PARVIOM TECHNOLOGIES-PARVIOMTECHNOLO GIESPV.PAYU@MAIRTEL-AIRP0000001-4114768...
+       Merchant: PARVIOM TECHNOLOGIES
+
+--- Other ---
+  Count: 298 transactions
+  Total: 907648.22
+  Average: 3045.80 per transaction
+  Sample Transactions:
+    1. Date: 01/04/24 | Amount: 235.00 | Method: UPI
+       Narration: UPI-ARVIND-Q521416267@YBL-YESB0YBLUPI-40 9213798990-UPI
+       Merchant: ARVIND
+    2. Date: 04/04/24 | Amount: 240.00 | Method: UPI
+       Narration: UPI-SATISH  KUMAR-Q615634887@YBL-YESB0YB LUPI-409533285862-UPI
+       Merchant: SATISH KUMAR
+    3. Date: 05/04/24 | Amount: 100.00 | Method: UPI
+       Narration: UPI-XXXXXX2035-CNRB0018909-409662630346- UPI
+       Merchant: XXXXXX2035
+
+--- Shopping ---
+  Count: 100 transactions
+  Total: 257666.77
+  Average: 2576.67 per transaction
+  Sample Transactions:
+    1. Date: 02/04/24 | Amount: 100.00 | Method: UPI
+       Narration: UPI-GOOGLE INDIA DIGITAL-PLAYSTORE@AXISB ANK-UTIB0000553-409364489489-UPI
+       Merchant: Google Play
+    2. Date: 02/04/24 | Amount: 40.00 | Method: UPI
+       Narration: UPI-GOOGLE INDIA DIGITAL-PLAYSTORE@AXISB ANK-UTIB0000553-409365484940-UPI
+       Merchant: Google Play
+    3. Date: 04/04/24 | Amount: 180.00 | Method: UPI
+       Narration: UPI-AGGARWAL TRADING COM-PAYTMQR9T60Y2E6 2U@PAYTM-YESB0PTMUPI-409546599159-UPI
+       Merchant: AGGARWAL TRADING COM
+
+--- Travel ---
+  Count: 36 transactions
+  Total: 100132.73
+  Average: 2781.46 per transaction
+  Sample Transactions:
+    1. Date: 04/05/24 | Amount: 2500.00 | Method: UPI
+       Narration: UPI-JYOTI CARGO PACKERS -9373229015@YBL- UTIB0002654-412516014057-UPI
+       Merchant: JYOTI CARGO PACKERS
+    2. Date: 05/05/24 | Amount: 2200.00 | Method: UPI
+       Narration: UPI-SURBHI SOLANKI-PAYTMQR1OUZ56XU66@PAY TM-YESB0PTMUPI-412645393456-UPI
+       Merchant: Ola
+    3. Date: 28/05/24 | Amount: 2500.00 | Method: UPI
+       Narration: UPI-JYOTI CARGO PACKERS -9373229015@YBL- UTIB0002654-414947983219-UPI
+       Merchant: JYOTI CARGO PACKERS
+
+--- Healthcare ---
+  Count: 65 transactions
+  Total: 76802.32
+  Average: 1181.57 per transaction
+  Sample Transactions:
+    1. Date: 16/04/24 | Amount: 390.00 | Method: UPI
+       Narration: UPI-SHYAM MEDICOS-PAYTMQR2PSPSYIT57@PAYT M-YESB0PTMUPI-410732887648-UPI
+       Merchant: SHYAM MEDICOS
+    2. Date: 19/04/24 | Amount: 185.00 | Method: UPI
+       Narration: UPI-MS AMIT MEDICOS-PAYTMQRQLOUO5FDZI@PA YTM-YESB0PTMUPI-411042566516-UPI
+       Merchant: MS AMIT MEDICOS
+    3. Date: 27/04/24 | Amount: 1410.91 | Method: Insurance
+       Narration: ACH D- TP ACH MAXLIFEINSURA-1424041803
+
+--- Fuel ---
+  Count: 20 transactions
+  Total: 40961.00
+  Average: 2048.05 per transaction
+  Sample Transactions:
+    1. Date: 08/04/24 | Amount: 1000.00 | Method: UPI
+       Narration: UPI-DAUJI SERVICE STATIO-PAYTM-8804186@P AYTM-YESB0PTMUPI-409915469440-UPI
+       Merchant: DAUJI SERVICE STATIO
+    2. Date: 09/04/24 | Amount: 4040.00 | Method: UPI
+       Narration: UPI-SONA FUEL CENTRE-PAYTMQR281005050101 12CGZVNLQKRM@PAYTM-YESB0PTMUPI-41002385...
+       Merchant: Maharashtra State Electricity Distribution Company
+    3. Date: 27/04/24 | Amount: 500.00 | Method: UPI
+       Narration: UPI-SONA FUEL CENTRE-PAYTMQR1BAG1V4F3P@P AYTM-YESB0PTMUPI-411848081372-UPI
+       Merchant: Maharashtra State Electricity Distribution Company
+
+--- Dining ---
+  Count: 59 transactions
+  Total: 31558.20
+  Average: 534.88 per transaction
+  Sample Transactions:
+    1. Date: 02/04/24 | Amount: 30.00 | Method: UPI
+       Narration: UPI-AGGARWAL FOOD-PAYTMQR9WCD1G460T@PAYT M-YESB0PTMUPI-409359234300-UPI
+       Merchant: AGGARWAL FOOD
+    2. Date: 02/04/24 | Amount: 240.00 | Method: UPI
+       Narration: UPI-ANKIT DAIRY AND SWEE-VYAPAR.17081982 6526@HDFCBANK-HDFC0000001-409359864240-...
+       Merchant: ANKIT DAIRY AND SWEE
+    3. Date: 04/04/24 | Amount: 122.00 | Method: UPI
+       Narration: UPI-ANKIT DAIRY AND SWEE-VYAPAR.17081982 6526@HDFCBANK-HDFC0000001-409546349336-...
+       Merchant: ANKIT DAIRY AND SWEE
+
+--- Groceries ---
+  Count: 90 transactions
+  Total: 31084.48
+  Average: 345.38 per transaction
+  Sample Transactions:
+    1. Date: 04/04/24 | Amount: 70.00 | Method: UPI
+       Narration: UPI-MAHA GANESH TRADERS-PAYTMQRP2SLLMBX1 3@PAYTM-YESB0PTMUPI-409546480149-UPI
+       Merchant: MAHA GANESH TRADERS
+    2. Date: 09/04/24 | Amount: 200.00 | Method: UPI
+       Narration: UPI-MAHA GANESH TRADERS-PAYTMQRP2SLLMBX1 Account Branch : VIMAN NAGAR Address   ...
+       Merchant: MAHA GANESH TRADERS
+    3. Date: 16/04/24 | Amount: 40.00 | Method: UPI
+       Narration: UPI-MAHA GANESH TRADERS-PAYTMQRP2SLLMBX1 3@PAYTM-YESB0PTMUPI-410731826506-UPI
+       Merchant: MAHA GANESH TRADERS
+
+--- Food_Delivery ---
+  Count: 21 transactions
+  Total: 14245.23
+  Average: 678.34 per transaction
+  Sample Transactions:
+    1. Date: 11/05/24 | Amount: 895.80 | Method: UPI
+       Narration: UPI-ZOMATO LIMITED-ZOMATOORDER1.GPAY@OKP AYAXIS-UTIB0000553-413200438850-UPI
+       Merchant: Zomato
+    2. Date: 01/06/24 | Amount: 228.10 | Method: UPI
+       Narration: UPI-ZOMATO LIMITED-ZOMATOORDER1.GPAY@OKP AYAXIS-UTIB0000553-415311739116-UPI
+       Merchant: Zomato
+    3. Date: 22/06/24 | Amount: 944.60 | Method: UPI
+       Narration: UPI-ZOMATO LIMITED-ZOMATOORDER1.GPAY@OKP AYAXIS-UTIB0000553-417479784695-UPI
+       Merchant: Zomato
+
+--- Entertainment ---
+  Count: 20 transactions
+  Total: 10524.10
+  Average: 526.21 per transaction
+  Sample Transactions:
+    1. Date: 28/08/24 | Amount: 399.00 | Method: UPI
+       Narration: UPI-SONY PICTURES NETWOR-SONYPICTURESNET WORKSAUTOPAY.RZP@HDFCBANK-HDFC0000001-4...
+       Merchant: SONY PICTURES NETWOR
+    2. Date: 28/08/24 | Amount: 1100.00 | Method: UPI
+       Narration: UPI-SONY PICTURES NETWOR-SONYPICTURESNET WORKSAUTOPAY.RZP@HDFCBANK-HDFC0000001-4...
+       Merchant: SONY PICTURES NETWOR
+    3. Date: 31/08/24 | Amount: 764.00 | Method: UPI
+       Narration: UPI-ZEE5-ZEE5@PTYBL-YESB0PTMUPI-42442047 6343-UPI MANDAT
+       Merchant: ZEE5
+
+--- Education ---
+  Count: 1 transactions
+  Total: 4849.00
+  Average: 4849.00 per transaction
+  Sample Transactions:
+    1. Date: 25/03/25 | Amount: 4849.00 | Method: UPI
+       Narration: UPI-PHYSICSWALLAH PVT LT-PHYSICSWALLAHPV Account Branch : VIMAN NAGAR Address   ...
+       Merchant: PHYSICSWALLAH PVT LT
+
+--- Loan ---
+  Count: 1 transactions
+  Total: 3774.00
+  Average: 3774.00 per transaction
+  Sample Transactions:
+    1. Date: 31/12/24 | Amount: 3774.00 | Method: EMI
+       Narration: P : K16675 STAFF LOAN EMI REC             000000000000000
+
+
+=== Writing All Expense Transactions by Category to File ===
+✅ All expense transactions written to: expenses_by_category.txt
+=== Potential Classification Issues ===
+⚠️  Found 298 expenses classified as 'Other' (Total: 907648.22)
+   Sample 'Other' expense transactions:
+   - Date: 01/04/24 | Amount: 235.00 | Method: UPI
+     Narration: UPI-ARVIND-Q521416267@YBL-YESB0YBLUPI-40 9213798990-UPI
+   - Date: 04/04/24 | Amount: 240.00 | Method: UPI
+     Narration: UPI-SATISH  KUMAR-Q615634887@YBL-YESB0YB LUPI-409533285862-UPI
+   - Date: 05/04/24 | Amount: 100.00 | Method: UPI
+     Narration: UPI-XXXXXX2035-CNRB0018909-409662630346- UPI
+   - Date: 05/04/24 | Amount: 90000.00 | Method: UPI
+     Narration: UPI-XXXXXX2035-CNRB0018909-409663757379- UPI Account Branch : VIMAN NAGAR Address        : SHOP NO.2...
+   - Date: 05/04/24 | Amount: 60.00 | Method: UPI
+     Narration: UPI-DESH RAJ SO SITALA P-PAYTMQR127EFEJQ GA@PAYTM-YESB0PTMUPI-409678714232-UPI
+
+📄 Full classification issues report written to: classification_issues.txt
