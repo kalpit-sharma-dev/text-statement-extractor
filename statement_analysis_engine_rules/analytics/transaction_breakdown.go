@@ -61,17 +61,26 @@ func CalculateTransactionBreakdown(transactions []models.ClassifiedTransaction) 
 			breakdown.Salary.Amount += amount
 			breakdown.Salary.Count++
 		case "RD":
-			// Recurring Deposit - count separately (not in Other)
+			// Recurring Deposit - count separately AND in Investment total
 			breakdown.RD.Amount += amount
 			breakdown.RD.Count++
+			// Also add to Investment for consolidated view
+			breakdown.Investment.Amount += amount
+			breakdown.Investment.Count++
 		case "FD":
-			// Fixed Deposit - count separately (not in Other)
+			// Fixed Deposit - count separately AND in Investment total
 			breakdown.FD.Amount += amount
 			breakdown.FD.Count++
+			// Also add to Investment for consolidated view
+			breakdown.Investment.Amount += amount
+			breakdown.Investment.Count++
 		case "SIP":
-			// Systematic Investment Plan - count separately (not in Other)
+			// Systematic Investment Plan - count separately AND in Investment total
 			breakdown.SIP.Amount += amount
 			breakdown.SIP.Count++
+			// Also add to Investment for consolidated view
+			breakdown.Investment.Amount += amount
+			breakdown.Investment.Count++
 		case "Interest":
 			// Interest - count separately (not in Other)
 			breakdown.Interest.Amount += amount
@@ -95,9 +104,9 @@ func CalculateTransactionBreakdown(transactions []models.ClassifiedTransaction) 
 			breakdown.BillPaid.Count++
 		case "Self_Transfer":
 			// Self-transfer (INF/INFT) - internal fund transfer
-			// Count as Other since it's not really an expense or income transfer
-			breakdown.Other.Amount += amount
-			breakdown.Other.Count++
+			// These are transfers to own investment/savings accounts, so count as Investment
+			breakdown.Investment.Amount += amount
+			breakdown.Investment.Count++
 		case "OnlineShopping":
 			// Online shopping (ONL) - count as Other or based on underlying method
 			// The actual payment method (UPI, Card, etc.) is already counted elsewhere
