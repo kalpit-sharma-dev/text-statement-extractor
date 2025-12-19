@@ -93,6 +93,20 @@ func CalculateTransactionBreakdown(transactions []models.ClassifiedTransaction) 
 			// Insurance premium - count in BillPaid (it's a bill payment)
 			breakdown.BillPaid.Amount += amount
 			breakdown.BillPaid.Count++
+		case "Self_Transfer":
+			// Self-transfer (INF/INFT) - internal fund transfer
+			// Count as Other since it's not really an expense or income transfer
+			breakdown.Other.Amount += amount
+			breakdown.Other.Count++
+		case "OnlineShopping":
+			// Online shopping (ONL) - count as Other or based on underlying method
+			// The actual payment method (UPI, Card, etc.) is already counted elsewhere
+			breakdown.Other.Amount += amount
+			breakdown.Other.Count++
+		case "TaxPayment":
+			// Tax payment (DTAX/IDTX) - count as BillPaid
+			breakdown.BillPaid.Amount += amount
+			breakdown.BillPaid.Count++
 		case "Other":
 			// Explicitly classified as Other
 			breakdown.Other.Amount += amount

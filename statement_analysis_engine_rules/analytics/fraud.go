@@ -60,6 +60,12 @@ func CalculateBigTicketMovements(transactions []models.ClassifiedTransaction, th
 	movements := make([]models.BigTicketMovement, 0)
 
 	for _, txn := range transactions {
+		// Skip regular income transactions - they are expected income, not "big ticket movements"
+		// Salary, Interest, and Dividend are regular income streams that don't need to be flagged
+		if txn.Method == "Salary" || txn.Method == "Interest" || txn.Method == "Dividend" {
+			continue
+		}
+		
 		// Determine amount and type - can be either deposit or withdrawal
 		var amount float64
 		var txnType string

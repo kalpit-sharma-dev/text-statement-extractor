@@ -99,6 +99,30 @@ func ClassifyTransaction(txn models.ClassifiedTransaction) models.ClassifiedTran
 		}
 	}
 	
+	// If Method is Self_Transfer, ensure Category is Self_Transfer
+	if txn.Method == "Self_Transfer" {
+		txn.Category = "Self_Transfer"
+		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "SELF_TRANSFER", "INF", "INFT")
+		categoryResult.Confidence = 0.98 // Very high confidence for internal transfers
+		categoryResult.Reason = "Internal fund transfer detected (INF/INFT) - classified as Self_Transfer"
+	}
+	
+	// If Method is OnlineShopping (ICICI ONL code), ensure Category is Shopping
+	if txn.Method == "OnlineShopping" {
+		txn.Category = "Shopping"
+		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "ONLINE_SHOPPING", "ONL")
+		categoryResult.Confidence = 0.90 // High confidence for ONL code
+		categoryResult.Reason = "Online shopping transaction detected (ONL) - classified as Shopping"
+	}
+	
+	// If Method is TaxPayment (ICICI DTAX/IDTX codes), ensure Category is Bills_Utilities
+	if txn.Method == "TaxPayment" {
+		txn.Category = "Bills_Utilities"
+		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "TAX_PAYMENT", "DTAX", "IDTX")
+		categoryResult.Confidence = 0.95 // Very high confidence for tax payments
+		categoryResult.Reason = "Tax payment detected (DTAX/IDTX) - classified as Bills_Utilities"
+	}
+	
 	// If Method is EMI, ensure Category is Loan
 	if txn.Method == "EMI" {
 		txn.Category = "Loan"
