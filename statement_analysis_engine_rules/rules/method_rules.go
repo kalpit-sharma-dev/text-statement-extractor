@@ -16,19 +16,27 @@ func ClassifyMethod(narration string) string {
 		"@YBL", "@PAYTM", "@OK", "@AXL", "@IBL", "@PTYES",
 	}
 
-	// IMPS patterns
+	// IMPS patterns (including ICICI codes)
 	impsPatterns := []string{
 		"IMPS-", "IMPS ", "IMPS/", "INSTANT PAYMENT",
+		"MMT", "MMT-", "MMT ", // Mobile Money Transfer (Insta FT - IMPS)
 	}
 
-	// NEFT patterns
+	// NEFT patterns (including ICICI codes)
 	neftPatterns := []string{
 		"NEFT-", "NEFT ", "NEFT/", "NATIONAL ELECTRONIC FUND TRANSFER",
+		"N CHG", "N-CHG", // NEFT Charges
 	}
 
 	// RTGS patterns
 	rtgsPatterns := []string{
 		"RTGS", "REAL TIME GROSS SETTLEMENT",
+	}
+	
+	// Self-Transfer patterns (ICICI internal transfers)
+	selfTransferPatterns := []string{
+		"INF-", "INF ", "INF/", "INTERNET FUND TRANSFER IN LINKED ACCOUNTS",
+		"INFT-", "INFT ", "INFT/", "INTERNAL FUND TRANSFER",
 	}
 
 	// Investment/Savings patterns (exclude these from EMI)
@@ -42,6 +50,8 @@ func ClassifyMethod(narration string) string {
 		"BROKING", "BROKING LTD", "HSL SEC", "HSL", "SEC", // Stock broking companies
 		"ANGEL BROKING", "ICICI SECURITIES", "HDFC SECURITIES", "KOTAK SECURITIES",
 		"SHAREKHAN", "MOTILAL OSWAL", "IIFL", "5PAISA",
+		"EBA", "EBA-", "EBA ", // ICICI Direct transactions
+		"SGB", "SGB-", "SGB ", "SOVEREIGN GOLD BOND", // Sovereign Gold Bond
 	}
 
 	// EMI patterns (loans/repayments - exclude investments)
@@ -49,6 +59,7 @@ func ClassifyMethod(narration string) string {
 		"EMI", "LOAN", "REPAYMENT",
 		"HOME LOAN", "PERSONAL LOAN", "CAR LOAN", "EDUCATION LOAN",
 		"LOAN INSTALLMENT", "LOAN EMI", "LOAN REPAYMENT",
+		"LNPY", "LNPY-", "LNPY ", "LINKED LOAN PAYMENT", // ICICI loan payment code
 	}
 
 	// ACH patterns
@@ -61,12 +72,14 @@ func ClassifyMethod(narration string) string {
 	atmWithdrawalPatterns := []string{
 		"EAW", "ATW", "NWD", "ATM WITHDRAWAL", "ATM CASH WITHDRAWAL",
 		"ELECTRONIC ATM WITHDRAWAL", "ATM CASH",
+		"VAT", "MAT", "NFS", "CCWD", // ICICI ATM codes (Cash withdrawal at other bank ATM, Cardless Cash Withdrawal)
 	}
 
 	// Debit Card patterns
 	debitCardPatterns := []string{
 		"DC", "POS", "DEBIT CARD", "ATM", "CASH WITHDRAWAL",
 		"SWIPE", "CARD TRANSACTION", "VISA", "MASTERCARD",
+		"VPS", "IPS", "VPS-", "IPS-", // ICICI debit card transaction codes
 	}
 
 	// Net Banking patterns
@@ -99,9 +112,39 @@ func ClassifyMethod(narration string) string {
 	// Check patterns
 	checkPatterns := []string{
 		"CHQ", "CHEQUE", "CHEQUE NO",
+		"LCCBRN CMS", "UCCBRN CMS", // ICICI cheque collection codes
+	}
+	
+	// Bill payment patterns (ICICI specific)
+	billPaymentPatterns := []string{
+		"BBPS", "BBPS-", "BBPS ", "BHARAT BILL PAYMENT",
+		"BPAY", "BPAY-", "BPAY ", "BILL PAYMENT",
+		"RCHG", "RCHG-", "RCHG ", "RECHARGE",
+		"TOP", "TOP-", "TOP ", "MOBILE RECHARGE",
+		"BIL", "BIL-", "BIL ", "INTERNET BILL PAYMENT",
+		"PAVC", "PAVC-", "PAVC ", "PAY ANY VISA CREDIT CARD",
+	}
+	
+	// Online shopping patterns (ICICI specific)
+	onlineShoppingPatterns := []string{
+		"ONL", "ONL-", "ONL ", "ONLINE SHOPPING",
+	}
+	
+	// Tax payment patterns (ICICI specific)
+	taxPatterns := []string{
+		"DTAX", "DTAX-", "DTAX ", "DIRECT TAX",
+		"IDTX", "IDTX-", "IDTX ", "INDIRECT TAX",
 	}
 
-	// Check for insurance premium FIRST (before RD to catch HLIC_INST)
+	// Check for self-transfer patterns FIRST (ICICI internal transfers)
+	// INF/INFT are internal fund transfers within ICICI Bank (linked accounts)
+	for _, pattern := range selfTransferPatterns {
+		if strings.Contains(narration, pattern) {
+			return "Self_Transfer"
+		}
+	}
+	
+	// Check for insurance premium (before RD to catch HLIC_INST)
 	// Insurance premiums should be classified as "Insurance" method
 	for _, pattern := range insurancePatterns {
 		if strings.Contains(narration, pattern) {
@@ -142,14 +185,19 @@ func ClassifyMethod(narration string) string {
 		return "Investment"
 	}
 
-	// Check for stock broking companies (Zerodha, etc.)
+	// Check for stock broking companies (Zerodha, etc.) and ICICI investment codes
 	// These are investment-related transactions
+	// EBA = ICICI Direct transactions (stock trading)
+	// SGB = Sovereign Gold Bond
 	if strings.Contains(narration, "ZERODHA") ||
 		strings.Contains(narration, "ZERODHA BROKING") ||
 		strings.Contains(narration, "ZERODHA BROKING LTD") ||
 		strings.Contains(narration, "ZERODHABROKING") ||
 		strings.Contains(narration, "HSL SEC") ||
-		strings.Contains(narration, "HSL") && strings.Contains(narration, "SEC") {
+		(strings.Contains(narration, "HSL") && strings.Contains(narration, "SEC")) ||
+		strings.Contains(narration, "EBA-") || strings.Contains(narration, "EBA ") || strings.HasPrefix(narration, "EBA") ||
+		strings.Contains(narration, "SGB-") || strings.Contains(narration, "SGB ") || strings.HasPrefix(narration, "SGB") ||
+		strings.Contains(narration, "SOVEREIGN GOLD BOND") {
 		// Classify as Investment method
 		return "Investment"
 	}
@@ -296,6 +344,30 @@ func ClassifyMethod(narration string) string {
 			return "Cheque"
 		}
 	}
+	
+	// Check Bill Payment (ICICI-specific codes)
+	// BBPS, BPAY, RCHG, TOP, BIL, PAVC
+	for _, pattern := range billPaymentPatterns {
+		if strings.Contains(narration, pattern) {
+			return "BillPaid"
+		}
+	}
+	
+	// Check Online Shopping (ICICI-specific code)
+	// ONL = Online shopping transaction (payment on third party website)
+	for _, pattern := range onlineShoppingPatterns {
+		if strings.Contains(narration, pattern) {
+			return "OnlineShopping"
+		}
+	}
+	
+	// Check Tax Payment (ICICI-specific codes)
+	// DTAX = Direct Tax, IDTX = Indirect Tax
+	for _, pattern := range taxPatterns {
+		if strings.Contains(narration, pattern) {
+			return "TaxPayment"
+		}
+	}
 
 	// Default to Other
 	return "Other"
@@ -310,6 +382,8 @@ func IsBillPayment(narration string) bool {
 		"INSURANCE", "PREMIUM", "LIC", "HDFC LIFE", "HLIC", "HLIC_INST", "HLIC INST",
 		"MAXLIFE", "SBI LIFE", "ICICI PRUDENTIAL", "BAJAJ ALLIANZ",
 		"PVVNL", "IGL", "AIRTEL", "JIO", "VODAFONE",
+		// ICICI-specific bill payment codes
+		"BBPS", "BPAY", "RCHG", "TOP", "BIL-", "PAVC",
 	}
 
 	for _, pattern := range billPatterns {
