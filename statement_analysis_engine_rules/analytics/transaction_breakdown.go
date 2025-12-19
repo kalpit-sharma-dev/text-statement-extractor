@@ -6,21 +6,34 @@ import "classify/statement_analysis_engine_rules/models"
 func CalculateTransactionBreakdown(transactions []models.ClassifiedTransaction) models.TransactionBreakdown {
 	breakdown := models.TransactionBreakdown{}
 
+	// Investment categories - must match account_summary.go logic
+	// Methods are handled explicitly in the switch statement below
+	investmentCategories := map[string]bool{
+		"Investment":    true,
+		"Investments":   true,
+		"Self_Transfer": true,
+	}
+
 	for _, txn := range transactions {
 		// Determine amount based on transaction type
 		// For deposits (income), use DepositAmt
 		// For withdrawals (expenses), use WithdrawalAmt
 		var amount float64
+		var isDebit bool
 		if txn.DepositAmt > 0 && txn.WithdrawalAmt == 0 {
 			amount = txn.DepositAmt
+			isDebit = false
 		} else if txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
 			amount = txn.WithdrawalAmt
+			isDebit = true
 		} else if txn.DepositAmt > 0 && txn.WithdrawalAmt > 0 {
 			// Both amounts present - use the larger one
 			if txn.DepositAmt > txn.WithdrawalAmt {
 				amount = txn.DepositAmt
+				isDebit = false
 			} else {
 				amount = txn.WithdrawalAmt
+				isDebit = true
 			}
 		} else {
 			// No amount, skip
@@ -61,26 +74,32 @@ func CalculateTransactionBreakdown(transactions []models.ClassifiedTransaction) 
 			breakdown.Salary.Amount += amount
 			breakdown.Salary.Count++
 		case "RD":
-			// Recurring Deposit - count separately AND in Investment total
+			// Recurring Deposit - count separately AND in Investment total (if debit)
 			breakdown.RD.Amount += amount
 			breakdown.RD.Count++
-			// Also add to Investment for consolidated view
-			breakdown.Investment.Amount += amount
-			breakdown.Investment.Count++
+			// Also add to Investment for consolidated view (only debits - actual investments)
+			if isDebit {
+				breakdown.Investment.Amount += amount
+				breakdown.Investment.Count++
+			}
 		case "FD":
-			// Fixed Deposit - count separately AND in Investment total
+			// Fixed Deposit - count separately AND in Investment total (if debit)
 			breakdown.FD.Amount += amount
 			breakdown.FD.Count++
-			// Also add to Investment for consolidated view
-			breakdown.Investment.Amount += amount
-			breakdown.Investment.Count++
+			// Also add to Investment for consolidated view (only debits - actual investments)
+			if isDebit {
+				breakdown.Investment.Amount += amount
+				breakdown.Investment.Count++
+			}
 		case "SIP":
-			// Systematic Investment Plan - count separately AND in Investment total
+			// Systematic Investment Plan - count separately AND in Investment total (if debit)
 			breakdown.SIP.Amount += amount
 			breakdown.SIP.Count++
-			// Also add to Investment for consolidated view
-			breakdown.Investment.Amount += amount
-			breakdown.Investment.Count++
+			// Also add to Investment for consolidated view (only debits - actual investments)
+			if isDebit {
+				breakdown.Investment.Amount += amount
+				breakdown.Investment.Count++
+			}
 		case "Interest":
 			// Interest - count separately (not in Other)
 			breakdown.Interest.Amount += amount
@@ -95,18 +114,22 @@ func CalculateTransactionBreakdown(transactions []models.ClassifiedTransaction) 
 			breakdown.Dividend.Count++
 		case "Investment":
 			// Investment transactions (like Indian Clearing Corporation)
-			// Count separately (not in Other)
-			breakdown.Investment.Amount += amount
-			breakdown.Investment.Count++
+			// Count separately (not in Other) - only debits as they represent actual investments
+			if isDebit {
+				breakdown.Investment.Amount += amount
+				breakdown.Investment.Count++
+			}
 		case "Insurance":
 			// Insurance premium - count in BillPaid (it's a bill payment)
 			breakdown.BillPaid.Amount += amount
 			breakdown.BillPaid.Count++
 		case "Self_Transfer":
 			// Self-transfer (INF/INFT) - internal fund transfer
-			// These are transfers to own investment/savings accounts, so count as Investment
-			breakdown.Investment.Amount += amount
-			breakdown.Investment.Count++
+			// These are transfers to own investment/savings accounts, so count as Investment (only debits)
+			if isDebit {
+				breakdown.Investment.Amount += amount
+				breakdown.Investment.Count++
+			}
 		case "OnlineShopping":
 			// Online shopping (ONL) - count as Other or based on underlying method
 			// The actual payment method (UPI, Card, etc.) is already counted elsewhere
@@ -124,6 +147,18 @@ func CalculateTransactionBreakdown(transactions []models.ClassifiedTransaction) 
 			// Catch all unmatched methods (empty string, unknown methods, etc.)
 			breakdown.Other.Amount += amount
 			breakdown.Other.Count++
+		}
+
+		// Additional check: if this is a debit with Investment category but wasn't caught by method
+		// This ensures category-based investments (e.g., IMPS to investment account) are counted
+		// Must match account_summary.go logic for consistency
+		if isDebit && txn.Method != "RD" && txn.Method != "FD" && txn.Method != "SIP" &&
+			txn.Method != "Investment" && txn.Method != "Self_Transfer" {
+			// Check if category indicates investment
+			if investmentCategories[txn.Category] {
+				breakdown.Investment.Amount += amount
+				breakdown.Investment.Count++
+			}
 		}
 	}
 

@@ -46,10 +46,11 @@ func CalculateAccountSummaryWithTotals(
 		"Self_Transfer": true, // Transfers to own accounts (savings/investment accounts)
 	}
 	investmentMethods := map[string]bool{
-		"RD":         true,
-		"FD":         true,
-		"SIP":        true,
-		"Investment": true,
+		"RD":           true,
+		"FD":           true,
+		"SIP":          true,
+		"Investment":   true,
+		"Self_Transfer": true, // ICICI INF/INFT internal transfers
 	}
 
 	// If statement totals are provided, use them (they're the official bank totals)
