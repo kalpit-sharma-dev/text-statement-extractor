@@ -39,14 +39,32 @@ func calculateAverageDailyExpense(transactions []models.ClassifiedTransaction) f
 	firstDate := ""
 	lastDate := ""
 
+	// Investment categories/methods to exclude from expenses
+	investmentCategories := map[string]bool{
+		"Investment":    true,
+		"Investments":   true,
+		"Self_Transfer": true,
+	}
+	investmentMethods := map[string]bool{
+		"RD":         true,
+		"FD":         true,
+		"SIP":        true,
+		"Investment": true,
+	}
+
 	for _, txn := range transactions {
-		// Only count withdrawals (expenses), not deposits
+		// Only count OPERATIONAL expenses (withdrawals) - EXCLUDE investments
 		if txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
-			totalExpense += txn.WithdrawalAmt
-			if firstDate == "" {
-				firstDate = txn.Date
+			// Check if it's an investment
+			isInvestment := investmentCategories[txn.Category] || investmentMethods[txn.Method]
+			
+			if !isInvestment {
+				totalExpense += txn.WithdrawalAmt
+				if firstDate == "" {
+					firstDate = txn.Date
+				}
+				lastDate = txn.Date
 			}
-			lastDate = txn.Date
 		}
 	}
 

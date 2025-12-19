@@ -10,6 +10,19 @@ import (
 func CalculateMonthlySummary(transactions []models.ClassifiedTransaction) []models.MonthlySummary {
 	monthlyData := make(map[string]*models.MonthlySummary)
 
+	// Investment categories/methods to exclude from expenses
+	investmentCategories := map[string]bool{
+		"Investment":    true,
+		"Investments":   true,
+		"Self_Transfer": true,
+	}
+	investmentMethods := map[string]bool{
+		"RD":         true,
+		"FD":         true,
+		"SIP":        true,
+		"Investment": true,
+	}
+
 	for _, txn := range transactions {
 		month := utils.GetMonthName(txn.Date)
 		if month == "" {
@@ -27,9 +40,15 @@ func CalculateMonthlySummary(transactions []models.ClassifiedTransaction) []mode
 			monthlyData[month].Income += txn.DepositAmt
 		}
 		
-		// Count expenses (withdrawals)
+		// Count ONLY operational expenses (withdrawals) - EXCLUDE investments
 		if txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
-			monthlyData[month].Expense += txn.WithdrawalAmt
+			// Check if it's an investment
+			isInvestment := investmentCategories[txn.Category] || investmentMethods[txn.Method]
+			
+			if !isInvestment {
+				// Only count as expense if it's NOT an investment
+				monthlyData[month].Expense += txn.WithdrawalAmt
+			}
 		}
 		
 		// Handle edge case where both amounts exist (shouldn't happen, but handle it)
@@ -37,7 +56,11 @@ func CalculateMonthlySummary(transactions []models.ClassifiedTransaction) []mode
 			if txn.DepositAmt > txn.WithdrawalAmt {
 				monthlyData[month].Income += (txn.DepositAmt - txn.WithdrawalAmt)
 			} else {
-				monthlyData[month].Expense += (txn.WithdrawalAmt - txn.DepositAmt)
+				netWithdrawal := txn.WithdrawalAmt - txn.DepositAmt
+				isInvestment := investmentCategories[txn.Category] || investmentMethods[txn.Method]
+				if !isInvestment {
+					monthlyData[month].Expense += netWithdrawal
+				}
 			}
 		}
 
@@ -78,10 +101,30 @@ func CalculateMonthlySummary(transactions []models.ClassifiedTransaction) []mode
 func getTopCategoryForMonth(transactions []models.ClassifiedTransaction, month string) string {
 	categoryMap := make(map[string]float64)
 
+	// Exclude investment categories from top category calculation
+	investmentCategories := map[string]bool{
+		"Investment":    true,
+		"Investments":   true,
+		"Self_Transfer": true,
+	}
+	investmentMethods := map[string]bool{
+		"RD":         true,
+		"FD":         true,
+		"SIP":        true,
+		"Investment": true,
+	}
+
 	for _, txn := range transactions {
-		// Only count expenses (withdrawals) for category breakdown
+		// Only count operational expenses (withdrawals) for category breakdown
 		if utils.GetMonthName(txn.Date) == month && 
 		   txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
+			
+			// Skip investment categories
+			isInvestment := investmentCategories[txn.Category] || investmentMethods[txn.Method]
+			if isInvestment {
+				continue
+			}
+			
 			categoryMap[txn.Category] += txn.WithdrawalAmt
 		}
 	}
