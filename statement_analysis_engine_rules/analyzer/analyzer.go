@@ -92,6 +92,9 @@ func (a *Analyzer) Analyze(
 	recommendedProducts := generateRecommendations(a.transactions, categorySummary, cashFlowScore)
 	behaviourInsights := generateBehaviourInsights(a.transactions)
 	savingsOpportunities := generateSavingsOpportunities(a.transactions, categorySummary)
+	
+	// Prepare all transactions for heatmap and pattern analysis
+	transactionDetails := analytics.PrepareTransactionsForResponse(a.transactions)
 
 	return models.ClassifyResponse{
 		AccountSummary:       accountSummary,
@@ -112,6 +115,7 @@ func (a *Analyzer) Analyze(
 		FraudRisk:            fraudRisk,
 		BigTicketMovements:   bigTicketMovements,
 		TaxInsights:          taxInsights,
+		Transactions:         transactionDetails, // All transactions for heatmap and pattern analysis
 	}
 }
 

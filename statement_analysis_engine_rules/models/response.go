@@ -182,24 +182,44 @@ type TaxInsights struct {
 	MissedDeductions []string `json:"missedDeductions"`
 }
 
+// TransactionDetail represents a single transaction for heatmap and pattern analysis
+type TransactionDetail struct {
+	// Required fields
+	Date          string  `json:"date"`          // Format: "DD/MM/YYYY" - e.g., "25/08/2025"
+	Amount        float64 `json:"amount"`        // Transaction amount
+	Type          string  `json:"type"`          // "Credit" or "Debit"
+	Category      string  `json:"category"`      // e.g., "Bills_Utilities", "Shopping", "Investment"
+	Merchant      string  `json:"merchant"`      // Merchant/vendor name
+	PaymentMethod string  `json:"paymentMethod"` // "UPI", "IMPS", "NEFT", "RTGS", etc.
+	
+	// Optional fields (for advanced features)
+	Time            string  `json:"time,omitempty"`            // Format: "HH:MM:SS" - e.g., "14:30:00"
+	Description     string  `json:"description,omitempty"`     // Full transaction description
+	Balance         float64 `json:"balance,omitempty"`         // Account balance after transaction
+	ReferenceNumber string  `json:"referenceNumber,omitempty"` // Transaction reference/ID
+	Beneficiary     string  `json:"beneficiary,omitempty"`     // Beneficiary name for transfers
+	IsRecurring     bool    `json:"isRecurring,omitempty"`     // Whether this is a recurring payment
+}
+
 // ClassifyResponse represents the complete response structure
 type ClassifyResponse struct {
-	AccountSummary       AccountSummary       `json:"accountSummary"`
-	TransactionBreakdown TransactionBreakdown `json:"transactionBreakdown"`
-	TopBeneficiaries     []TopBeneficiary     `json:"topBeneficiaries"`
-	TopExpenses          []TopExpense         `json:"topExpenses"`
-	MonthlySummary       []MonthlySummary     `json:"monthlySummary"`
-	CategorySummary      CategorySummary      `json:"categorySummary"`
-	MerchantSummary      MerchantSummary      `json:"merchantSummary"`
-	TransactionTrends    TransactionTrends    `json:"transactionTrends"`
-	RecommendedProducts  []RecommendedProduct `json:"recommendedProducts"`
-	PredictiveInsights   PredictiveInsights   `json:"predictiveInsights"`
-	CashFlowScore        CashFlowScore        `json:"cashFlowScore"`
-	SalaryUtilization    SalaryUtilization    `json:"salaryUtilization"`
-	BehaviourInsights    []BehaviourInsight   `json:"behaviourInsights"`
-	RecurringPayments    []RecurringPayment   `json:"recurringPayments"`
-	SavingsOpportunities []SavingsOpportunity `json:"savingsOpportunities"`
-	FraudRisk            FraudRisk            `json:"fraudRisk"`
-	BigTicketMovements   []BigTicketMovement  `json:"bigTicketMovements"`
-	TaxInsights          TaxInsights          `json:"taxInsights"`
+	AccountSummary       AccountSummary        `json:"accountSummary"`
+	TransactionBreakdown TransactionBreakdown  `json:"transactionBreakdown"`
+	TopBeneficiaries     []TopBeneficiary      `json:"topBeneficiaries"`
+	TopExpenses          []TopExpense          `json:"topExpenses"`
+	MonthlySummary       []MonthlySummary      `json:"monthlySummary"`
+	CategorySummary      CategorySummary       `json:"categorySummary"`
+	MerchantSummary      MerchantSummary       `json:"merchantSummary"`
+	TransactionTrends    TransactionTrends     `json:"transactionTrends"`
+	RecommendedProducts  []RecommendedProduct  `json:"recommendedProducts"`
+	PredictiveInsights   PredictiveInsights    `json:"predictiveInsights"`
+	CashFlowScore        CashFlowScore         `json:"cashFlowScore"`
+	SalaryUtilization    SalaryUtilization     `json:"salaryUtilization"`
+	BehaviourInsights    []BehaviourInsight    `json:"behaviourInsights"`
+	RecurringPayments    []RecurringPayment    `json:"recurringPayments"`
+	SavingsOpportunities []SavingsOpportunity  `json:"savingsOpportunities"`
+	FraudRisk            FraudRisk             `json:"fraudRisk"`
+	BigTicketMovements   []BigTicketMovement   `json:"bigTicketMovements"`
+	TaxInsights          TaxInsights           `json:"taxInsights"`
+	Transactions         []TransactionDetail   `json:"transactions"` // All transactions for heatmap and pattern analysis
 }
