@@ -61,9 +61,11 @@ func isWhitelisted(txn models.ClassifiedTransaction) bool {
 }
 
 // CalculateFraudRisk calculates fraud risk indicators
+// Enhanced to consider cumulative patterns from anomaly detection
 func CalculateFraudRisk(transactions []models.ClassifiedTransaction) models.FraudRisk {
 	riskLevel := "Low"
 	alerts := make([]models.FraudAlert, 0)
+	riskFactors := 0
 
 	// Check for unusual transactions
 	for _, txn := range transactions {
@@ -86,8 +88,10 @@ func CalculateFraudRisk(transactions []models.ClassifiedTransaction) models.Frau
 				Amount:   amount,
 				Merchant: txn.Merchant,
 			})
+			riskFactors++
 			if amount > 100000 {
 				riskLevel = "Medium"
+				riskFactors += 2 // Higher weight for very large amounts
 			}
 		}
 
@@ -97,6 +101,46 @@ func CalculateFraudRisk(transactions []models.ClassifiedTransaction) models.Frau
 				Amount:   amount,
 				Merchant: "Unknown Vendor",
 			})
+			riskFactors++
+		}
+	}
+
+	// Check for cumulative patterns (multiple large transfers to same account)
+	beneficiaryCounts := make(map[string]int)
+	beneficiaryAmounts := make(map[string]float64)
+	
+	for _, txn := range transactions {
+		if txn.DepositAmt > 0 || txn.WithdrawalAmt == 0 {
+			continue
+		}
+		if isWhitelisted(txn) {
+			continue
+		}
+		
+		beneficiary := strings.ToUpper(strings.TrimSpace(txn.Beneficiary))
+		merchant := strings.ToUpper(strings.TrimSpace(txn.Merchant))
+		target := beneficiary
+		if target == "" {
+			target = merchant
+		}
+		
+		if target != "" && txn.WithdrawalAmt >= 30000 {
+			beneficiaryCounts[target]++
+			beneficiaryAmounts[target] += txn.WithdrawalAmt
+		}
+	}
+	
+	// Flag if multiple large transfers to same account
+	for beneficiary, count := range beneficiaryCounts {
+		if count >= 2 && beneficiaryAmounts[beneficiary] >= 100000 {
+			riskFactors += 2 // Significant risk factor
+			if riskLevel == "Low" {
+				riskLevel = "Medium"
+			}
+		}
+		if count >= 3 {
+			riskLevel = "Medium"
+			riskFactors += 3 // High risk factor
 		}
 	}
 
@@ -105,8 +149,45 @@ func CalculateFraudRisk(transactions []models.ClassifiedTransaction) models.Frau
 		alerts = alerts[:5]
 	}
 
-	if len(alerts) > 3 {
+	// Check for large bill payments (potential red flag)
+	for _, txn := range transactions {
+		if txn.DepositAmt > 0 || txn.WithdrawalAmt == 0 {
+			continue
+		}
+		if isWhitelisted(txn) {
+			continue
+		}
+		
+		// Large bill payments via CRED or similar platforms
+		if (txn.Category == "Bills_Utilities" || strings.Contains(strings.ToUpper(txn.Merchant), "CRED")) && 
+		   txn.WithdrawalAmt >= 100000 {
+			riskFactors += 2 // Significant risk factor
+			if riskLevel == "Low" {
+				riskLevel = "Medium"
+			}
+		}
+	}
+	
+	// Enhanced risk level determination
+	if len(alerts) > 3 || riskFactors >= 5 {
 		riskLevel = "High"
+	} else if len(alerts) > 1 || riskFactors >= 2 {
+		if riskLevel == "Low" {
+			riskLevel = "Medium"
+		}
+	}
+	
+	// Special case: If we have multiple large transfers pattern, elevate risk
+	if riskFactors >= 3 && len(beneficiaryCounts) > 0 {
+		maxCount := 0
+		for _, count := range beneficiaryCounts {
+			if count > maxCount {
+				maxCount = count
+			}
+		}
+		if maxCount >= 3 {
+			riskLevel = "Medium" // At minimum, medium risk
+		}
 	}
 
 	return models.FraudRisk{

@@ -186,6 +186,37 @@ type TaxInsights struct {
 	MissedDeductions []string `json:"missedDeductions"`
 }
 
+// AnomalyDetection represents anomaly detection results
+type AnomalyDetection struct {
+	Anomalies     []AnomalyDetail `json:"anomalies"`
+	RiskScore     float64          `json:"riskScore"`     // 0-100
+	TotalChecked  int              `json:"totalChecked"`
+	AnomalyCount  int              `json:"anomalyCount"`
+	Summary       AnomalySummary   `json:"summary"`
+}
+
+// AnomalyDetail represents a single detected anomaly
+type AnomalyDetail struct {
+	TransactionID    int     `json:"transactionId"`
+	Type             string  `json:"type"`
+	Severity         string  `json:"severity"`
+	Score            float64 `json:"score"`
+	Description      string  `json:"description"`
+	Amount           float64 `json:"amount"`
+	Merchant         string  `json:"merchant"`
+	Category         string  `json:"category"`
+	Date             string  `json:"date"`
+	Reason           string  `json:"reason"`
+	StatisticalValue float64 `json:"statisticalValue"`
+}
+
+// AnomalySummary provides summary statistics
+type AnomalySummary struct {
+	ByType      map[string]int     `json:"byType"`
+	BySeverity  map[string]int     `json:"bySeverity"`
+	TopAnomalies []AnomalyDetail  `json:"topAnomalies"`
+}
+
 // TransactionDetail represents a single transaction for heatmap and pattern analysis
 type TransactionDetail struct {
 	// Required fields
@@ -225,5 +256,6 @@ type ClassifyResponse struct {
 	FraudRisk            FraudRisk             `json:"fraudRisk"`
 	BigTicketMovements   []BigTicketMovement   `json:"bigTicketMovements"`
 	TaxInsights          TaxInsights           `json:"taxInsights"`
+	AnomalyDetection     AnomalyDetection      `json:"anomalyDetection"` // Anomaly detection results
 	Transactions         []TransactionDetail   `json:"transactions"` // All transactions for heatmap and pattern analysis
 }

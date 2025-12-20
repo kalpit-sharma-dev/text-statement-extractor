@@ -77,6 +77,8 @@ func (a *Analyzer) Analyze(
 	fraudRisk := analytics.CalculateFraudRisk(a.transactions)
 	bigTicketMovements := analytics.CalculateBigTicketMovements(a.transactions, 20000)
 	taxInsights := analytics.CalculateTaxInsights(a.transactions)
+	// Use new anomaly_engine package (bank-grade detection)
+	anomalyDetection := analytics.CalculateAnomalyDetectionWithEngine(a.transactions, customerName)
 	cashFlowScore := analytics.CalculateCashFlowScore(
 		openingBalance,
 		closingBalance,
@@ -115,6 +117,7 @@ func (a *Analyzer) Analyze(
 		FraudRisk:            fraudRisk,
 		BigTicketMovements:   bigTicketMovements,
 		TaxInsights:          taxInsights,
+		AnomalyDetection:     anomalyDetection,
 		Transactions:         transactionDetails, // All transactions for heatmap and pattern analysis
 	}
 }
