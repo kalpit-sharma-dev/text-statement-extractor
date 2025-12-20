@@ -42,15 +42,57 @@ func ClassifyTransaction(txn models.ClassifiedTransaction) models.ClassifiedTran
 	
 	// Get category with metadata (matched keywords, confidence, etc.)
 	categoryResult := rules.ClassifyCategoryWithMetadata(normalizedNarration, txn.Merchant, amount)
+	
+	// Step 3.5: Handle Refunds - Credits from shopping merchants should be classified as Refund
+	// If it's a deposit (credit) and category is Shopping, it's likely a refund
+	if txn.DepositAmt > 0 && txn.WithdrawalAmt == 0 {
+		refundMerchants := []string{
+			"AMAZON", "FLIPKART", "MYNTRA", "AJIO", "MEESHO", "NYKAA",
+			"ZARA", "HNM", "SHOPPERS STOP", "LIFESTYLE", "PANTALOONS",
+			"CROMA", "RELIANCE DIGITAL", "VIJAY SALES", "SIMPL",
+		}
+		normalizedUpper := strings.ToUpper(normalizedNarration)
+		merchantUpper := strings.ToUpper(txn.Merchant)
+		
+		for _, refundMerchant := range refundMerchants {
+			if strings.Contains(normalizedUpper, refundMerchant) || strings.Contains(merchantUpper, refundMerchant) {
+				categoryResult.Category = "Refund"
+				categoryResult.Confidence = 0.90
+				categoryResult.Reason = "Refund detected - credit from shopping merchant"
+				categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "REFUND", refundMerchant)
+				break
+			}
+		}
+	}
 	txn.Category = categoryResult.Category
 	
 	// Step 4: Extract beneficiary
 	txn.Beneficiary = rules.ExtractBeneficiary(normalizedNarration, txn.Method)
 
 	// Step 5: Determine if income or expense
-	// Dividends are always income (even if they come as deposits)
-	if txn.Method == "Dividend" {
+	// Dividends and Salary are always income (even if they come as deposits)
+	if txn.Method == "Dividend" || txn.Method == "Salary" || txn.Method == "Interest" {
 		txn.IsIncome = true
+		// Also ensure category is Income for these payment methods
+		if txn.Method == "Salary" {
+			txn.Category = "Income"
+			categoryResult.Category = "Income"
+			categoryResult.Confidence = 0.98
+			categoryResult.Reason = "Salary income detected"
+			categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "SALARY")
+		} else if txn.Method == "Dividend" {
+			txn.Category = "Income"
+			categoryResult.Category = "Income"
+			categoryResult.Confidence = 0.95
+			categoryResult.Reason = "Dividend income detected"
+			categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "DIVIDEND")
+		} else if txn.Method == "Interest" {
+			txn.Category = "Income"
+			categoryResult.Category = "Income"
+			categoryResult.Confidence = 0.95
+			categoryResult.Reason = "Interest income detected"
+			categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "INTEREST")
+		}
 	} else {
 		txn.IsIncome = txn.DepositAmt > 0
 	}
@@ -92,19 +134,21 @@ func ClassifyTransaction(txn models.ClassifiedTransaction) models.ClassifiedTran
 		}
 		
 		if isSelfTransfer {
-			txn.Category = "Self_Transfer"
+			// Self-transfers are treated as Investments (moving money to savings/investment accounts)
+			txn.Category = "Investment"
 			categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "SELF_TRANSFER", txn.Method)
 			categoryResult.Confidence = 0.95
-			categoryResult.Reason = "Self-transfer detected - same account holder name"
+			categoryResult.Reason = "Self-transfer detected - classified as Investment (savings movement)"
 		}
 	}
 	
-	// If Method is Self_Transfer, ensure Category is Self_Transfer
+	// If Method is Self_Transfer, ensure Category is Investment
+	// Self-transfers to own accounts are considered investments/savings movements
 	if txn.Method == "Self_Transfer" {
-		txn.Category = "Self_Transfer"
+		txn.Category = "Investment"
 		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "SELF_TRANSFER", "INF", "INFT")
 		categoryResult.Confidence = 0.98 // Very high confidence for internal transfers
-		categoryResult.Reason = "Internal fund transfer detected (INF/INFT) - classified as Self_Transfer"
+		categoryResult.Reason = "Internal fund transfer detected (INF/INFT) - classified as Investment (savings movement)"
 	}
 	
 	// If Method is OnlineShopping (ICICI ONL code), ensure Category is Shopping

@@ -78,6 +78,10 @@ var KnownMerchants = []KnownMerchant{
 	{Patterns: []string{"CATERERS", "CATERING", "BALAJI CATERERS", "SHRI BALAJI CATERERS"}, Name: "Catering Service", Category: "Dining", Confidence: 0.8},
 	{Patterns: []string{"DAGDUSHET COUNTER"}, Name: "Dagdushet Temple Counter", Category: "Dining", Confidence: 0.7},
 
+	// Dairy Shops (Groceries, NOT Dining - they sell milk, paneer, curd etc.)
+	{Patterns: []string{"DAIRY", "DAIRY AND SWEE", "DAIRY AND SWEET", "ANKIT DAIRY"}, Name: "Dairy Shop", Category: "Groceries", Confidence: 0.85},
+	{Patterns: []string{"MILK SHOP", "MILK STORE", "DOODH"}, Name: "Milk Shop", Category: "Groceries", Confidence: 0.85},
+
 	// Healthcare
 	{Patterns: []string{"NOBLE CHEMISTS", "NOBLE CHEMIST"}, Name: "Noble Chemists", Category: "Healthcare", Confidence: 0.8},
 	{Patterns: []string{"KAIWALYA MEDICO", "KAIWALYA"}, Name: "Kaiwalya Medico", Category: "Healthcare", Confidence: 0.8},

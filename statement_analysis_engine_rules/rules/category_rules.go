@@ -194,16 +194,17 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 	}
 
 	// Dining patterns (POS signals - restaurants, cafes, NOT delivery)
+	// IMPORTANT: Do NOT include DAIRY here - Dairy shops are Groceries, not Dining
 	diningPatterns := []string{
 		// POS indicators (key signal for dining vs delivery)
 		"POS RESTAURANT", "POS CAFE", "POS DINING",
 		// Restaurant/Cafe names (when not with delivery gateways)
-		"RESTAURANT", "CAFE", "HOTEL", "DINING",
+		"RESTAURANT", "CAFE", "DINING",
 		"FOOD COURT", "EATERY", "BAKERY", "COFFEE",
-		// Sweets shops
-		"BANSAL BIKANER SWEET", "BIKANER SWEET", "SWEET",
+		// Sweets shops (ready-to-eat sweets from shops are dining)
+		"BANSAL BIKANER SWEET", "BIKANER SWEET",
 		"AGGARWAL SWEETS", "AGGARWAL FOOD", "AGGARWAL SWEET",
-		"SWEETS", "SWEET SHOP",
+		"SWEET SHOP", "SWEETS SHOP",
 		"STARBUCKS", "CAFE COFFEE DAY", "CCD",
 		"BARBEQUENATION",
 		// POS + restaurant chain (dining, not delivery)
@@ -211,14 +212,14 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"POS PIZZAHUT", "POS BURGERKING", "POS SUBWAY",
 		// Restaurants/Cafes (from "Other" transactions)
 		"EATSOME", "MEGAPOLISSANGRIA", "SANGRIA",
-		"SNACKS CENT", "SNACKS", "DAIRY AND SWEE",
+		"SNACKS CENT", "SNACKS",
 		"GODAVARI SNACKS", "GODAVARI",
 		// Dining establishments (from classification issues)
 		"BAMRADA SONS", "BAMRADA",
 		"SPECIAL CHAT CENTER", "SPECIAL CHAT", "CHAT CENTER",
 		"MUSKAN BAKERS", "MUSKAN BAKERS AND CO",
 		"ROSIER FOODS", "ROSIER",
-		"PANCHAITEA", "PANCHAI TEA", "TEA",
+		"PANCHAITEA", "PANCHAI TEA",
 		// Beverage vendors (from 2025 data)
 		"LASSI WALE", "LASSI", "JUICE", "JUICE WALE",
 	}
@@ -325,6 +326,7 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 	}
 
 	// Groceries patterns (Online & Offline)
+	// IMPORTANT: Dairy shops sell milk, paneer, etc. - these are groceries, NOT dining
 	groceriesPatterns := []string{
 		// Online Groceries
 		"BIGBASKET", "BBNOW", "GROFERS", "BLINKIT",
@@ -340,8 +342,9 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"VEGETABLE", "VEGETABLES", "VEG", "FRUIT", "FRUITS",
 		"VEGETABLE SHOP", "FRUIT SHOP", "VEGETABLE MARKET",
 		"FRUIT MARKET", "VEGETABLE VENDOR", "FRUIT VENDOR",
-		// Dairy and local stores (from "Other" transactions)
-		"ANKIT DAIRY", "DAIRY", "DAIRY AND SWEE", "DAIRY AND SWEET",
+		// Dairy shops (milk, paneer, curd, etc. - these are grocery stores, NOT restaurants)
+		"DAIRY", "DAIRY SHOP", "DAIRY STORE", "DAIRY AND SWEE", "DAIRY AND SWEET",
+		"ANKIT DAIRY", "MILK", "MILK SHOP", "DOODH", "PANEER",
 		// Smart bazar / marketplaces
 		"SMART BAZAR", "SMART BAZAAR", "MAYUR SMART BAZAR",
 		// Provision stores (from 2025 data)
@@ -708,6 +711,20 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		"DIV", "DIVIDEND", "DIVIDEND CREDIT", "DIV CR",
 	}
 
+	// Priority -1: Check Salary/Income (HIGHEST PRIORITY - before all other categories)
+	// Salary detection has very high confidence and should be checked first
+	salaryIncomePatterns := []string{
+		"SALARY", "SAL FOR", "PAYROLL", "WAGES", "BONUS",
+		"HDFC BANK SALARY", "ICICI BANK SALARY", "SBI SALARY", "AXIS BANK SALARY",
+		"SALARY FOR", "SAL CREDIT", "SALARY CREDIT",
+	}
+	for _, pattern := range salaryIncomePatterns {
+		if strings.Contains(combined, pattern) {
+			return returnCategory("Income", 0.98, "Salary/Income detected", pattern)
+		}
+	}
+
+	// Note: Refund detection is handled in classifier.go where we have access to deposit/withdrawal amounts
 	// Priority 0: Check Loan EMI (HIGHEST PRIORITY - before all other categories)
 	// Loan EMI detection has very high confidence and should be checked first
 	// First check for simple EMI keyword (catches minimal narrations like "EMI 4452581")
@@ -877,7 +894,16 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		}
 	}
 
+	// Priority 2.5: Check Groceries BEFORE Dining (Dairy shops should be Groceries, not Dining)
+	// Dairy shops sell milk, paneer, curd, etc. - these are grocery stores
+	for _, pattern := range groceriesPatterns {
+		if strings.Contains(combined, pattern) {
+			return returnCategory("Groceries", 0.80, "Grocery/Dairy store detected", pattern)
+		}
+	}
+
 	// Priority 3: Check Dining (non-POS restaurants/cafes)
+	// IMPORTANT: This comes AFTER Groceries check so Dairy shops are not misclassified
 	for _, pattern := range diningPatterns {
 		if strings.Contains(combined, pattern) {
 			// Make sure it's not a delivery gateway
@@ -933,12 +959,7 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		}
 	}
 
-	// Check Groceries
-	for _, pattern := range groceriesPatterns {
-		if strings.Contains(combined, pattern) {
-			return returnCategory("Groceries", 0.75, "Grocery expense detected", pattern)
-		}
-	}
+	// NOTE: Groceries check moved to Priority 2.5 (before Dining) to properly classify Dairy shops
 
 	// Check Healthcare (before Bills to avoid misclassification)
 	// Medical/pharmacy transactions should NOT be classified as bills
@@ -1402,10 +1423,11 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		}
 	}
 
-	// Check Dividend (income from investments) - should be classified as income category
+	// Check Dividend (income from investments) - should be classified as INCOME, not Investment
+	// Dividends are returns on investments, hence income
 	for _, pattern := range dividendPatterns {
 		if strings.Contains(combined, pattern) {
-			return returnCategory("Investment", 0.90, "Dividend income detected", pattern)
+			return returnCategory("Income", 0.90, "Dividend income detected", pattern)
 		}
 	}
 

@@ -69,6 +69,7 @@ type MonthlySummary struct {
 }
 
 // CategorySummary represents category-wise summary
+// NOTE: This only includes OPERATIONAL EXPENSES - Investments are tracked separately in accountSummary.totalInvestments
 type CategorySummary struct {
 	Shopping       float64 `json:"Shopping"`
 	BillsUtilities float64 `json:"Bills_Utilities"`
@@ -77,8 +78,11 @@ type CategorySummary struct {
 	Groceries      float64 `json:"Groceries"`
 	FoodDelivery   float64 `json:"Food_Delivery"`
 	Fuel           float64 `json:"Fuel"`
-	Investments    float64 `json:"Investments"`
+	Healthcare     float64 `json:"Healthcare"`
+	Education      float64 `json:"Education"`
+	Entertainment  float64 `json:"Entertainment"`
 	Loan           float64 `json:"Loan"`
+	// Note: Investments removed - tracked separately in accountSummary.totalInvestments
 }
 
 // MerchantSummary represents merchant-wise summary

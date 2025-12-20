@@ -3,21 +3,30 @@ package analytics
 import "classify/statement_analysis_engine_rules/models"
 
 // CalculateCategorySummary calculates category-wise summary
-// NOTE: This is for OPERATIONAL EXPENSES only - investments are tracked separately
+// NOTE: This is for OPERATIONAL EXPENSES only - investments and income are tracked separately
 func CalculateCategorySummary(transactions []models.ClassifiedTransaction) models.CategorySummary {
 	summary := models.CategorySummary{}
 
-	// Investment categories/methods to exclude
-	investmentCategories := map[string]bool{
-		"Investment":    true,
-		"Investments":   true,
-		"Self_Transfer": true,
+	// Categories to EXCLUDE from expense summary
+	// These are NOT operational expenses - they're tracked separately
+	excludedCategories := map[string]bool{
+		"Investment":    true,  // Tracked in totalInvestments
+		"Investments":   true,  // Tracked in totalInvestments
+		"Self_Transfer": true,  // Internal transfers, not expenses
+		"Income":        true,  // Income, not expense
+		"Refund":        true,  // Refunds reduce spend, not add to it
 	}
+	
+	// Methods that indicate investments/savings (not expenses)
 	investmentMethods := map[string]bool{
-		"RD":         true,
-		"FD":         true,
-		"SIP":        true,
-		"Investment": true,
+		"RD":            true,  // Recurring Deposit
+		"FD":            true,  // Fixed Deposit
+		"SIP":           true,  // Systematic Investment Plan
+		"Investment":    true,  // Generic investment
+		"Self_Transfer": true,  // Self-transfer
+		"Salary":        true,  // Income, not expense
+		"Interest":      true,  // Income, not expense
+		"Dividend":      true,  // Income, not expense
 	}
 
 	for _, txn := range transactions {
@@ -26,9 +35,8 @@ func CalculateCategorySummary(transactions []models.ClassifiedTransaction) model
 			continue
 		}
 
-		// Skip investments - they're tracked separately, not as expenses
-		isInvestment := investmentCategories[txn.Category] || investmentMethods[txn.Method]
-		if isInvestment {
+		// Skip excluded categories - they're tracked separately
+		if excludedCategories[txn.Category] || investmentMethods[txn.Method] {
 			continue
 		}
 
@@ -52,9 +60,17 @@ func CalculateCategorySummary(transactions []models.ClassifiedTransaction) model
 		case "Loan", "Loan_EMI", "LOAN_EMI":
 			// Loan EMI expenses (keep this as it's an operational expense)
 			summary.Loan += amount
+		case "Healthcare":
+			summary.Healthcare += amount
+		case "Education":
+			summary.Education += amount
+		case "Entertainment":
+			summary.Entertainment += amount
 		}
-		// Note: "Investment" case removed - investments are NOT expenses
-		// They're tracked separately in accountSummary.totalInvestments
+		// Note: "Investment", "Income", "Refund" cases excluded - they're NOT expenses
+		// Investments tracked in accountSummary.totalInvestments
+		// Income tracked in accountSummary.totalIncome
+		// Refunds net off against spending
 	}
 
 	return summary
