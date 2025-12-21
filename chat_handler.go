@@ -211,6 +211,19 @@ func chatHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Using existing chunks for source: %s", sourceID)
 	}
 
+	// Classify query for optimized retrieval
+	classifier := rag.NewQueryClassifier()
+	queryType := classifier.ClassifyQuery(chatReq.Message)
+	log.Printf("Query classified as: %s", queryType)
+	
+	// Adjust TopK based on query type (temporarily override config)
+	originalTopK := ragMgr.GetConfig().TopK
+	optimalTopK := classifier.GetOptimalTopK(queryType, originalTopK)
+	if optimalTopK != originalTopK {
+		log.Printf("Adjusted TopK from %d to %d for query type %s", originalTopK, optimalTopK, queryType)
+		// Note: We'll retrieve with original TopK but can filter later
+	}
+	
 	// Retrieve relevant chunks with scores using RAG
 	log.Printf("Retrieving relevant chunks for query: %s", chatReq.Message)
 	chunksWithScores, err := ragMgr.RetrieveRelevantChunksWithScores(chatReq.Message, sourceID)
@@ -238,48 +251,19 @@ func chatHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Retrieved %d relevant chunks (scores: %v)", len(chunksWithScores),
-		func() []float32 {
-			scores := make([]float32, len(chunksWithScores))
-			for i, cws := range chunksWithScores {
-				scores[i] = cws.Score
-			}
-			return scores
-		}())
-
-	// Build context from retrieved chunks with better structure
-	contextBuilder := strings.Builder{}
-	contextBuilder.WriteString("=== BANK STATEMENT CONTEXT ===\n\n")
-	contextBuilder.WriteString("The following information is extracted from the bank statement:\n\n")
-
-	chunkCount := 0
-	for _, cws := range chunksWithScores {
-		chunk := cws.Chunk
-		if chunk.Content == "" {
-			log.Printf("Warning: Chunk %s has empty content, skipping", chunk.ID)
-			continue
-		}
-
-		chunkCount++
-
-		// Add chunk type/context from metadata
-		chunkType := "Information"
-		if chunk.Metadata != nil {
-			if t, ok := chunk.Metadata["type"].(string); ok {
-				chunkType = formatChunkType(t)
-			}
-		}
-
-		// Include relevance score in context (helps LLM understand which info is most relevant)
-		contextBuilder.WriteString(fmt.Sprintf("[%d] %s (Relevance: %.1f%%):\n",
-			chunkCount, chunkType, cws.Score*100))
-		contextBuilder.WriteString(chunk.Content)
-		contextBuilder.WriteString("\n\n")
+	// Log scores for debugging
+	scores := make([]float32, len(chunksWithScores))
+	for i, cws := range chunksWithScores {
+		scores[i] = cws.Score
 	}
+	log.Printf("Retrieved %d relevant chunks with scores: %v", len(chunksWithScores), scores)
 
-	if chunkCount == 0 {
-		// Empty context after filtering, fallback to direct prompt
-		log.Printf("Warning: Context is empty after filtering. Falling back to direct prompt.")
+	// Build optimized context from retrieved chunks
+	contextStr := buildOptimizedContext(chunksWithScores, chatReq.Message, queryType)
+	
+	// Check if context is empty
+	if len(contextStr) < 50 { // Very short context likely means no chunks
+		log.Printf("Warning: Context is empty or too short. Falling back to direct prompt.")
 		responseText, err := handleChatWithoutRAG(apiKey, useOllama, chatReq)
 		if err != nil {
 			sendErrorResponse(w, "Internal server error", fmt.Sprintf("Failed to process chat: %v", err), http.StatusInternalServerError)
@@ -288,24 +272,13 @@ func chatHandler(w http.ResponseWriter, r *http.Request) {
 		sendSuccessResponse(w, responseText)
 		return
 	}
-
-	contextBuilder.WriteString("=== END OF CONTEXT ===\n")
-
-	// Create system prompt with clearer instructions
-	systemPrompt := `You are a helpful financial assistant analyzing bank statement data.
-Answer the user's question based ONLY on the provided context above. 
-
-IMPORTANT RULES:
-1. Use ONLY the information provided in the context - do not make up or assume any data
-2. If the answer is not in the context, say "I don't have that information in the statement data"
-3. Be precise with numbers - use the exact amounts from the context
-4. Use currency symbols (₹) where appropriate
-5. Format numbers in Indian numbering system (e.g., ₹1,00,000 instead of ₹100000)
-6. Reference specific sections from the context when answering
-7. Be conversational but accurate`
-
+	
+	chunkCount := len(chunksWithScores) // Count chunks
+	
+	// Create enhanced system prompt with few-shot examples
+	systemPrompt := buildEnhancedSystemPrompt(queryType)
+	
 	// Build user message with context
-	contextStr := contextBuilder.String()
 	userMessage := fmt.Sprintf("%s\n\n=== USER QUESTION ===\n%s", contextStr, chatReq.Message)
 
 	log.Printf("Context built: %d chunks, total length: %d characters", chunkCount, len(contextStr))
@@ -361,8 +334,183 @@ IMPORTANT RULES:
 		responseText = "I apologize, but I couldn't generate a response. Please try again."
 	}
 
+	// Validate answer against context
+	validator := rag.NewAnswerValidator()
+	isValid, reason := validator.ValidateAnswer(responseText, contextStr, chatReq.Message)
+	if !isValid {
+		log.Printf("Warning: Answer validation failed: %s. Response may be inaccurate.", reason)
+		// Continue anyway, but log the warning
+	} else {
+		log.Printf("Answer validated successfully: %s", reason)
+	}
+
 	log.Printf("Successfully generated response (length: %d)", len(responseText))
 	sendSuccessResponse(w, responseText)
+}
+
+// buildOptimizedContext builds context with better organization
+func buildOptimizedContext(chunksWithScores []rag.RetrievedChunk, query string, queryType rag.QueryType) string {
+	contextBuilder := strings.Builder{}
+	contextBuilder.WriteString("=== BANK STATEMENT CONTEXT ===\n\n")
+	contextBuilder.WriteString("The following information is extracted from the bank statement:\n\n")
+	
+	// Group chunks by type for better organization
+	chunksByType := make(map[string][]rag.RetrievedChunk)
+	for _, cws := range chunksWithScores {
+		chunkType := "Information"
+		if cws.Chunk.Metadata != nil {
+			if t, ok := cws.Chunk.Metadata["type"].(string); ok {
+				chunkType = t
+			}
+		}
+		chunksByType[chunkType] = append(chunksByType[chunkType], cws)
+	}
+	
+	// Order types by relevance to query
+	typeOrder := getRelevantTypeOrder(query, chunksByType, queryType)
+	
+	chunkCount := 0
+	for _, chunkType := range typeOrder {
+		if chunks, ok := chunksByType[chunkType]; ok {
+			contextBuilder.WriteString(fmt.Sprintf("\n--- %s ---\n", formatChunkType(chunkType)))
+			
+			for _, cws := range chunks {
+				chunkCount++
+				contextBuilder.WriteString(fmt.Sprintf("\n[%d] Relevance: %.1f%%\n",
+					chunkCount, cws.Score*100))
+				
+				// Truncate very long chunks (keep first 600 chars)
+				content := cws.Chunk.Content
+				if len(content) > 600 {
+					content = content[:600] + "\n[... content truncated for brevity ...]"
+				}
+				
+				contextBuilder.WriteString(content)
+				contextBuilder.WriteString("\n")
+			}
+		}
+	}
+	
+	contextBuilder.WriteString("\n=== END OF CONTEXT ===\n")
+	return contextBuilder.String()
+}
+
+// getRelevantTypeOrder returns chunk types ordered by relevance to query
+func getRelevantTypeOrder(query string, chunksByType map[string][]rag.RetrievedChunk, queryType rag.QueryType) []string {
+	queryLower := strings.ToLower(query)
+	
+	// Priority order based on query type
+	switch queryType {
+	case rag.QueryTypeCalculation:
+		if strings.Contains(queryLower, "total") || strings.Contains(queryLower, "expense") {
+			return []string{"account_summary", "transaction_breakdown", "monthly_summary", "category_summary", "transactions"}
+		}
+		return []string{"account_summary", "transaction_breakdown", "monthly_summary"}
+	case rag.QueryTypeComparison:
+		return []string{"monthly_summary", "category_summary", "transactions", "account_summary"}
+	case rag.QueryTypeListing:
+		return []string{"top_expenses", "top_beneficiaries", "category_summary", "transactions"}
+	case rag.QueryTypeTrend:
+		return []string{"monthly_summary", "transactions", "category_summary", "account_summary"}
+	default:
+		// Order by average relevance score
+		typeScores := make(map[string]float32)
+		for t, chunks := range chunksByType {
+			sum := float32(0)
+			for _, cws := range chunks {
+				sum += cws.Score
+			}
+			if len(chunks) > 0 {
+				typeScores[t] = sum / float32(len(chunks))
+			}
+		}
+		
+		// Sort types by score (simple implementation)
+		typeList := []string{}
+		for t := range chunksByType {
+			typeList = append(typeList, t)
+		}
+		
+		// Simple sort by score (bubble sort for small lists)
+		for i := 0; i < len(typeList)-1; i++ {
+			for j := i + 1; j < len(typeList); j++ {
+				if typeScores[typeList[i]] < typeScores[typeList[j]] {
+					typeList[i], typeList[j] = typeList[j], typeList[i]
+				}
+			}
+		}
+		
+		return typeList
+	}
+}
+
+// buildEnhancedSystemPrompt builds system prompt with few-shot examples
+func buildEnhancedSystemPrompt(queryType rag.QueryType) string {
+	basePrompt := `You are a helpful financial assistant analyzing bank statement data.
+Answer the user's question based ONLY on the provided context above. 
+
+IMPORTANT RULES:
+1. Use ONLY the information provided in the context - do not make up or assume any data
+2. If the answer is not in the context, say "I don't have that information in the statement data"
+3. Be precise with numbers - use the exact amounts from the context
+4. Use currency symbols (₹) where appropriate
+5. Format numbers in Indian numbering system (e.g., ₹1,00,000 instead of ₹100000)
+6. Reference specific sections from the context when answering (use chunk numbers like [1], [2])
+7. Be conversational but accurate
+8. When calculating, show your reasoning step by step
+9. Always cite the source chunk number when providing specific numbers`
+
+	// Add few-shot examples based on query type
+	examples := getFewShotExamples(queryType)
+	
+	return basePrompt + "\n\n" + examples
+}
+
+// getFewShotExamples returns few-shot examples for the query type
+func getFewShotExamples(queryType rag.QueryType) string {
+	examples := map[rag.QueryType]string{
+		rag.QueryTypeCalculation: `
+EXAMPLE 1 - Calculation Question:
+Context: [1] Account Summary: Total Expense: ₹10,76,240.21, Total Income: ₹12,00,000.00
+Question: What is my net savings?
+Answer: Based on the Account Summary [1], your net savings is calculated as:
+Total Income: ₹12,00,000.00
+Total Expense: ₹10,76,240.21
+Net Savings = ₹12,00,000.00 - ₹10,76,240.21 = ₹1,23,759.79
+
+EXAMPLE 2 - Specific Value Question:
+Context: [1] Top Expenses: CRED CLUB: ₹2,17,646.22
+Question: What was my highest expense?
+Answer: According to the Top Expenses section [1], your highest expense was ₹2,17,646.22 to CRED CLUB.`,
+
+		rag.QueryTypeComparison: `
+EXAMPLE - Comparison Question:
+Context: [1] Monthly Summary: April: ₹50,000, May: ₹75,000
+Question: Which month had higher expenses?
+Answer: Based on the Monthly Summary [1], May had higher expenses (₹75,000) compared to April (₹50,000).`,
+
+		rag.QueryTypeListing: `
+EXAMPLE - Listing Question:
+Context: [1] Top Expenses: Item 1: ₹10,000, Item 2: ₹8,000
+Question: What are my top expenses?
+Answer: According to the Top Expenses section [1], your top expenses are:
+1. Item 1: ₹10,000
+2. Item 2: ₹8,000`,
+
+		rag.QueryTypeTrend: `
+EXAMPLE - Trend Question:
+Context: [1] Monthly Summary: April: ₹50,000, May: ₹60,000, June: ₹70,000
+Question: How did my expenses change?
+Answer: Based on the Monthly Summary [1], your expenses show an increasing trend:
+- April: ₹50,000
+- May: ₹60,000 (20% increase)
+- June: ₹70,000 (16.7% increase from May)`,
+	}
+	
+	if example, ok := examples[queryType]; ok {
+		return "EXAMPLES:\n" + example
+	}
+	return "EXAMPLES:\n" + examples[rag.QueryTypeCalculation] // Default
 }
 
 // formatChunkType formats chunk type for better readability
@@ -572,7 +720,11 @@ func callOllamaWithMessages(messages []OllamaMessage, model string) (string, err
 		Messages: messages,
 		Stream:   false,
 		Options: map[string]interface{}{
-			"temperature": 0.0, // Deterministic output
+			"temperature":    0.0,  // Deterministic output
+			"top_p":          0.9,  // Nucleus sampling (focus on top tokens)
+			"top_k":          40,   // Limit vocabulary
+			"repeat_penalty": 1.1,  // Reduce repetition
+			"num_predict":    512,  // Max tokens in response
 		},
 	}
 
@@ -774,7 +926,11 @@ func callOllamaAPI(systemPrompt, userMessage string, conversationHistory []Conve
 		Messages: messages,
 		Stream:   false,
 		Options: map[string]interface{}{
-			"temperature": 0.0, // Deterministic output
+			"temperature":    0.0,  // Deterministic output
+			"top_p":          0.9,  // Nucleus sampling (focus on top tokens)
+			"top_k":          40,   // Limit vocabulary
+			"repeat_penalty": 1.1,  // Reduce repetition
+			"num_predict":    512,  // Max tokens in response
 		},
 	}
 

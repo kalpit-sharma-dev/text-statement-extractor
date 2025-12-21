@@ -47,8 +47,16 @@ func (r *Retriever) Retrieve(query string, sourceID string) ([]*Chunk, error) {
 
 // RetrieveWithScores finds the most relevant chunks with their similarity scores
 func (r *Retriever) RetrieveWithScores(query string, sourceID string) ([]RetrievedChunk, error) {
-	// Generate embedding for the query
-	queryEmbedding, err := r.embeddingClient.GenerateEmbedding(query)
+	// Enhance query before embedding
+	enhancer := NewQueryEnhancer(r.config)
+	enhancedQuery := enhancer.EnhanceQuery(query)
+	
+	if enhancedQuery != query {
+		log.Printf("Query enhanced: '%s' -> '%s'", query, enhancedQuery)
+	}
+	
+	// Generate embedding for the enhanced query
+	queryEmbedding, err := r.embeddingClient.GenerateEmbedding(enhancedQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate query embedding: %w", err)
 	}
@@ -106,6 +114,14 @@ func (r *Retriever) RetrieveWithScores(query string, sourceID string) ([]Retriev
 		return chunksWithScores[:1], nil
 	}
 	
-	return filtered, nil
+	// Re-rank chunks for better relevance
+	reranker := NewReranker(r.embeddingClient, r.config)
+	reranked, err := reranker.RerankChunks(query, filtered)
+	if err != nil {
+		log.Printf("Warning: Reranking failed, using original order: %v", err)
+		return filtered, nil
+	}
+	
+	return reranked, nil
 }
 
