@@ -36,9 +36,26 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 	}
 
 	// Step 3: Classify category (Intent) with amount for charge detection
-	amount := txn.DepositAmt
-	if txn.WithdrawalAmt > 0 {
+	// Determine the transaction amount - prioritize withdrawal for expense detection
+	// Edge case: If both amounts exist (shouldn't happen in normal statements), use the larger one
+	var amount float64
+	if txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
+		// Pure debit transaction
 		amount = txn.WithdrawalAmt
+	} else if txn.DepositAmt > 0 && txn.WithdrawalAmt == 0 {
+		// Pure credit transaction
+		amount = txn.DepositAmt
+	} else if txn.DepositAmt > 0 && txn.WithdrawalAmt > 0 {
+		// Edge case: Both amounts present (unusual but handle it)
+		// Use the larger amount for classification
+		if txn.WithdrawalAmt > txn.DepositAmt {
+			amount = txn.WithdrawalAmt
+		} else {
+			amount = txn.DepositAmt
+		}
+	} else {
+		// No amount (shouldn't happen, but default to 0)
+		amount = 0.0
 	}
 
 	// Get category with metadata (matched keywords, confidence, etc.)
@@ -361,8 +378,10 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 
 	// Step 6.5: FINAL SAFEGUARD - Ensure credit transactions are NEVER classified as expenses
 	// This is a critical check to catch any edge cases that might have slipped through
-	// Re-check if this is a credit transaction (variables already declared earlier)
-	isCreditTxn := txn.DepositAmt > 0 && txn.WithdrawalAmt == 0
+	// Check if this is a credit transaction (pure credit or net credit)
+	isCreditTxn := (txn.DepositAmt > 0 && txn.WithdrawalAmt == 0) ||
+		(txn.DepositAmt > 0 && txn.WithdrawalAmt > 0 && txn.DepositAmt > txn.WithdrawalAmt)
+
 	expenseCats := map[string]bool{
 		"Shopping":        true,
 		"Dining":          true,
@@ -375,12 +394,12 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 		"Loan_EMI":        true,
 		"LOAN_EMI":        true,
 		"Healthcare":      true,
-		"Education":      true,
-		"Entertainment":  true,
+		"Education":       true,
+		"Entertainment":   true,
 	}
-	
+
 	if isCreditTxn && expenseCats[txn.Category] {
-		// Credit transaction was classified as expense - override to Income
+		// Credit transaction (or net credit) was classified as expense - override to Income
 		// This should not happen if earlier checks worked, but this is a final safeguard
 		txn.Category = "Income"
 		categoryResult.Category = "Income"
