@@ -349,12 +349,44 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 	}
 
 	// Check if bill payment
+	// Only apply to debit transactions - expenses cannot be credits
 	if rules.IsBillPayment(normalizedNarration) {
-		if txn.Category == "Other" {
+		if txn.Category == "Other" && txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
 			txn.Category = "Bills_Utilities"
+			categoryResult.Category = "Bills_Utilities"
 			categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "BILL_PAYMENT")
 			categoryResult.Reason = "Bill payment gateway detected"
 		}
+	}
+
+	// Step 6.5: FINAL SAFEGUARD - Ensure credit transactions are NEVER classified as expenses
+	// This is a critical check to catch any edge cases that might have slipped through
+	// Re-check if this is a credit transaction (variables already declared earlier)
+	isCreditTxn := txn.DepositAmt > 0 && txn.WithdrawalAmt == 0
+	expenseCats := map[string]bool{
+		"Shopping":        true,
+		"Dining":          true,
+		"Travel":          true,
+		"Fuel":            true,
+		"Groceries":       true,
+		"Food_Delivery":   true,
+		"Bills_Utilities": true,
+		"Loan":            true,
+		"Loan_EMI":        true,
+		"LOAN_EMI":        true,
+		"Healthcare":      true,
+		"Education":      true,
+		"Entertainment":  true,
+	}
+	
+	if isCreditTxn && expenseCats[txn.Category] {
+		// Credit transaction was classified as expense - override to Income
+		// This should not happen if earlier checks worked, but this is a final safeguard
+		txn.Category = "Income"
+		categoryResult.Category = "Income"
+		categoryResult.Confidence = 0.80
+		categoryResult.Reason = "FINAL SAFEGUARD: Credit transaction cannot be expense - classified as Income"
+		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "CREDIT_SAFEGUARD")
 	}
 
 	// Step 7: Build classification metadata (for explainability)
