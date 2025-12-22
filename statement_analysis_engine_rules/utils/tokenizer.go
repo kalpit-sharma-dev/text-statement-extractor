@@ -35,17 +35,21 @@ func ExtractGateway(narration string) string {
 		"WHDF":     "BillDesk",
 		"BILLDK":   "BillDesk",
 		"BILLDESK": "BillDesk",
+		"BILLDESKPG": "BillDesk", // BillDesk payment gateway (e.g., BILLDESKPG.UPPCL@HDFCBANK)
+		"BDGPAY":   "BillDesk", // BillDesk variant (e.g., BDGPAY.MSEDCL@HDFCBANK)
 		"PAYU":     "PayU",
 		"RAZP":     "Razorpay",
 		"RAZORPAY": "Razorpay",
 		"CCAVENUE": "CCAvenue",
 		"BBPS":     "BBPS",
 		"PAYGOV":   "PayGov",
+		"VYAPAR":   "VYAPAR", // VYAPAR payment gateway (e.g., VYAPAR.170819826526@HDFCBANK)
 		"SBIPG":    "SBI Payment Gateway",
 		"AXISPG":   "Axis Payment Gateway",
 		"ICICIPG":  "ICICI Payment Gateway",
 		"KOTAKPG":  "Kotak Payment Gateway",
 		"YESPG":    "Yes Bank Payment Gateway",
+		"PYTM":     "Paytm Bank", // Paytm Payments Bank (e.g., PYTM-XXXXXXXXXXXX8734)
 		// Other payment methods
 		"UPI":         "UPI",
 		"NET BANKING": "NetBanking",

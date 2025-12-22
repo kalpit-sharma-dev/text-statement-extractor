@@ -362,7 +362,7 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 	// Generic gateways like PAYTM, GPAY, PHONEPE, AMAZONPAY are used for ALL payment types
 	// EXCEPTION: PAYTM UTILITY / PAYTM ECOMMERCE-UTILITYPAYTM are bill payments
 	billGateways := []string{
-		"BILLDESK", "BILLDK", "BBPS", // Actual bill payment aggregators
+		"BILLDESK", "BILLDK", "BILLDESKPG", "BDGPAY", "BBPS", // Actual bill payment aggregators
 		"WHDF", "SBIPG", "AXISPG", "ICICIPG", "KOTAKPG", "YESPG", // Bank-specific bill payment gateways
 		"PAYGOV", // Government payment gateway
 		// Note: PAYU, RAZORPAY, RAZP, CCAVENUE can be used for bills but also for other payments
@@ -399,7 +399,8 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 	// Telecom & Internet Patterns
 	telecomPatterns := []string{
 		"PHONE", "MOBILE", "BROADBAND", "INTERNET", "AIRTEL", "JIO",
-		"VODAFONE", "IDEA", "BSNL", "ACTFIBERNET", "HATHWAY", "TIKONA",
+		"VODAFONE", "VODAFONE IDEA", "VODAFONE IDEA LTD", "VILPOSMNG", // VODAFONE IDEA LTD pattern
+		"IDEA", "BSNL", "ACTFIBERNET", "HATHWAY", "TIKONA",
 		"RECHARGE", "PREPAID", "POSTPAID", "TELECOM",
 	}
 
@@ -621,6 +622,7 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		// Streaming services
 		"ZEE5", "ZEE 5", "ZEE5SUBSCRIPTION",
 		"SONY PICTURES", "SONY PICTURES NETWOR", "SONYPICTURESNETWORK",
+		"SONYLIV", "SONY LIV", // SonyLIV subscription service
 		// Gaming (from "Other" transactions)
 		"GAMING", "GAME BUSINESS", "GAMING BUSINESS",
 		"JD DIGITAL", "DIGITAL", "ARTS", "VRT ARTS",
@@ -958,6 +960,12 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 			return returnCategory("Shopping", 0.75, "Shopping merchant detected in token", token)
 		}
 	}
+	
+	// Check for SIMPL BILL PAYMENT (BNPL settlement)
+	// Pattern: UPI-SIMPL-SIMPL@AXB-UTIB0000100-209213229155-SIMPL BILL PAYMENT
+	if strings.Contains(combined, "SIMPL") && strings.Contains(combined, "BILL PAYMENT") {
+		return returnCategory("Bills_Utilities", 0.85, "SIMPL BNPL bill payment detected", "SIMPL", "BILL_PAYMENT")
+	}
 
 	// NOTE: Groceries check moved to Priority 2.5 (before Dining) to properly classify Dairy shops
 
@@ -1008,6 +1016,12 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 	}
 
 	// Step 1: Check for actual bill payment gateways/aggregators (high confidence)
+	// BILLDESK is a strong indicator of bill payments
+	// Pattern: UPI-UTTAR PRADESH POWER -BILLDESKPG.UPPCL@HDFCBANK-HDFC0MERUPI-103694656790-PAY
+	// Pattern: UPI-MAHARASHTRA STATE EL-BDGPAY.MSEDCL@HDFCBANK-111217405720-MSEBMUM
+	hasBillDesk := strings.Contains(combined, "BILLDESK") || strings.Contains(combined, "BILLDK") || 
+		strings.Contains(combined, "BILLDESKPG") || strings.Contains(combined, "BDGPAY")
+	
 	// Exclude generic payment gateways - they're used for ALL payment types
 	hasBillGateway := false
 	hasGenericGateway := false
@@ -1018,11 +1032,16 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		}
 	}
 	// Only check bill gateways if no generic gateway is present (to avoid false positives)
-	if !hasGenericGateway {
-		for _, gw := range billGateways {
-			if strings.Contains(combined, gw) {
-				hasBillGateway = true
-				break
+	// OR if BILLDESK is present (strong bill payment indicator)
+	if !hasGenericGateway || hasBillDesk {
+		if hasBillDesk {
+			hasBillGateway = true
+		} else {
+			for _, gw := range billGateways {
+				if strings.Contains(combined, gw) {
+					hasBillGateway = true
+					break
+				}
 			}
 		}
 	}
@@ -1389,6 +1408,38 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		}
 	}
 
+	// Check for subscription patterns (SOLD BY pattern)
+	// Pattern: UPI-GOOGLE PAY-GOOGLEPAY@AXISBANK-UTIB0000004-210309445050-SOLD BY YOUTUBE
+	// This indicates digital content/subscription purchases
+	if strings.Contains(combined, "SOLD BY") {
+		// Check if it's a known entertainment/subscription service
+		subscriptionServices := []string{"YOUTUBE", "SPOTIFY", "NETFLIX", "AMAZON PRIME", "DISNEY", "HOTSTAR", 
+			"ZEE5", "SONY PICTURES", "PRIME VIDEO", "APPLE MUSIC", "JIOSAAVN", "GOOGLE PLAY"}
+		for _, service := range subscriptionServices {
+			if strings.Contains(combined, service) {
+				return returnCategory("Entertainment", 0.90, "Subscription/digital content detected (SOLD BY): "+service, service, "SOLD_BY")
+			}
+		}
+		// If no specific service detected, still classify as Entertainment (likely subscription)
+		return returnCategory("Entertainment", 0.85, "Digital content/subscription detected (SOLD BY)", "SOLD_BY")
+	}
+
+	// Check for subscription mandates (MANDATEREQUEST pattern)
+	// Pattern: UPI-SPOTIFY INDIA-SPOTIFY.BDSI@ICICI-ICIC0DC0099-510810810514-MANDATEREQUEST
+	// This indicates recurring subscription payments (OTT, streaming, etc.)
+	if strings.Contains(combined, "MANDATEREQUEST") {
+		// Check if it's a known entertainment/subscription service
+		subscriptionServices := []string{"SPOTIFY", "NETFLIX", "AMAZON PRIME", "DISNEY", "HOTSTAR", 
+			"YOUTUBE", "ZEE5", "SONY PICTURES", "PRIME VIDEO", "APPLE MUSIC", "JIOSAAVN"}
+		for _, service := range subscriptionServices {
+			if strings.Contains(combined, service) {
+				return returnCategory("Entertainment", 0.90, "Subscription service with mandate detected: "+service, service, "MANDATEREQUEST")
+			}
+		}
+		// If no specific service detected, still classify as Entertainment (likely subscription)
+		return returnCategory("Entertainment", 0.80, "Subscription mandate detected (MANDATEREQUEST)", "MANDATEREQUEST")
+	}
+
 	// Check Entertainment
 	// IMPORTANT: Check for specific YouTube patterns first (don't match "PAYTM")
 	// "YT" alone matches "PAYTM" - use word boundaries or specific patterns
@@ -1445,54 +1496,119 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 
 	// Check Investment
 	// Priority 1: Check for large transfers to investment accounts (IMPS, UPI, NetBanking, RTGS, NEFT)
-	// These are high-confidence investment indicators
+	// Generic approach: Use investment-related keywords and amount patterns, not bank-specific or account-specific patterns
 	if amount >= 10000 {
-		// RTGS/NEFT to brokerage/investment accounts (large transfers to banks)
-		// These should NEVER be classified as utility bills
+		// RTGS/NEFT large transfers (generic pattern)
+		// Large RTGS/NEFT transfers are generally for investments/deposits, not utility bills
+		// Pattern: NEFT CR-YESB0000001-ZERODHA BROKING LIMITED NSE CLIENT-KALPIT KUMAR SHARMA
 		if strings.Contains(combined, "RTGS") || strings.Contains(combined, "NEFT") {
-			// RTGS/NEFT to HDFC Bank (common for brokerage accounts like Zerodha, Upstox)
-			if strings.Contains(combined, "HDFC") || strings.Contains(combined, "HDFCR") {
-				return returnCategory("Investment", 0.95, "Large RTGS/NEFT transfer to brokerage/investment account detected", "RTGS/NEFT", "HDFC")
+			// Check for NEFT CR (credit) with broker/investment keywords - high confidence investment
+			if strings.Contains(combined, "NEFT CR") || strings.Contains(combined, "NEFT CR-") {
+				brokerKeywords := []string{"ZERODHA", "BROKING", "BROKER", "NSE", "BSE", "CLIENT", 
+					"ICICI SECURITIES", "HDFC SECURITIES", "KOTAK SECURITIES", "ANGEL BROKING"}
+				for _, keyword := range brokerKeywords {
+					if strings.Contains(combined, keyword) {
+						return returnCategory("Investment", 0.95, "NEFT credit from broker/investment account detected", "NEFT_CR", keyword)
+					}
+				}
 			}
-			// RTGS/NEFT to IDFB/IDFC (investment account transfers)
-			if strings.Contains(combined, "IDFB") || strings.Contains(combined, "IDFC") {
-				return returnCategory("Investment", 0.95, "Large RTGS/NEFT transfer to investment account detected", "RTGS/NEFT", "IDFB")
+			
+			// Check for investment-related keywords in narration
+			// Includes: FD (Fixed Deposit), RD (Recurring Deposit), PPF (Public Provident Fund), NPS (National Pension System)
+			investmentKeywords := []string{
+				"INVESTMENT", "BROKERAGE", "DEMAT", "TRADING", "MUTUAL FUND", "SIP",
+				"STOCK", "SHARE", "SECURITIES", "BROKING", "BROKER",
+				"FD", "FIXED DEPOSIT", "RD", "RECURRING DEPOSIT",
+				"PPF", "PUBLIC PROVIDENT FUND", "NPS", "NATIONAL PENSION SYSTEM",
 			}
-			// Large RTGS/NEFT transfers are generally for investments/deposits, not utility bills
+			hasInvestmentKeyword := false
+			for _, keyword := range investmentKeywords {
+				if strings.Contains(combined, keyword) {
+					hasInvestmentKeyword = true
+					break
+				}
+			}
+			
+			// Large RTGS/NEFT transfers with investment keywords are high confidence
+			if hasInvestmentKeyword && amount >= 50000 {
+				return returnCategory("Investment", 0.95, "Large RTGS/NEFT transfer with investment keywords detected", "RTGS/NEFT", "INVESTMENT")
+			}
+			
+			// Very large RTGS/NEFT transfers (> ₹50K) are likely investments even without keywords
 			if amount >= 50000 {
 				return returnCategory("Investment", 0.90, "Large RTGS/NEFT transfer detected (likely investment/deposit)", "RTGS/NEFT")
 			}
 		}
-		// IMPS to investment accounts (IDFC First Bank, etc.)
+		
+		// IMPS large transfers (generic pattern)
+		// Large IMPS transfers with investment keywords or very large amounts
 		if strings.Contains(combined, "IMPS") {
-			if strings.Contains(combined, "IDFB") || strings.Contains(combined, "IDFC") ||
-				(strings.Contains(combined, "KALPIT") && strings.Contains(combined, "SHARMA") && strings.Contains(combined, "XXXXXXX2950")) {
-				return returnCategory("Investment", 0.95, "Large IMPS transfer to investment account detected", "IMPS", "IDFB")
+			investmentKeywords := []string{
+				"INVESTMENT", "BROKERAGE", "DEMAT", "TRADING", "MUTUAL FUND", "SIP",
+				"STOCK", "SHARE", "SECURITIES", "BROKING", "BROKER",
+			}
+			hasInvestmentKeyword := false
+			for _, keyword := range investmentKeywords {
+				if strings.Contains(combined, keyword) {
+					hasInvestmentKeyword = true
+					break
+				}
+			}
+			
+			// Large IMPS with investment keywords
+			if hasInvestmentKeyword && amount >= 50000 {
+				return returnCategory("Investment", 0.95, "Large IMPS transfer with investment keywords detected", "IMPS", "INVESTMENT")
+			}
+			
+			// Very large IMPS transfers (> ₹1L) are likely investments
+			if amount >= 100000 {
+				return returnCategory("Investment", 0.90, "Very large IMPS transfer detected (likely investment)", "IMPS")
 			}
 		}
-		// Recurring large UPI transfers to same account (investment pattern)
+		
+		// Recurring large UPI transfers (generic pattern)
+		// Large recurring UPI transfers to same merchant/account are often investments
 		if strings.Contains(combined, "UPI") && amount >= 30000 {
-			// Check for recurring investment account patterns
-			if strings.Contains(combined, "XXXXXX3286") && strings.Contains(combined, "ICIC0003458") {
-				return returnCategory("Investment", 0.90, "Large recurring UPI transfer to investment account", "UPI", "ICICI")
+			// Check for investment-related keywords
+			// Includes: FD (Fixed Deposit), RD (Recurring Deposit), PPF (Public Provident Fund), NPS (National Pension System)
+			investmentKeywords := []string{
+				"INVESTMENT", "BROKERAGE", "DEMAT", "TRADING", "MUTUAL FUND", "SIP",
+				"STOCK", "SHARE", "SECURITIES", "BROKING", "BROKER",
+				"FD", "FIXED DEPOSIT", "RD", "RECURRING DEPOSIT",
+				"PPF", "PUBLIC PROVIDENT FUND", "NPS", "NATIONAL PENSION SYSTEM",
 			}
-			if strings.Contains(combined, "XXXXXX7431") && strings.Contains(combined, "SBIN0009062") {
-				return returnCategory("Investment", 0.90, "Large recurring UPI transfer to investment account", "UPI", "SBI")
+			hasInvestmentKeyword := false
+			for _, keyword := range investmentKeywords {
+				if strings.Contains(combined, keyword) {
+					hasInvestmentKeyword = true
+					break
+				}
+			}
+			
+			if hasInvestmentKeyword {
+				return returnCategory("Investment", 0.90, "Large recurring UPI transfer with investment keywords", "UPI", "INVESTMENT")
 			}
 		}
-		// NetBanking large transfers (investment pattern)
+		
+		// NetBanking large transfers (generic pattern)
 		if strings.Contains(combined, "FUNDS TRANSFER") || strings.Contains(combined, "IB SS FUNDS TRANSFER") {
+			// Very large NetBanking transfers are likely investments
 			if amount >= 100000 {
 				return returnCategory("Investment", 0.90, "Large NetBanking transfer detected (likely investment)", "FUNDS TRANSFER")
 			}
 		}
-		// Bajaj Finance investment
-		if strings.Contains(combined, "BAJAJS") || strings.Contains(combined, "BAJAJ FINANCE") {
-			return returnCategory("Investment", 0.90, "Bajaj Finance investment detected", "BAJAJS")
+		
+		// Investment companies (generic - known investment-related companies)
+		investmentCompanies := []string{
+			"BAJAJ FINANCE", "BAJAJS", "BAJAJ FINSERV",
+			"ZERODHA", "UPSTOX", "GROWW", "COIN", "5PAISA",
+			"ICICI SECURITIES", "HDFC SECURITIES", "KOTAK SECURITIES",
+			"SHAREKHAN", "MOTILAL OSWAL", "IIFL", "ANGEL BROKING",
 		}
-		// IDFC First Bank fund transfer
-		if strings.Contains(combined, "FUND IDFC") || strings.Contains(combined, "IDFC FIRST ACCO") {
-			return returnCategory("Investment", 0.90, "IDFC First Bank fund transfer detected", "IDFC")
+		for _, company := range investmentCompanies {
+			if strings.Contains(combined, company) {
+				return returnCategory("Investment", 0.90, "Investment company detected: "+company, company)
+			}
 		}
 	}
 
@@ -1501,6 +1617,22 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		if strings.Contains(combined, pattern) {
 			return returnCategory("Investment", 0.90, "Investment detected", pattern)
 		}
+	}
+
+	// Check for card charges (international transaction markup, etc.)
+	// Pattern: .DC INTL POS TXN MARKUP+ST 180425 180425 -MIR2612858476764
+	if strings.Contains(combined, "INTL POS") && strings.Contains(combined, "MARKUP") {
+		return returnCategory("Bills_Utilities", 0.90, "International card transaction markup/charges", "INTL_POS", "MARKUP")
+	}
+	// Also check for CardCharges method (set by method_rules.go)
+	if strings.Contains(combined, "CARD CHARGES") || strings.Contains(combined, "CARD MARKUP") {
+		return returnCategory("Bills_Utilities", 0.85, "Card charges/markup detected", "CARD_CHARGES")
+	}
+
+	// Check for depository charges (investment-related charges)
+	// Pattern: DEPOSITORY CHARGES MAR21 - 1031004
+	if strings.Contains(combined, "DEPOSITORY CHARGES") || strings.Contains(combined, "DEPOSITORY CHARGE") {
+		return returnCategory("Bills_Utilities", 0.90, "Depository charges detected (investment-related)", "DEPOSITORY_CHARGES")
 	}
 
 	// Check for charges (small amounts with charge keywords)
@@ -1527,21 +1659,45 @@ func ClassifyCategoryWithMetadata(narration string, merchant string, amount floa
 		return returnCategory("Shopping", 0.80, "ATM cash withdrawal for shopping", "ATM")
 	}
 
+	// Check for wallet top-up (ADDMONEY pattern)
+	// Pattern: UPI-MOBIKWIK-MOBIKWIKADDMONEY@ICICI-113001857300-NA
+	// Pattern: UPI-ADD MONEY TO WALLET-ADD-MONEY@PAYTM-PYTM0123456-214717738256
+	if strings.Contains(combined, "ADDMONEY") || 
+		strings.Contains(combined, "ADD MONEY") ||
+		strings.Contains(combined, "ADD MONEY TO WALLET") ||
+		strings.Contains(combined, "ADD-MONEY") ||
+		(strings.Contains(combined, "MOBIKWIK") && strings.Contains(combined, "ADDMONEY")) ||
+		(strings.Contains(combined, "PAYTM") && strings.Contains(combined, "ADDMONEY")) {
+		return returnCategory("Bills_Utilities", 0.85, "Wallet top-up detected", "WALLET", "ADDMONEY")
+	}
+
 	// Special handling for Person-to-Person (P2P) transfers
 	// Large UPI transfers to individuals (not merchants) - likely personal transfers
-	if strings.Contains(combined, "UPI") && amount > 5000 {
+	// Pattern: UPI-AMAN SHARMA-9958428066@YBL-ICIC0000816-109504672058-PAYMENT FROM PHONE
+	hasPaymentFromPhone := strings.Contains(combined, "PAYMENT FROM PHONE") || 
+		strings.Contains(combined, "PAYMENT FROM") || strings.Contains(combined, "FROM PHONE")
+	
+	if strings.Contains(combined, "UPI") && (amount > 5000 || hasPaymentFromPhone) {
 		// Check if it doesn't have known merchant patterns
 		hasKnownMerchantPattern := strings.Contains(combined, "@") || 
 			strings.Contains(combined, "PAY") && (strings.Contains(combined, "AMAZON") || 
 			strings.Contains(combined, "GOOGLE") || strings.Contains(combined, "PAYTM"))
 		
-		// If no known merchant pattern and has common name patterns
+		// If no known merchant pattern and has common name patterns or PAYMENT FROM PHONE
+		// Generic pattern: Detect common Indian name prefixes and surnames (works for all customers)
 		hasNamePattern := strings.Contains(combined, "MR ") || strings.Contains(combined, "MRS ") || 
 			strings.Contains(combined, "MS ") || strings.Contains(combined, "KUMAR") || 
-			strings.Contains(combined, "SHARMA") || strings.Contains(combined, "SINGH")
+			strings.Contains(combined, "SHARMA") || strings.Contains(combined, "SINGH") ||
+			strings.Contains(combined, "PATEL") || strings.Contains(combined, "GUPTA") ||
+			strings.Contains(combined, "REDDY") || strings.Contains(combined, "RAO") ||
+			strings.Contains(combined, "NAIR") || strings.Contains(combined, "IYER")
 		
-		if hasNamePattern && !hasKnownMerchantPattern {
-			return returnCategory("Other", 0.70, "Large P2P transfer - purpose unclear", "P2P")
+		if (hasNamePattern || hasPaymentFromPhone) && !hasKnownMerchantPattern {
+			confidence := 0.80
+			if hasPaymentFromPhone {
+				confidence = 0.90 // Higher confidence for explicit "PAYMENT FROM PHONE"
+			}
+			return returnCategory("Other", confidence, "P2P transfer detected (personal transfer)", "P2P", "PAYMENT_FROM_PHONE")
 		}
 	}
 
@@ -1603,15 +1759,21 @@ func ExtractMerchantName(narration string) string {
 		}
 	}
 
-	// Try to extract from UPI format: UPI-MERCHANT NAME-...
-	re := regexp.MustCompile(`UPI-([^-@]+)`)
+	// Try to extract from UPI format: UPI-MERCHANT/PERSON NAME-VPA@BANK-REF-UPI
+	// Handles: UPI-CHANDRA KANT BHARDWA-Q309399912@YBL-...
+	// Handles: UPI-SONA FUEL CENTRE-PAYTMQR...@PAYTM-...
+	// Handles: UPI-PVVNL ELECTRICITY BI-PAYTM-PTMBBP@PAYTM-...
+	re := regexp.MustCompile(`UPI-([^-@]+?)(?:-|@|$)`)
 	matches := re.FindStringSubmatch(narration)
 	if len(matches) > 1 {
 		merchant := strings.TrimSpace(matches[1])
 		// Clean up common suffixes
 		merchant = strings.TrimSuffix(merchant, " -")
 		merchant = strings.TrimSuffix(merchant, "-")
-		return merchant
+		// Remove common abbreviations that might be part of narration
+		if len(merchant) > 0 && len(merchant) < 100 {
+			return merchant
+		}
 	}
 
 	// Try to extract from IMPS/NEFT/RTGS format

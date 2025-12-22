@@ -33,7 +33,8 @@ var KnownMerchants = []KnownMerchant{
 	{Patterns: []string{"IOCL", "INDIANOIL"}, Name: "Indian Oil", Category: "Fuel", Confidence: 0.9},
 	{Patterns: []string{"BPCL", "BHARATPETROLEUM"}, Name: "Bharat Petroleum", Category: "Fuel", Confidence: 0.9},
 	{Patterns: []string{"HPCL", "HINDUSTANPETROLEUM"}, Name: "Hindustan Petroleum", Category: "Fuel", Confidence: 0.9},
-	{Patterns: []string{"DAUJI SERVICE STATIO", "PHOOL SERVICE STATIO", "SERVICE STATIO"}, Name: "Service Station", Category: "Fuel", Confidence: 0.8},
+	// Generic pattern from local merchants (work for all customers)
+	{Patterns: []string{"SERVICE STATIO", "SERVICE STATION"}, Name: "Service Station", Category: "Fuel", Confidence: 0.8},
 
 	// Utilities
 	{Patterns: []string{"IGL", "INDRAPRASTHAGA"}, Name: "Indraprastha Gas", Category: "Bills_Utilities", Confidence: 0.9},
@@ -53,47 +54,47 @@ var KnownMerchants = []KnownMerchant{
 	{Patterns: []string{"AMAZON", "AMAZONPAY"}, Name: "Amazon", Category: "Shopping", Confidence: 0.9},
 	{Patterns: []string{"FLIPKART", "FLIPKARTIN"}, Name: "Flipkart", Category: "Shopping", Confidence: 0.9},
 	{Patterns: []string{"MYNTRA", "AJIO", "MEESHO"}, Name: "Fashion E-commerce", Category: "Shopping", Confidence: 0.85},
-	{Patterns: []string{"MAHA GANESH TRADERS", "MAHA GANESH"}, Name: "Maha Ganesh Traders", Category: "Groceries", Confidence: 0.8},
-	{Patterns: []string{"PANCHAM SUPER MARKET", "PANCHAM SUPERMARKET"}, Name: "Pancham Super Market", Category: "Groceries", Confidence: 0.8},
-	{Patterns: []string{"AGGARWAL TRADING COM", "AGGARWAL TRADING"}, Name: "Aggarwal Trading", Category: "Shopping", Confidence: 0.75},
-	{Patterns: []string{"BALAJI TRADING COMPA", "BALAJI TRADING"}, Name: "Balaji Trading", Category: "Shopping", Confidence: 0.75},
-	{Patterns: []string{"POOJA STATIONERY"}, Name: "Pooja Stationery", Category: "Shopping", Confidence: 0.8},
-	{Patterns: []string{"BIKANERVALA", "BIKANERVALA PRIVATE"}, Name: "Bikanervala", Category: "Shopping", Confidence: 0.8},
-	{Patterns: []string{"BOMBAY WATCH COMPANY"}, Name: "Bombay Watch Company", Category: "Shopping", Confidence: 0.8},
-	{Patterns: []string{"BATTERY", "AUTO BATTERY", "ANIKET BATTERY"}, Name: "Auto Parts Shop", Category: "Shopping", Confidence: 0.75},
-	{Patterns: []string{"ENTERPRISES"}, Name: "General Store/Enterprise", Category: "Shopping", Confidence: 0.5},
+	// Generic patterns from local merchants (work for all customers)
+	{Patterns: []string{"TRADERS", "TRADING"}, Name: "Trading Company", Category: "Shopping", Confidence: 0.75},
+	{Patterns: []string{"SUPER MARKET", "SUPERMARKET"}, Name: "Super Market", Category: "Groceries", Confidence: 0.8},
+	{Patterns: []string{"STATIONERY", "STATIONARY"}, Name: "Stationery Shop", Category: "Shopping", Confidence: 0.8},
+	{Patterns: []string{"WATCH COMPANY", "WATCH"}, Name: "Watch Shop", Category: "Shopping", Confidence: 0.75},
+	{Patterns: []string{"BATTERY", "AUTO BATTERY"}, Name: "Auto Parts Shop", Category: "Shopping", Confidence: 0.75},
 
 	// Groceries
 	{Patterns: []string{"BIGBASKET", "BBNOW"}, Name: "BigBasket", Category: "Groceries", Confidence: 0.9},
 	{Patterns: []string{"GROFERS", "BLINKIT"}, Name: "Grocery Apps", Category: "Groceries", Confidence: 0.85},
 	{Patterns: []string{"ZEPTO", "ZEPTO MARKETPLACE"}, Name: "Zepto", Category: "Groceries", Confidence: 0.9},
-	{Patterns: []string{"BALAJI KHOA PANEER", "KHOA PANEER"}, Name: "Balaji Khoa Paneer", Category: "Groceries", Confidence: 0.75},
+	// Generic patterns from local merchants (work for all customers)
+	{Patterns: []string{"PANEER", "KHOA PANEER"}, Name: "Dairy Product", Category: "Groceries", Confidence: 0.75},
 
 	// Dining
-	{Patterns: []string{"BAMRADA SONS", "BAMRADA"}, Name: "Bamrada Sons", Category: "Dining", Confidence: 0.75},
-	{Patterns: []string{"SPECIAL CHAT CENTER", "SPECIAL CHAT"}, Name: "Special Chat Center", Category: "Dining", Confidence: 0.75},
-	{Patterns: []string{"MUSKAN BAKERS", "MUSKAN BAKERS AND CO"}, Name: "Muskan Bakers", Category: "Dining", Confidence: 0.75},
-	{Patterns: []string{"ROSIER FOODS", "ROSIER"}, Name: "Rosier Foods", Category: "Dining", Confidence: 0.75},
-	{Patterns: []string{"PANCHAITEA", "PANCHAI TEA"}, Name: "Panchai Tea", Category: "Dining", Confidence: 0.75},
-	{Patterns: []string{"CATERERS", "CATERING", "BALAJI CATERERS", "SHRI BALAJI CATERERS"}, Name: "Catering Service", Category: "Dining", Confidence: 0.8},
-	{Patterns: []string{"DAGDUSHET COUNTER"}, Name: "Dagdushet Temple Counter", Category: "Dining", Confidence: 0.7},
+	// Generic patterns from local merchants (work for all customers)
+	{Patterns: []string{"CATERERS", "CATERING"}, Name: "Catering Service", Category: "Dining", Confidence: 0.8},
+	{Patterns: []string{"BAKERS", "BAKERY"}, Name: "Bakery", Category: "Dining", Confidence: 0.8},
+	{Patterns: []string{"CHAT", "CHAT CENTER", "CHAT CENTRE"}, Name: "Chat Center", Category: "Dining", Confidence: 0.75},
+	{Patterns: []string{"TEA", "TEA SHOP", "TEA STALL"}, Name: "Tea Shop", Category: "Dining", Confidence: 0.75},
 
 	// Dairy Shops (Groceries, NOT Dining - they sell milk, paneer, curd etc.)
-	{Patterns: []string{"DAIRY", "DAIRY AND SWEE", "DAIRY AND SWEET", "ANKIT DAIRY"}, Name: "Dairy Shop", Category: "Groceries", Confidence: 0.85},
+	// Keep generic patterns only, removed specific local dairy names
+	{Patterns: []string{"DAIRY", "DAIRY AND SWEE", "DAIRY AND SWEET"}, Name: "Dairy Shop", Category: "Groceries", Confidence: 0.85},
 	{Patterns: []string{"MILK SHOP", "MILK STORE", "DOODH"}, Name: "Milk Shop", Category: "Groceries", Confidence: 0.85},
 
 	// Healthcare
-	{Patterns: []string{"NOBLE CHEMISTS", "NOBLE CHEMIST"}, Name: "Noble Chemists", Category: "Healthcare", Confidence: 0.8},
-	{Patterns: []string{"KAIWALYA MEDICO", "KAIWALYA"}, Name: "Kaiwalya Medico", Category: "Healthcare", Confidence: 0.8},
+	// Keep major hospital chains and generic patterns
 	{Patterns: []string{"APOLLO", "FORTIS", "MAX"}, Name: "Hospital Chains", Category: "Healthcare", Confidence: 0.9},
 	{Patterns: []string{"WAY2FITNESS", "FITNESS", "GYM"}, Name: "Fitness Center", Category: "Healthcare", Confidence: 0.85},
+	// Generic patterns from local merchants (work for all customers)
+	{Patterns: []string{"CHEMISTS", "CHEMIST"}, Name: "Pharmacy", Category: "Healthcare", Confidence: 0.8},
+	{Patterns: []string{"MEDICO", "MEDICAL"}, Name: "Medical Store", Category: "Healthcare", Confidence: 0.75},
 
 	// Entertainment
 	{Patterns: []string{"SONY PICTURES", "SONYPICTURESNETWORK"}, Name: "Sony Pictures", Category: "Entertainment", Confidence: 0.9},
-	{Patterns: []string{"ISTHARA PARKS", "ISTHARA PARKS PRIVAT"}, Name: "Isthara Parks", Category: "Entertainment", Confidence: 0.8},
 	{Patterns: []string{"NETFLIX", "AMAZON PRIME", "DISNEY", "HOTSTAR"}, Name: "Streaming Services", Category: "Entertainment", Confidence: 0.9},
 	{Patterns: []string{"ZEE5", "ZEE 5"}, Name: "Zee5", Category: "Entertainment", Confidence: 0.85},
+	// Generic patterns for tourism/heritage and parks (work for all customers)
 	{Patterns: []string{"ARCHAEOLOGICAL SURVE", "ARCHAEOLOGICAL", "MUSEUM"}, Name: "Tourism/Heritage Site", Category: "Entertainment", Confidence: 0.75},
+	{Patterns: []string{"PARKS", "PARK"}, Name: "Park/Recreation", Category: "Entertainment", Confidence: 0.75},
 
 	// Education
 	{Patterns: []string{"PHYSICSWALLAH", "PHYSICSWALLAH PVT LT"}, Name: "PhysicsWallah", Category: "Education", Confidence: 0.9},

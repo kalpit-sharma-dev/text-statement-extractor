@@ -9,11 +9,26 @@ import (
 func ClassifyMethod(narration string) string {
 	narration = strings.ToUpper(narration)
 
+	// UPI Reversal patterns (check before regular UPI)
+	// Pattern: REV-UPI-08821130001725-KALPIT.COOL2006@OKHDFCBANK-209945000965-UPI
+	upiReversalPatterns := []string{
+		"REV-UPI", "REV UPI", "REV-UPI-", "REV UPI-",
+		"UPI REVERSAL", "UPI REV", "UPI REFUND",
+	}
+
 	// UPI patterns
 	upiPatterns := []string{
 		"UPI-", "UPI ", "UPI/", "UPI@", "UPIINTENT", "UPI TRANSACTION",
 		"PAYTM", "PHONEPE", "GOOGLEPAY", "BHIM", "AMAZONPAY",
-		"@YBL", "@PAYTM", "@OK", "@AXL", "@IBL", "@PTYES",
+		"@YBL", "@PAYTM", "@OK", "@OKAXIS", "@OKHDFC", "@OKICICI", "@AXL", "@IBL", "@PTYES",
+		"@IDFCFIRST", "@OKAXIS", "@OKAXIS", "@HDFCBANK", "@AXISBANK",
+	}
+
+	// IMPS Reversal patterns (check before regular IMPS)
+	// Pattern: REV-IMPS-112900179557-KALPIT KUMAR SHARMA-PYTM-XXXXXXXXXXXX8734-WAZIRX
+	impsReversalPatterns := []string{
+		"REV-IMPS", "REV IMPS", "REV-IMPS-", "REV IMPS-",
+		"IMPS REVERSAL", "IMPS REV", "IMPS REFUND",
 	}
 
 	// IMPS patterns (including ICICI codes)
@@ -23,14 +38,18 @@ func ClassifyMethod(narration string) string {
 	}
 
 	// NEFT patterns (including ICICI codes)
+	// Pattern: NEFT CR-YESB0000001-ZERODHA BROKING LIMITED NSE CLIENT-KALPIT KUMAR SHARMA
 	neftPatterns := []string{
 		"NEFT-", "NEFT ", "NEFT/", "NATIONAL ELECTRONIC FUND TRANSFER",
+		"NEFT CR", "NEFT CR-", "NEFT CR ", // NEFT Credit
+		"NEFT DR", "NEFT DR-", "NEFT DR ", // NEFT Debit
 		"N CHG", "N-CHG", // NEFT Charges
 	}
 
-	// RTGS patterns
+	// RTGS patterns (HDFC format: RTGS CR/DR-IFSC-NAME-NAME-REF)
 	rtgsPatterns := []string{
 		"RTGS", "REAL TIME GROSS SETTLEMENT",
+		"RTGS CR", "RTGS DR", "RTGS CR-", "RTGS DR-",
 	}
 	
 	// Self-Transfer patterns (ICICI internal transfers)
@@ -47,39 +66,57 @@ func ClassifyMethod(narration string) string {
 		"INDIAN C LEARING CORPORATION", "INDIAN C LEARING CORPORATION LIMITED", // Handle typo with space
 		"NSDL", "CDSL", "CLEARING CORPORATION",
 		"ZERODHA", "ZERODHA BROKING", "ZERODHA BROKING LTD", "ZERODHABROKING",
+		"ZERODHAMF", "ZERODHA COIN", "ICCL ZERODHA", // Mutual fund patterns
+		"KITE", "KITE DEPOSIT", // Zerodha Kite trading platform
 		"BROKING", "BROKING LTD", "HSL SEC", "HSL", "SEC", // Stock broking companies
 		"ANGEL BROKING", "ICICI SECURITIES", "HDFC SECURITIES", "KOTAK SECURITIES",
 		"SHAREKHAN", "MOTILAL OSWAL", "IIFL", "5PAISA",
-		"EBA", "EBA-", "EBA ", // ICICI Direct transactions
+		"EBA", "EBA-", "EBA ", // ICICI Direct transactions (ICICI-specific - used as fallback)
 		"SGB", "SGB-", "SGB ", "SOVEREIGN GOLD BOND", // Sovereign Gold Bond
 	}
 
 	// EMI patterns (loans/repayments - exclude investments)
+	// Pattern: EMI 4452581 CHQ S44525810472 04214452581
 	emiPatterns := []string{
 		"EMI", "LOAN", "REPAYMENT",
 		"HOME LOAN", "PERSONAL LOAN", "CAR LOAN", "EDUCATION LOAN",
 		"LOAN INSTALLMENT", "LOAN EMI", "LOAN REPAYMENT",
-		"LNPY", "LNPY-", "LNPY ", "LINKED LOAN PAYMENT", // ICICI loan payment code
+		"EMI CHQ", "EMI CHEQUE", // EMI with cheque reference
+		"LNPY", "LNPY-", "LNPY ", "LINKED LOAN PAYMENT", // ICICI loan payment code (ICICI-specific - used as fallback)
 	}
 
-	// ACH patterns
+	// ACH patterns (HDFC format: ACH C/D- MERCHANT-REF)
+	// Examples: "ACH D- TP ACH MAXLIFEINSURA-1424041803", "ACH C- ICICI SECURITIES LIM-3614387"
 	achPatterns := []string{
 		"ACH", "AUTOMATED CLEARING HOUSE",
-		"ACH C-", "ACH D-", "ACH CR", "ACH DR",
+		"ACH C-", "ACH D-", "ACH C ", "ACH D ", "ACH CR", "ACH DR",
+		"ACH C", "ACH D", // Handle cases without dash/space
 	}
 
 	// ATM Withdrawal patterns (check before Debit Card)
 	atmWithdrawalPatterns := []string{
 		"EAW", "ATW", "NWD", "ATM WITHDRAWAL", "ATM CASH WITHDRAWAL",
 		"ELECTRONIC ATM WITHDRAWAL", "ATM CASH",
-		"VAT", "MAT", "NFS", "CCWD", // ICICI ATM codes (Cash withdrawal at other bank ATM, Cardless Cash Withdrawal)
+		"VAT", "MAT", "NFS", "CCWD", // ICICI ATM codes (ICICI-specific - used as fallback)
+	}
+
+	// POS Reversal/Refund patterns (check before regular POS)
+	posReversalPatterns := []string{
+		"CRV POS", "CRV POS ", "CRV POS-", "POS REVERSAL", "POS REFUND",
+		"REVERSAL POS", "REFUND POS", "CARD REVERSAL", "CARD REFUND",
+	}
+
+	// International Card Markup/Charges patterns
+	intlMarkupPatterns := []string{
+		"INTL POS", "INTL POS TXN MARKUP", "DC INTL POS", ".DC INTL POS",
+		"INTERNATIONAL POS", "FOREIGN TRANSACTION", "FX MARKUP", "FOREIGN EXCHANGE",
 	}
 
 	// Debit Card patterns
 	debitCardPatterns := []string{
 		"DC", "POS", "DEBIT CARD", "ATM", "CASH WITHDRAWAL",
 		"SWIPE", "CARD TRANSACTION", "VISA", "MASTERCARD",
-		"VPS", "IPS", "VPS-", "IPS-", // ICICI debit card transaction codes
+		"VPS", "IPS", "VPS-", "IPS-", // ICICI debit card transaction codes (ICICI-specific - used as fallback)
 	}
 
 	// Net Banking patterns
@@ -88,9 +125,10 @@ func ClassifyMethod(narration string) string {
 		"IB ", "IB-", "IB/", "ONLINE TRANSFER",
 	}
 
-	// Salary patterns
+	// Salary patterns (HDFC format: P:REF BANK SALARY FOR MONTH YEAR)
 	salaryPatterns := []string{
 		"SALARY", "SAL FOR", "PAYROLL", "WAGES", "BONUS",
+		"P:", // HDFC salary prefix (P:K16675 HDFC BANK SALARY FOR APR 2024)
 	}
 
 	// Interest patterns
@@ -112,10 +150,12 @@ func ClassifyMethod(narration string) string {
 	// Check patterns
 	checkPatterns := []string{
 		"CHQ", "CHEQUE", "CHEQUE NO",
-		"LCCBRN CMS", "UCCBRN CMS", // ICICI cheque collection codes
+		"LCCBRN CMS", "UCCBRN CMS", // ICICI cheque collection codes (ICICI-specific - used as fallback)
 	}
 	
-	// Bill payment patterns (ICICI specific)
+	// Bill payment patterns (ICICI-specific - used as fallback after generic patterns)
+	// NOTE: These are ICICI bank-specific transaction codes. They are checked AFTER generic patterns
+	// (UPI, IMPS, NEFT, etc.) to ensure generic patterns take priority for all banks.
 	billPaymentPatterns := []string{
 		"BBPS", "BBPS-", "BBPS ", "BHARAT BILL PAYMENT",
 		"BPAY", "BPAY-", "BPAY ", "BILL PAYMENT",
@@ -125,12 +165,14 @@ func ClassifyMethod(narration string) string {
 		"PAVC", "PAVC-", "PAVC ", "PAY ANY VISA CREDIT CARD",
 	}
 	
-	// Online shopping patterns (ICICI specific)
+	// Online shopping patterns (ICICI-specific - used as fallback after generic patterns)
+	// NOTE: ICICI-specific code. Checked after generic UPI patterns.
 	onlineShoppingPatterns := []string{
 		"ONL", "ONL-", "ONL ", "ONLINE SHOPPING",
 	}
 	
-	// Tax payment patterns (ICICI specific)
+	// Tax payment patterns (ICICI-specific - used as fallback after generic patterns)
+	// NOTE: ICICI-specific codes. Checked after generic patterns.
 	taxPatterns := []string{
 		"DTAX", "DTAX-", "DTAX ", "DIRECT TAX",
 		"IDTX", "IDTX-", "IDTX ", "INDIRECT TAX",
@@ -189,10 +231,18 @@ func ClassifyMethod(narration string) string {
 	// These are investment-related transactions
 	// EBA = ICICI Direct transactions (stock trading)
 	// SGB = Sovereign Gold Bond
+	// ZERODHAMF = Zerodha Mutual Fund
+	// ICCL ZERODHA COIN = Zerodha Coin (mutual fund platform)
+	// KITE = Zerodha Kite trading platform
 	if strings.Contains(narration, "ZERODHA") ||
 		strings.Contains(narration, "ZERODHA BROKING") ||
 		strings.Contains(narration, "ZERODHA BROKING LTD") ||
 		strings.Contains(narration, "ZERODHABROKING") ||
+		strings.Contains(narration, "ZERODHAMF") ||
+		strings.Contains(narration, "ZERODHA COIN") ||
+		strings.Contains(narration, "ICCL ZERODHA") ||
+		strings.Contains(narration, "KITE") ||
+		strings.Contains(narration, "KITE DEPOSIT") ||
 		strings.Contains(narration, "HSL SEC") ||
 		(strings.Contains(narration, "HSL") && strings.Contains(narration, "SEC")) ||
 		strings.Contains(narration, "EBA-") || strings.Contains(narration, "EBA ") || strings.HasPrefix(narration, "EBA") ||
@@ -205,10 +255,13 @@ func ClassifyMethod(narration string) string {
 	// Check for investments/savings FIRST (RD, FD, SIP) - exclude from EMI and other methods
 	// These should NOT be classified as EMI even if they contain "INSTALLMENT"
 	// Also classify them as their own method type for proper tracking
+	// HDFC RD format: ACCOUNT-RD INSTALLMENT-MONTH YEAR (e.g., "50400334918713- RD INSTALLMENT-APR 2024")
 	// Check RD with word boundaries to avoid false matches (e.g., "PAYTMQRD" in UPI)
 	// Match: " RD ", " RD-", "RD INSTALLMENT", "RD-", or starts with "RD "
 	if (strings.Contains(narration, " RD ") ||
 		strings.Contains(narration, " RD-") ||
+		strings.Contains(narration, "- RD ") ||
+		strings.Contains(narration, "-RD ") ||
 		strings.Contains(narration, "RD INSTALLMENT") ||
 		strings.Contains(narration, "RECURRING DEPOSIT") ||
 		strings.HasPrefix(narration, "RD ") ||
@@ -217,7 +270,15 @@ func ClassifyMethod(narration string) string {
 		!strings.Contains(narration, "UPI") { // Exclude UPI transactions
 		return "RD" // Recurring Deposit
 	}
-	if (strings.Contains(narration, " FD ") ||
+	// Check FD patterns (Fixed Deposit)
+	// Pattern: FD THROUGH NET-50300618314680:KALPIT KUMAR SHARMA
+	// Pattern: IB FD PREMAT PRINCIPAL-50300618314680
+	// Pattern: IB FD PREMAT INT PAID-50300618314680
+	if strings.Contains(narration, "FD THROUGH NET") ||
+		strings.Contains(narration, "FD THROUGH") ||
+		strings.Contains(narration, "FD PREMAT") ||
+		strings.Contains(narration, "FD PREMATURE") ||
+		(strings.Contains(narration, " FD ") ||
 		strings.Contains(narration, " FD-") ||
 		strings.Contains(narration, "FIXED DEPOSIT") ||
 		strings.HasPrefix(narration, "FD ") ||
@@ -233,10 +294,24 @@ func ClassifyMethod(narration string) string {
 		return "SIP" // Systematic Investment Plan
 	}
 
+	// Check UPI Reversal (before regular UPI)
+	for _, pattern := range upiReversalPatterns {
+		if strings.Contains(narration, pattern) {
+			return "UPIReversal"
+		}
+	}
+
 	// Check UPI
 	for _, pattern := range upiPatterns {
 		if strings.Contains(narration, pattern) {
 			return "UPI"
+		}
+	}
+
+	// Check IMPS Reversal (before regular IMPS)
+	for _, pattern := range impsReversalPatterns {
+		if strings.Contains(narration, pattern) {
+			return "IMPSReversal"
 		}
 	}
 
@@ -254,7 +329,12 @@ func ClassifyMethod(narration string) string {
 		}
 	}
 
-	// Check RTGS
+	// Check RTGS (HDFC format: RTGS CR/DR-IFSC-NAME-NAME-REF)
+	// Check for RTGS CR/DR first (more specific)
+	if strings.HasPrefix(narration, "RTGS CR") || strings.HasPrefix(narration, "RTGS DR") {
+		return "RTGS"
+	}
+	// Check other RTGS patterns
 	for _, pattern := range rtgsPatterns {
 		if strings.Contains(narration, pattern) {
 			return "RTGS"
@@ -303,6 +383,20 @@ func ClassifyMethod(narration string) string {
 		}
 	}
 
+	// Check POS Reversal/Refund (before regular POS)
+	for _, pattern := range posReversalPatterns {
+		if strings.Contains(narration, pattern) {
+			return "CardReversal"
+		}
+	}
+
+	// Check International Card Markup/Charges (before regular POS)
+	for _, pattern := range intlMarkupPatterns {
+		if strings.Contains(narration, pattern) {
+			return "CardCharges"
+		}
+	}
+
 	// Check Debit Card
 	for _, pattern := range debitCardPatterns {
 		if strings.Contains(narration, pattern) {
@@ -317,7 +411,12 @@ func ClassifyMethod(narration string) string {
 		}
 	}
 
-	// Check Salary
+	// Check Salary (HDFC format: P:REF BANK SALARY FOR MONTH YEAR)
+	// Check for P: prefix first (HDFC-specific but common pattern)
+	if strings.HasPrefix(narration, "P:") && strings.Contains(narration, "SALARY") {
+		return "Salary"
+	}
+	// Check other salary patterns
 	for _, pattern := range salaryPatterns {
 		if strings.Contains(narration, pattern) {
 			return "Salary"
@@ -395,22 +494,43 @@ func IsBillPayment(narration string) bool {
 }
 
 // ExtractUPIDetails extracts merchant/payee name from UPI narration
+// Handles multiple UPI formats:
+// - UPI-MERCHANT-VPA@BANK-REF-UPI (standard format)
+// - UPI-PERSON NAME-VPA@BANK-REF-UPI (P2P format)
+// - UPI-MERCHANT-PAYTMQR...@PAYTM-BANK-REF-UPI (QR code format)
 func ExtractUPIDetails(narration string) (merchant string, payee string) {
 	narration = strings.TrimSpace(narration)
 	
-	// UPI format: UPI-MERCHANT NAME-UPIID@BANK-REF-UPI
-	// Extract merchant name (between UPI- and first - or @)
-	re := regexp.MustCompile(`UPI-([^-@]+)`)
+	// UPI format: UPI-MERCHANT/PERSON NAME-VPA@BANK-REF-UPI
+	// Extract merchant/person name (between UPI- and first - or @)
+	// Handle cases where name might contain spaces or hyphens
+	re := regexp.MustCompile(`UPI-([^-@]+?)(?:-|@|$)`)
 	matches := re.FindStringSubmatch(narration)
 	if len(matches) > 1 {
 		merchant = strings.TrimSpace(matches[1])
+		// Clean up common suffixes that might be part of merchant name
+		merchant = strings.TrimSuffix(merchant, " -")
+		merchant = strings.TrimSuffix(merchant, "-")
 	}
 
-	// Extract payee from UPI ID (before @)
+	// Extract payee from UPI ID (VPA before @)
+	// Format: VPA@BANK or PAYTMQR...@PAYTM
 	re = regexp.MustCompile(`([^@\s]+)@`)
 	matches = re.FindStringSubmatch(narration)
 	if len(matches) > 1 {
 		payee = strings.TrimSpace(matches[1])
+		// For QR codes, extract merchant name from QR data if possible
+		if strings.HasPrefix(payee, "PAYTMQR") {
+			// QR code format - merchant name is in the narration before QR
+			if merchant == "" {
+				// Try to extract from QR pattern
+				re2 := regexp.MustCompile(`UPI-([^-]+)-PAYTMQR`)
+				matches2 := re2.FindStringSubmatch(narration)
+				if len(matches2) > 1 {
+					merchant = strings.TrimSpace(matches2[1])
+				}
+			}
+		}
 	}
 
 	return merchant, payee

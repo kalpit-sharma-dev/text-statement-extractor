@@ -104,8 +104,8 @@ func classifyHandler(w http.ResponseWriter, r *http.Request) {
 		classifiedTransactions = append(classifiedTransactions, classifiedTxn)
 	}
 
-	// Step 3: Classify all transactions first
-	classifiedTransactions = classifier.ClassifyTransactions(classifiedTransactions)
+	// Step 3: Classify all transactions first (pass customerName for self-transfer detection)
+	classifiedTransactions = classifier.ClassifyTransactions(classifiedTransactions, statement.AccountInfo.AccountHolderName)
 
 	// Step 3.5: Create analyzer instance
 	analyzerInstance := analyzer.NewAnalyzer()
@@ -233,8 +233,8 @@ func classifyHandler(w http.ResponseWriter, r *http.Request) {
 		totalBreakdown, len(classifiedTransactions))
 
 	// Print all "Other" transactions with their narrations
-	// Re-classify to ensure we have the latest classification
-	classifiedTransactions = classifier.ClassifyTransactions(classifiedTransactions)
+	// Re-classify to ensure we have the latest classification (pass customerName for self-transfer detection)
+	classifiedTransactions = classifier.ClassifyTransactions(classifiedTransactions, statement.AccountInfo.AccountHolderName)
 
 	fmt.Println("\n=== Other Transactions (with Narrations) ===")
 	otherCount := 0

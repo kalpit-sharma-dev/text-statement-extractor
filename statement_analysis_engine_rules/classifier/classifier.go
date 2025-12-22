@@ -9,7 +9,8 @@ import (
 
 // ClassifyTransaction classifies a single transaction
 // Implements: Narration → Signals → Facts → Category
-func ClassifyTransaction(txn models.ClassifiedTransaction) models.ClassifiedTransaction {
+// customerName is optional - if provided, used for self-transfer detection
+func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) models.ClassifiedTransaction {
 	// Step 1: Clean narration first (critical - improves accuracy by 20-30%)
 	normalizedNarration := utils.NormalizeNarration(txn.Narration)
 
@@ -44,8 +45,29 @@ func ClassifyTransaction(txn models.ClassifiedTransaction) models.ClassifiedTran
 	categoryResult := rules.ClassifyCategoryWithMetadata(normalizedNarration, txn.Merchant, amount)
 	
 	// Step 3.5: Handle Refunds - Credits from shopping merchants should be classified as Refund
-	// If it's a deposit (credit) and category is Shopping, it's likely a refund
-	if txn.DepositAmt > 0 && txn.WithdrawalAmt == 0 {
+	// Also handle POS reversals (CRV POS) and IMPS reversals (REV-IMPS) - these are refunds
+	if txn.Method == "CardReversal" {
+		// POS reversal is always a refund
+		categoryResult.Category = "Refund"
+		categoryResult.Confidence = 0.95
+		categoryResult.Reason = "Card reversal/refund detected (CRV POS)"
+		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "REFUND", "CRV_POS")
+	} else if txn.Method == "IMPSReversal" {
+		// IMPS reversal is always a refund
+		// Pattern: REV-IMPS-112900179557-KALPIT KUMAR SHARMA-PYTM-XXXXXXXXXXXX8734-WAZIRX
+		categoryResult.Category = "Refund"
+		categoryResult.Confidence = 0.95
+		categoryResult.Reason = "IMPS reversal/refund detected (REV-IMPS)"
+		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "REFUND", "REV_IMPS")
+	} else if txn.Method == "UPIReversal" {
+		// UPI reversal is always a refund
+		// Pattern: REV-UPI-08821130001725-KALPIT.COOL2006@OKHDFCBANK-209945000965-UPI
+		categoryResult.Category = "Refund"
+		categoryResult.Confidence = 0.95
+		categoryResult.Reason = "UPI reversal/refund detected (REV-UPI)"
+		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "REFUND", "REV_UPI")
+	} else if txn.DepositAmt > 0 && txn.WithdrawalAmt == 0 {
+		// Credits from shopping merchants are likely refunds
 		refundMerchants := []string{
 			"AMAZON", "FLIPKART", "MYNTRA", "AJIO", "MEESHO", "NYKAA",
 			"ZARA", "HNM", "SHOPPERS STOP", "LIFESTYLE", "PANTALOONS",
@@ -68,6 +90,26 @@ func ClassifyTransaction(txn models.ClassifiedTransaction) models.ClassifiedTran
 	
 	// Step 4: Extract beneficiary
 	txn.Beneficiary = rules.ExtractBeneficiary(normalizedNarration, txn.Method)
+
+	// Step 4.5: Handle FD premature closure and interest
+	// Pattern: IB FD PREMAT PRINCIPAL-50300618314680 (withdrawal - principal returned)
+	// Pattern: IB FD PREMAT INT PAID-50300618314680 (credit - interest paid)
+	normalizedUpper := strings.ToUpper(normalizedNarration)
+	if strings.Contains(normalizedUpper, "FD PREMAT") {
+		if strings.Contains(normalizedUpper, "INT PAID") || strings.Contains(normalizedUpper, "INTEREST PAID") {
+			// FD interest credit - this is income
+			categoryResult.Category = "Income"
+			categoryResult.Confidence = 0.95
+			categoryResult.Reason = "FD premature closure interest paid (income)"
+			categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "FD", "INTEREST", "INCOME")
+		} else if strings.Contains(normalizedUpper, "PRINCIPAL") {
+			// FD principal withdrawal - this is investment withdrawal (not expense)
+			categoryResult.Category = "Investment"
+			categoryResult.Confidence = 0.95
+			categoryResult.Reason = "FD premature closure principal returned (investment withdrawal)"
+			categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "FD", "PRINCIPAL", "INVESTMENT")
+		}
+	}
 
 	// Step 5: Determine if income or expense
 	// Dividends and Salary are always income (even if they come as deposits)
@@ -99,37 +141,46 @@ func ClassifyTransaction(txn models.ClassifiedTransaction) models.ClassifiedTran
 
 	// Step 6: Priority overrides (high confidence rules)
 	// Detect self-transfers (IMPS/NEFT/RTGS to same account holder)
+	// Generic approach: Compare beneficiary name with account holder name (from metadata)
+	// If beneficiary name matches account holder name, it's a self-transfer
 	if (txn.Method == "IMPS" || txn.Method == "NEFT" || txn.Method == "RTGS") && txn.Beneficiary != "" {
 		normalizedUpper := strings.ToUpper(normalizedNarration)
 		beneficiaryUpper := strings.ToUpper(txn.Beneficiary)
 		
-		// Self-transfer indicators:
-		// 1. Beneficiary name matches common account holder name pattern
-		// 2. Narration contains beneficiary name (IMPS format: IMPS-REF-NAME-BANK-ACCOUNT)
-		// 3. Account number pattern suggests same account (IDFB bank with similar ref)
+		// Self-transfer indicators (generic patterns):
+		// 1. Beneficiary name matches account holder name (from metadata) - HIGHEST CONFIDENCE
+		// 2. Beneficiary name appears in narration + large round amounts (fallback)
 		
 		// Check for explicit self-transfer patterns
 		isSelfTransfer := false
 		
-		// Pattern 1: Check if narration contains the beneficiary name
-		if strings.Contains(normalizedUpper, beneficiaryUpper) {
-			// Check for known account holder names (can be extended)
-			accountHolderPatterns := []string{
-				"KALPIT KUMAR SHARMA", "KALPIT SHARMA", "K K SHARMA",
-			}
-			for _, pattern := range accountHolderPatterns {
-				if strings.Contains(normalizedUpper, pattern) {
-					isSelfTransfer = true
-					break
-				}
+		// Pattern 1: Compare beneficiary name with account holder name (from metadata)
+		// This is the most accurate method - compares all words in both names
+		// Handles: full name vs partial name, different order, missing middle name
+		if customerName != "" {
+			if utils.MatchNames(txn.Beneficiary, customerName) {
+				// High confidence: beneficiary name matches account holder name
+				isSelfTransfer = true
 			}
 		}
 		
-		// Pattern 2: Check for IDFB bank pattern (your bank) in IMPS
-		if txn.Method == "IMPS" && strings.Contains(normalizedUpper, "IDFB") {
-			// IMPS to same bank is often a self-transfer
-			if strings.Contains(normalizedUpper, "KALPIT") {
-				isSelfTransfer = true
+		// Pattern 2: Fallback - Check if narration contains the beneficiary name + large round amounts
+		// This is a weaker indicator but still useful when customerName is not available
+		if !isSelfTransfer && strings.Contains(normalizedUpper, beneficiaryUpper) {
+			// Additional check: Large round amounts are common for self-transfers
+			// Typical self-transfers: ₹10K, ₹20K, ₹50K, ₹1L, etc.
+			if amount >= 10000 {
+				// Check if amount is a round number (common for self-transfers)
+				isRoundAmount := (int(amount)%10000 == 0) || (int(amount)%50000 == 0) || (int(amount)%100000 == 0)
+				if isRoundAmount {
+					isSelfTransfer = true
+				} else {
+					// Even if not round, if beneficiary name is in narration and amount is large,
+					// it's likely a self-transfer (medium confidence)
+					if amount >= 50000 {
+						isSelfTransfer = true
+					}
+				}
 			}
 		}
 		
@@ -137,7 +188,11 @@ func ClassifyTransaction(txn models.ClassifiedTransaction) models.ClassifiedTran
 			// Self-transfers are treated as Investments (moving money to savings/investment accounts)
 			txn.Category = "Investment"
 			categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "SELF_TRANSFER", txn.Method)
-			categoryResult.Confidence = 0.95
+			if customerName != "" {
+				categoryResult.Confidence = 0.98 // Very high confidence when customerName matches
+			} else {
+				categoryResult.Confidence = 0.95 // High confidence for fallback pattern
+			}
 			categoryResult.Reason = "Self-transfer detected - classified as Investment (savings movement)"
 		}
 	}
@@ -254,13 +309,14 @@ func generateReason(category string, keywords []string, gateway string, channel 
 }
 
 // ClassifyTransactions classifies a list of transactions
-func ClassifyTransactions(transactions []models.ClassifiedTransaction) []models.ClassifiedTransaction {
+// customerName is optional - if provided, used for self-transfer detection
+func ClassifyTransactions(transactions []models.ClassifiedTransaction, customerName string) []models.ClassifiedTransaction {
 	classified := make([]models.ClassifiedTransaction, len(transactions))
 	previousNarrations := make([]string, 0)
 
 	for i, txn := range transactions {
 		// Classify transaction
-		classified[i] = ClassifyTransaction(txn)
+		classified[i] = ClassifyTransaction(txn, customerName)
 
 		// Check for recurring payments
 		previousNarrations = append(previousNarrations, txn.Narration)

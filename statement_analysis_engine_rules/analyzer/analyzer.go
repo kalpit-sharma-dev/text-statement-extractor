@@ -38,8 +38,9 @@ func (a *Analyzer) AddTransactions(transactions []models.ClassifiedTransaction) 
 }
 
 // ClassifyAll classifies all transactions
-func (a *Analyzer) ClassifyAll() {
-	a.transactions = classifier.ClassifyTransactions(a.transactions)
+// customerName is optional - if provided, used for self-transfer detection
+func (a *Analyzer) ClassifyAll(customerName string) {
+	a.transactions = classifier.ClassifyTransactions(a.transactions, customerName)
 }
 
 // Analyze generates complete analysis
@@ -50,8 +51,8 @@ func (a *Analyzer) Analyze(
 	openingBalance float64,
 	closingBalance float64,
 ) models.ClassifyResponse {
-	// Classify all transactions first
-	a.ClassifyAll()
+	// Classify all transactions first (pass customerName for self-transfer detection)
+	a.ClassifyAll(customerName)
 
 	// Calculate all analytics
 	// Use statement totals if available, otherwise calculate from transactions
