@@ -222,6 +222,37 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 		categoryResult.Reason = "Tax payment detected (DTAX/IDTX) - classified as Bills_Utilities"
 	}
 	
+	// If Method is RD, ensure Category is Investment
+	// RD (Recurring Deposit) is a savings/investment product
+	if txn.Method == "RD" {
+		txn.Category = "Investment"
+		categoryResult.Category = "Investment"
+		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "RD", "RECURRING_DEPOSIT")
+		categoryResult.Confidence = 0.98 // Very high confidence for RD
+		categoryResult.Reason = "RD (Recurring Deposit) detected - classified as Investment"
+	}
+	
+	// If Method is FD, ensure Category is Investment
+	// FD (Fixed Deposit) is a savings/investment product
+	// Exception: FD interest credits are already handled above as Income
+	if txn.Method == "FD" && !strings.Contains(normalizedUpper, "INT PAID") && !strings.Contains(normalizedUpper, "INTEREST PAID") {
+		txn.Category = "Investment"
+		categoryResult.Category = "Investment"
+		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "FD", "FIXED_DEPOSIT")
+		categoryResult.Confidence = 0.98 // Very high confidence for FD
+		categoryResult.Reason = "FD (Fixed Deposit) detected - classified as Investment"
+	}
+	
+	// If Method is SIP, ensure Category is Investment
+	// SIP (Systematic Investment Plan) is an investment product
+	if txn.Method == "SIP" {
+		txn.Category = "Investment"
+		categoryResult.Category = "Investment"
+		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "SIP", "SYSTEMATIC_INVESTMENT")
+		categoryResult.Confidence = 0.98 // Very high confidence for SIP
+		categoryResult.Reason = "SIP (Systematic Investment Plan) detected - classified as Investment"
+	}
+	
 	// If Method is EMI, ensure Category is Loan
 	if txn.Method == "EMI" {
 		txn.Category = "Loan"
