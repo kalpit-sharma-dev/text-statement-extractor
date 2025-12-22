@@ -18,10 +18,10 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 	// Separate concepts: Channel, Gateway, Merchant, Intent
 	// Channel detection (payment method)
 	txn.Method = rules.ClassifyMethod(normalizedNarration)
-	
+
 	// Gateway detection (separate from channel)
 	gateway := utils.ExtractGateway(normalizedNarration)
-	
+
 	// Merchant extraction and canonicalization (separate from category)
 	rawMerchant := rules.ExtractMerchantName(normalizedNarration)
 	if rawMerchant == "Unknown" {
@@ -40,11 +40,90 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 	if txn.WithdrawalAmt > 0 {
 		amount = txn.WithdrawalAmt
 	}
-	
+
 	// Get category with metadata (matched keywords, confidence, etc.)
 	categoryResult := rules.ClassifyCategoryWithMetadata(normalizedNarration, txn.Merchant, amount)
-	
-	// Step 3.5: Handle Refunds - Credits from shopping merchants should be classified as Refund
+
+	// Step 3.5: CRITICAL FIX - Credit transactions CANNOT be expenses
+	// Expenses are only for debit transactions (money spent)
+	// Credit transactions (deposits) should be Income, Refund, Investment (returns), or Other
+	isCreditTransaction := txn.DepositAmt > 0 && txn.WithdrawalAmt == 0
+
+	// List of expense categories that should ONLY apply to debit transactions
+	expenseCategories := map[string]bool{
+		"Shopping":        true,
+		"Dining":          true,
+		"Travel":          true,
+		"Fuel":            true,
+		"Groceries":       true,
+		"Food_Delivery":   true,
+		"Bills_Utilities": true,
+		"Loan":            true,
+		"Loan_EMI":        true,
+		"LOAN_EMI":        true,
+		"Healthcare":      true,
+		"Education":       true,
+		"Entertainment":   true,
+		"Other":           true, // Other can be expense or income, but if credit, prefer Income/Refund
+	}
+
+	// If this is a credit transaction and was classified as an expense category, override it
+	if isCreditTransaction && expenseCategories[categoryResult.Category] {
+		// Credit transactions should be Income, Refund, Investment (returns), or Other (not expense categories)
+		// Check for specific income/refund patterns first
+		normalizedUpper := strings.ToUpper(normalizedNarration)
+
+		// Check if it's a refund from shopping merchants
+		refundMerchants := []string{
+			"AMAZON", "FLIPKART", "MYNTRA", "AJIO", "MEESHO", "NYKAA",
+			"ZARA", "HNM", "SHOPPERS STOP", "LIFESTYLE", "PANTALOONS",
+			"CROMA", "RELIANCE DIGITAL", "VIJAY SALES", "SIMPL",
+		}
+		merchantUpper := strings.ToUpper(txn.Merchant)
+		isRefundMerchant := false
+		for _, refundMerchant := range refundMerchants {
+			if strings.Contains(normalizedUpper, refundMerchant) || strings.Contains(merchantUpper, refundMerchant) {
+				isRefundMerchant = true
+				break
+			}
+		}
+
+		if isRefundMerchant {
+			categoryResult.Category = "Refund"
+			categoryResult.Confidence = 0.90
+			categoryResult.Reason = "Refund detected - credit from shopping merchant (expense category overridden)"
+		} else {
+			// Default credit transactions to Income or Other (not expense categories)
+			// Check if it looks like investment returns
+			investmentReturnKeywords := []string{
+				"INVESTMENT", "BROKERAGE", "DEMAT", "TRADING", "MUTUAL FUND", "SIP",
+				"STOCK", "SHARE", "SECURITIES", "BROKING", "BROKER",
+				"FD", "FIXED DEPOSIT", "RD", "RECURRING DEPOSIT",
+				"PPF", "PUBLIC PROVIDENT FUND", "NPS", "NATIONAL PENSION SYSTEM",
+				"ZERODHA", "UPSTOX", "GROWW", "COIN",
+			}
+			hasInvestmentKeyword := false
+			for _, keyword := range investmentReturnKeywords {
+				if strings.Contains(normalizedUpper, keyword) {
+					hasInvestmentKeyword = true
+					break
+				}
+			}
+
+			if hasInvestmentKeyword {
+				categoryResult.Category = "Investment"
+				categoryResult.Confidence = 0.85
+				categoryResult.Reason = "Credit transaction classified as Investment (expense category overridden)"
+			} else {
+				// Default to Income for credit transactions that were misclassified as expenses
+				categoryResult.Category = "Income"
+				categoryResult.Confidence = 0.80
+				categoryResult.Reason = "Credit transaction cannot be expense - classified as Income (expense category overridden)"
+			}
+		}
+	}
+
+	// Step 3.6: Handle Refunds - Credits from shopping merchants should be classified as Refund
 	// Also handle POS reversals (CRV POS) and IMPS reversals (REV-IMPS) - these are refunds
 	if txn.Method == "CardReversal" {
 		// POS reversal is always a refund
@@ -66,28 +145,9 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 		categoryResult.Confidence = 0.95
 		categoryResult.Reason = "UPI reversal/refund detected (REV-UPI)"
 		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "REFUND", "REV_UPI")
-	} else if txn.DepositAmt > 0 && txn.WithdrawalAmt == 0 {
-		// Credits from shopping merchants are likely refunds
-		refundMerchants := []string{
-			"AMAZON", "FLIPKART", "MYNTRA", "AJIO", "MEESHO", "NYKAA",
-			"ZARA", "HNM", "SHOPPERS STOP", "LIFESTYLE", "PANTALOONS",
-			"CROMA", "RELIANCE DIGITAL", "VIJAY SALES", "SIMPL",
-		}
-		normalizedUpper := strings.ToUpper(normalizedNarration)
-		merchantUpper := strings.ToUpper(txn.Merchant)
-		
-		for _, refundMerchant := range refundMerchants {
-			if strings.Contains(normalizedUpper, refundMerchant) || strings.Contains(merchantUpper, refundMerchant) {
-				categoryResult.Category = "Refund"
-				categoryResult.Confidence = 0.90
-				categoryResult.Reason = "Refund detected - credit from shopping merchant"
-				categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "REFUND", refundMerchant)
-				break
-			}
-		}
 	}
 	txn.Category = categoryResult.Category
-	
+
 	// Step 4: Extract beneficiary
 	txn.Beneficiary = rules.ExtractBeneficiary(normalizedNarration, txn.Method)
 
@@ -146,14 +206,14 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 	if (txn.Method == "IMPS" || txn.Method == "NEFT" || txn.Method == "RTGS") && txn.Beneficiary != "" {
 		normalizedUpper := strings.ToUpper(normalizedNarration)
 		beneficiaryUpper := strings.ToUpper(txn.Beneficiary)
-		
+
 		// Self-transfer indicators (generic patterns):
 		// 1. Beneficiary name matches account holder name (from metadata) - HIGHEST CONFIDENCE
 		// 2. Beneficiary name appears in narration + large round amounts (fallback)
-		
+
 		// Check for explicit self-transfer patterns
 		isSelfTransfer := false
-		
+
 		// Pattern 1: Compare beneficiary name with account holder name (from metadata)
 		// This is the most accurate method - compares all words in both names
 		// Handles: full name vs partial name, different order, missing middle name
@@ -163,7 +223,7 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 				isSelfTransfer = true
 			}
 		}
-		
+
 		// Pattern 2: Fallback - Check if narration contains the beneficiary name + large round amounts
 		// This is a weaker indicator but still useful when customerName is not available
 		if !isSelfTransfer && strings.Contains(normalizedUpper, beneficiaryUpper) {
@@ -183,7 +243,7 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 				}
 			}
 		}
-		
+
 		if isSelfTransfer {
 			// Self-transfers are treated as Investments (moving money to savings/investment accounts)
 			txn.Category = "Investment"
@@ -196,7 +256,7 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 			categoryResult.Reason = "Self-transfer detected - classified as Investment (savings movement)"
 		}
 	}
-	
+
 	// If Method is Self_Transfer, ensure Category is Investment
 	// Self-transfers to own accounts are considered investments/savings movements
 	if txn.Method == "Self_Transfer" {
@@ -205,23 +265,27 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 		categoryResult.Confidence = 0.98 // Very high confidence for internal transfers
 		categoryResult.Reason = "Internal fund transfer detected (INF/INFT) - classified as Investment (savings movement)"
 	}
-	
+
 	// If Method is OnlineShopping (ICICI ONL code), ensure Category is Shopping
-	if txn.Method == "OnlineShopping" {
+	// Only apply to debit transactions - expenses cannot be credits
+	if txn.Method == "OnlineShopping" && txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
 		txn.Category = "Shopping"
+		categoryResult.Category = "Shopping"
 		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "ONLINE_SHOPPING", "ONL")
 		categoryResult.Confidence = 0.90 // High confidence for ONL code
 		categoryResult.Reason = "Online shopping transaction detected (ONL) - classified as Shopping"
 	}
-	
+
 	// If Method is TaxPayment (ICICI DTAX/IDTX codes), ensure Category is Bills_Utilities
-	if txn.Method == "TaxPayment" {
+	// Only apply to debit transactions - expenses cannot be credits
+	if txn.Method == "TaxPayment" && txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
 		txn.Category = "Bills_Utilities"
+		categoryResult.Category = "Bills_Utilities"
 		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "TAX_PAYMENT", "DTAX", "IDTX")
 		categoryResult.Confidence = 0.95 // Very high confidence for tax payments
 		categoryResult.Reason = "Tax payment detected (DTAX/IDTX) - classified as Bills_Utilities"
 	}
-	
+
 	// If Method is RD, ensure Category is Investment
 	// RD (Recurring Deposit) is a savings/investment product
 	if txn.Method == "RD" {
@@ -231,7 +295,7 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 		categoryResult.Confidence = 0.98 // Very high confidence for RD
 		categoryResult.Reason = "RD (Recurring Deposit) detected - classified as Investment"
 	}
-	
+
 	// If Method is FD, ensure Category is Investment
 	// FD (Fixed Deposit) is a savings/investment product
 	// Exception: FD interest credits are already handled above as Income
@@ -242,7 +306,7 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 		categoryResult.Confidence = 0.98 // Very high confidence for FD
 		categoryResult.Reason = "FD (Fixed Deposit) detected - classified as Investment"
 	}
-	
+
 	// If Method is SIP, ensure Category is Investment
 	// SIP (Systematic Investment Plan) is an investment product
 	if txn.Method == "SIP" {
@@ -252,15 +316,17 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 		categoryResult.Confidence = 0.98 // Very high confidence for SIP
 		categoryResult.Reason = "SIP (Systematic Investment Plan) detected - classified as Investment"
 	}
-	
+
 	// If Method is EMI, ensure Category is Loan
-	if txn.Method == "EMI" {
+	// Only apply to debit transactions - expenses cannot be credits
+	if txn.Method == "EMI" && txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
 		txn.Category = "Loan"
+		categoryResult.Category = "Loan"
 		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "EMI")
 		categoryResult.Confidence = 0.95 // High confidence for EMI
 		categoryResult.Reason = "EMI method detected - classified as Loan expense"
 	}
-	
+
 	// If Method is Insurance, check if it's investment-type insurance
 	// Investment-type insurance (ULIP, Endowment) should be Investment, not Bills_Utilities
 	if txn.Method == "Insurance" {
@@ -290,24 +356,24 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 			categoryResult.Reason = "Bill payment gateway detected"
 		}
 	}
-	
+
 	// Step 7: Build classification metadata (for explainability)
 	// Detect amount pattern (secondary signal)
 	amountPattern, hasAmountPattern := utils.DetectAmountPattern(amount)
 	if hasAmountPattern {
 		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, amountPattern)
 	}
-	
+
 	// Set gateway and channel (separate concepts)
 	categoryResult.Gateway = gateway
 	categoryResult.Channel = txn.Method
 	categoryResult.RuleVersion = utils.RuleVersion
-	
+
 	// If no reason set, generate one
 	if categoryResult.Reason == "" {
 		categoryResult.Reason = generateReason(txn.Category, categoryResult.MatchedKeywords, gateway, txn.Method)
 	}
-	
+
 	// Store metadata (for explainability - critical for debugging, audits, user trust)
 	txn.ClassificationMetadata = models.ClassificationMetadata{
 		Confidence:      categoryResult.Confidence,
