@@ -15,6 +15,7 @@ func CalculateCategorySummary(transactions []models.ClassifiedTransaction) model
 		"Self_Transfer": true,  // Internal transfers, not expenses
 		"Income":        true,  // Income, not expense
 		"Refund":        true,  // Refunds reduce spend, not add to it
+		"Reimbursement": true,  // Reimbursements are credits, not expenses
 	}
 	
 	// Methods that indicate investments/savings (not expenses)

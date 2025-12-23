@@ -140,7 +140,7 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 		}
 	}
 
-	// Step 3.6: Handle Refunds - Credits from shopping merchants should be classified as Refund
+	// Step 3.6: Handle Refunds and Reimbursements
 	// Also handle POS reversals (CRV POS) and IMPS reversals (REV-IMPS) - these are refunds
 	if txn.Method == "CardReversal" {
 		// POS reversal is always a refund
@@ -162,6 +162,31 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 		categoryResult.Confidence = 0.95
 		categoryResult.Reason = "UPI reversal/refund detected (REV-UPI)"
 		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "REFUND", "REV_UPI")
+	}
+
+	// Step 3.7: Handle Loan EMI Reimbursements
+	// Credit entries for loan EMI reimbursements should be categorized as "Reimbursement", not "Income"
+	// Pattern: "P: A54152 STAFF LOAN EMI REC ..."
+	if isCreditTransaction {
+		normalizedUpper := strings.ToUpper(normalizedNarration)
+		// Check for loan EMI reimbursement patterns
+		loanEmiReimbursementPatterns := []string{
+			"STAFF LOAN EMI REC",
+			"LOAN EMI REC",
+			"LOAN EMI REIMBURSEMENT",
+			"EMI REC",
+			"EMI REIMBURSEMENT",
+			"LOAN REC",
+		}
+		for _, pattern := range loanEmiReimbursementPatterns {
+			if strings.Contains(normalizedUpper, pattern) {
+				categoryResult.Category = "Reimbursement"
+				categoryResult.Confidence = 0.95
+				categoryResult.Reason = "Loan EMI reimbursement detected - credit entry for loan EMI payment"
+				categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "REIMBURSEMENT", "LOAN_EMI_REC")
+				break
+			}
+		}
 	}
 	txn.Category = categoryResult.Category
 
@@ -220,21 +245,81 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 	// Detect self-transfers (IMPS/NEFT/RTGS to same account holder)
 	// Generic approach: Compare beneficiary name with account holder name (from metadata)
 	// If beneficiary name matches account holder name, it's a self-transfer
+	// normalizedUpper is already defined above, so we reuse it here
+	
+	// Pattern 0: Check for "OWN" in narration - indicates self-transfer
+	// Examples: "NEFT DR-ICIC0004289-428901501818-NETBANK-...-OWN"
+	//           "IMPS-500312393031-AKSHAY IDFC-IDFB-...-OWN"
+	if strings.Contains(normalizedUpper, "-OWN") || strings.Contains(normalizedUpper, " OWN") || 
+		strings.Contains(normalizedUpper, "OWN ") || strings.Contains(normalizedUpper, "-OWN-") {
+		// "OWN" in narration indicates transfer to own account
+		txn.Category = "Investment"
+		categoryResult.Category = "Investment"
+		categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "SELF_TRANSFER", "OWN")
+		categoryResult.Confidence = 0.95
+		categoryResult.Reason = "Self-transfer detected - 'OWN' indicator in narration"
+	}
+
 	if (txn.Method == "IMPS" || txn.Method == "NEFT" || txn.Method == "RTGS") && txn.Beneficiary != "" {
-		normalizedUpper := strings.ToUpper(normalizedNarration)
 		beneficiaryUpper := strings.ToUpper(txn.Beneficiary)
 
 		// Self-transfer indicators (generic patterns):
-		// 1. Beneficiary name matches account holder name (from metadata) - HIGHEST CONFIDENCE
-		// 2. Beneficiary name appears in narration + large round amounts (fallback)
+		// 1. First name of customer appears in narration - HIGHEST PRIORITY (people often use first name in beneficiary)
+		// 2. Beneficiary name matches account holder name (from metadata) - HIGH CONFIDENCE
+		// 3. Beneficiary name appears in narration + large round amounts (fallback)
 
 		// Check for explicit self-transfer patterns
 		isSelfTransfer := false
 
-		// Pattern 1: Compare beneficiary name with account holder name (from metadata)
+		// Pattern 1: Check if customer's first name appears in narration
+		// People usually keep first name in beneficiary account name
+		if customerName != "" {
+			// Extract first name from customer name
+			firstName := extractFirstName(customerName)
+			if firstName != "" && len(firstName) >= 3 { // Only check if first name is at least 3 characters (avoid false positives)
+				firstNameUpper := strings.ToUpper(firstName)
+				// Check if first name appears in narration
+				// Check for word boundaries to avoid partial matches (e.g., "KALPIT" shouldn't match "KALPITKUMAR")
+				// Patterns: space/hyphen before and/or after, or at start/end of string
+				if strings.Contains(normalizedUpper, " "+firstNameUpper+" ") ||
+					strings.Contains(normalizedUpper, "-"+firstNameUpper+"-") ||
+					strings.Contains(normalizedUpper, "-"+firstNameUpper+" ") ||
+					strings.Contains(normalizedUpper, " "+firstNameUpper+"-") ||
+					strings.HasPrefix(normalizedUpper, firstNameUpper+" ") ||
+					strings.HasPrefix(normalizedUpper, firstNameUpper+"-") ||
+					strings.HasSuffix(normalizedUpper, " "+firstNameUpper) ||
+					strings.HasSuffix(normalizedUpper, "-"+firstNameUpper) ||
+					normalizedUpper == firstNameUpper {
+					// First name found in narration - high confidence self-transfer
+					isSelfTransfer = true
+				}
+			}
+		}
+
+		// Pattern 2: Check if full customer name appears in narration
+		// If customer account holder name is occurring in narration, it should be considered as self-transfer
+		if !isSelfTransfer && customerName != "" {
+			customerNameUpper := strings.ToUpper(customerName)
+			// Remove common prefixes for matching
+			customerNameUpper = strings.TrimPrefix(customerNameUpper, "MR. ")
+			customerNameUpper = strings.TrimPrefix(customerNameUpper, "MR ")
+			customerNameUpper = strings.TrimPrefix(customerNameUpper, "MRS. ")
+			customerNameUpper = strings.TrimPrefix(customerNameUpper, "MRS ")
+			customerNameUpper = strings.TrimPrefix(customerNameUpper, "MS. ")
+			customerNameUpper = strings.TrimPrefix(customerNameUpper, "MS ")
+			customerNameUpper = strings.TrimSpace(customerNameUpper)
+			
+			// Check if customer name appears in narration
+			if customerNameUpper != "" && strings.Contains(normalizedUpper, customerNameUpper) {
+				// Customer name found in narration - high confidence self-transfer
+				isSelfTransfer = true
+			}
+		}
+
+		// Pattern 3: Compare beneficiary name with account holder name (from metadata)
 		// This is the most accurate method - compares all words in both names
 		// Handles: full name vs partial name, different order, missing middle name
-		if customerName != "" {
+		if !isSelfTransfer && customerName != "" {
 			if utils.MatchNames(txn.Beneficiary, customerName) {
 				// High confidence: beneficiary name matches account holder name
 				isSelfTransfer = true
@@ -264,13 +349,22 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 		if isSelfTransfer {
 			// Self-transfers are treated as Investments (moving money to savings/investment accounts)
 			txn.Category = "Investment"
+			categoryResult.Category = "Investment"
 			categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "SELF_TRANSFER", txn.Method)
 			if customerName != "" {
-				categoryResult.Confidence = 0.98 // Very high confidence when customerName matches
+				// Check if first name was used for detection
+				firstName := extractFirstName(customerName)
+				if firstName != "" && strings.Contains(normalizedUpper, strings.ToUpper(firstName)) {
+					categoryResult.Confidence = 0.97 // Very high confidence when first name matches in narration
+					categoryResult.Reason = "Self-transfer detected - customer's first name found in narration"
+				} else {
+					categoryResult.Confidence = 0.98 // Very high confidence when full customerName matches
+					categoryResult.Reason = "Self-transfer detected - customer name matches beneficiary"
+				}
 			} else {
 				categoryResult.Confidence = 0.95 // High confidence for fallback pattern
+				categoryResult.Reason = "Self-transfer detected - classified as Investment (savings movement)"
 			}
-			categoryResult.Reason = "Self-transfer detected - classified as Investment (savings movement)"
 		}
 	}
 
@@ -376,6 +470,54 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 		}
 	}
 
+	// Step 6.4: Improve ACH D categorization
+	// ACH D - HDFC BANK LTD patterns are typically credit card payments or loan payments
+	// Pattern: "ACH D- HDFC BANK LTD-408491108"
+	if txn.Method == "ACH" && txn.WithdrawalAmt > 0 && txn.DepositAmt == 0 {
+		normalizedUpper := strings.ToUpper(normalizedNarration)
+		// Check for bank names in ACH D patterns - these are typically credit card or loan payments
+		bankNames := []string{
+			"HDFC BANK", "ICICI BANK", "SBI BANK", "AXIS BANK", "KOTAK BANK",
+			"YES BANK", "IDFC BANK", "IDFC FIRST BANK", "PNB BANK",
+		}
+		hasBankName := false
+		for _, bankName := range bankNames {
+			if strings.Contains(normalizedUpper, "ACH D") && strings.Contains(normalizedUpper, bankName) {
+				hasBankName = true
+				break
+			}
+		}
+		
+		if hasBankName && txn.Category == "Other" {
+			// Check if it looks like a credit card payment (recurring, similar amounts)
+			// Or if it contains credit card related keywords
+			creditCardKeywords := []string{"CREDIT CARD", "CC", "CARD BILL", "CARD PAYMENT"}
+			isCreditCardPayment := false
+			for _, keyword := range creditCardKeywords {
+				if strings.Contains(normalizedUpper, keyword) {
+					isCreditCardPayment = true
+					break
+				}
+			}
+			
+			if isCreditCardPayment {
+				txn.Category = "Bills_Utilities"
+				categoryResult.Category = "Bills_Utilities"
+				categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "CREDIT_CARD", "ACH_D")
+				categoryResult.Confidence = 0.90
+				categoryResult.Reason = "ACH D credit card payment detected"
+			} else {
+				// Default to Loan payment for ACH D to bank (could be loan EMI or credit card)
+				// User can correct if needed, but this is better than "Other"
+				txn.Category = "Loan"
+				categoryResult.Category = "Loan"
+				categoryResult.MatchedKeywords = append(categoryResult.MatchedKeywords, "ACH_D", "BANK")
+				categoryResult.Confidence = 0.85
+				categoryResult.Reason = "ACH D bank payment detected - likely loan or credit card payment"
+			}
+		}
+	}
+
 	// Step 6.5: FINAL SAFEGUARD - Ensure credit transactions are NEVER classified as expenses
 	// This is a critical check to catch any edge cases that might have slipped through
 	// Check if this is a credit transaction (pure credit or net credit)
@@ -436,6 +578,37 @@ func ClassifyTransaction(txn models.ClassifiedTransaction, customerName string) 
 	}
 
 	return txn
+}
+
+// extractFirstName extracts the first name from a full name
+// Handles names with prefixes like MR., MRS., MS., DR., etc.
+// Returns the first word after removing prefixes
+func extractFirstName(fullName string) string {
+	if fullName == "" {
+		return ""
+	}
+	
+	// Normalize: remove common prefixes and trim
+	name := strings.TrimSpace(fullName)
+	name = strings.ToUpper(name)
+	
+	// Remove common prefixes
+	prefixes := []string{"MR.", "MR ", "MRS.", "MRS ", "MS.", "MS ", "DR.", "DR ", "PROF.", "PROF "}
+	for _, prefix := range prefixes {
+		if strings.HasPrefix(name, prefix) {
+			name = strings.TrimPrefix(name, prefix)
+			name = strings.TrimSpace(name)
+			break
+		}
+	}
+	
+	// Split into words and return the first word
+	words := strings.Fields(name)
+	if len(words) > 0 {
+		return words[0]
+	}
+	
+	return ""
 }
 
 // generateReason creates a human-readable explanation for classification

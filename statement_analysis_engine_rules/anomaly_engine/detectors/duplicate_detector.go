@@ -86,6 +86,36 @@ func (d *DuplicateDetector) DetectInternal(txn models.ClassifiedTransaction, pro
 	}
 	
 	merchant := strings.ToUpper(strings.TrimSpace(txn.Merchant))
+	narrationUpper := strings.ToUpper(txn.Narration)
+	category := txn.Category
+	method := txn.Method
+	
+	// Check if this is a legitimate recurring payment that shouldn't be flagged as duplicate
+	// EMIs, credit card bills, rent, insurance premiums can legitimately occur on same day
+	// (e.g., multiple credit card payments, or retry after failed payment)
+	isLegitimateRecurring := false
+	
+	// EMI/Loan payments are inherently recurring and may have retries
+	if method == "EMI" || category == "Loan" || 
+		strings.Contains(narrationUpper, "EMI") || 
+		strings.Contains(narrationUpper, "LOAN EMI") ||
+		strings.Contains(narrationUpper, "STAFF LOAN EMI") {
+		isLegitimateRecurring = true
+	}
+	
+	// Credit card bill payments (via CRED, ACH D to banks, etc.) can have retries
+	if category == "Bills_Utilities" && 
+		(strings.Contains(narrationUpper, "CRED") || 
+		 strings.Contains(narrationUpper, "ACH D") ||
+		 strings.Contains(narrationUpper, "CREDIT CARD") ||
+		 strings.Contains(narrationUpper, "CARD BILL")) {
+		isLegitimateRecurring = true
+	}
+	
+	// Insurance premiums
+	if category == "Bills_Utilities" && method == "Insurance" {
+		isLegitimateRecurring = true
+	}
 	
 	for i := len(d.history) - 1; i >= 0 && i >= len(d.history)-lookbackLimit; i-- {
 		other := d.history[i]
@@ -118,29 +148,46 @@ func (d *DuplicateDetector) DetectInternal(txn models.ClassifiedTransaction, pro
 			continue
 		}
 		
-		// Duplicate detected!
-		var score float64
-		var explanation string
-		
-		if daysDiff < 1 {
-			// Same day - high severity
-			score = 85.0
-			explanation = formatDuplicateSameDay(amount, merchant, other.Date)
-		} else {
-			// Within time window - medium severity
-			score = 60.0
-			explanation = formatDuplicateWithinWindow(amount, merchant, daysDiff)
+		// If it's a legitimate recurring payment and same day, it might be a retry - lower severity
+		// But if it's more than 1 day apart, it's likely a duplicate
+		if isLegitimateRecurring && daysDiff < 1 {
+			// Same day for legitimate recurring - might be retry, lower severity
+			score := 50.0 // Lower than normal duplicate
+			explanation := fmt.Sprintf("Similar payment to %s was made earlier today. This appears to be a recurring payment (EMI/loan/bill). If this was a retry after a failed payment, you can ignore this alert.", merchant)
+			
+			signal := map[string]interface{}{
+				"Code":        "DUPLICATE_PAYMENT",
+				"Category":    "Frequency",
+				"Score":       score,
+				"Severity":    getSeverityFromScore(score),
+				"Explanation": explanation,
+			}
+			signals = append(signals, signal)
+		} else if !isLegitimateRecurring {
+			// Not a legitimate recurring payment - flag as duplicate
+			var score float64
+			var explanation string
+			
+			if daysDiff < 1 {
+				// Same day - high severity
+				score = 85.0
+				explanation = formatDuplicateSameDay(amount, merchant, other.Date)
+			} else {
+				// Within time window - medium severity
+				score = 60.0
+				explanation = formatDuplicateWithinWindow(amount, merchant, daysDiff)
+			}
+			
+			// Create signal as map (will be converted in engine.go)
+			signal := map[string]interface{}{
+				"Code":        "DUPLICATE_PAYMENT",
+				"Category":    "Frequency",
+				"Score":       score,
+				"Severity":    getSeverityFromScore(score),
+				"Explanation": explanation,
+			}
+			signals = append(signals, signal)
 		}
-		
-		// Create signal as map (will be converted in engine.go)
-		signal := map[string]interface{}{
-			"Code":        "DUPLICATE_PAYMENT",
-			"Category":    "Frequency",
-			"Score":       score,
-			"Severity":    getSeverityFromScore(score),
-			"Explanation": explanation,
-		}
-		signals = append(signals, signal)
 		
 		// Only report first duplicate found
 		break

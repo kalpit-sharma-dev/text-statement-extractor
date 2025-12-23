@@ -181,6 +181,49 @@ func (p *PatternDetector) detectHighValueRecurring(txn models.ClassifiedTransact
 		return signals
 	}
 	
+	// Suppress for known legitimate recurring payments (EMIs, loans, credit card bills)
+	// These are expected to be recurring and shouldn't be flagged as anomalies
+	narrationUpper := strings.ToUpper(txn.Narration)
+	category := txn.Category
+	method := txn.Method
+	
+	// Check if it's a known recurring payment type
+	isLegitimateRecurring := false
+	
+	// EMI/Loan payments are inherently recurring
+	if method == "EMI" || category == "Loan" || 
+		strings.Contains(narrationUpper, "EMI") || 
+		strings.Contains(narrationUpper, "LOAN EMI") ||
+		strings.Contains(narrationUpper, "STAFF LOAN EMI") {
+		isLegitimateRecurring = true
+	}
+	
+	// Credit card bill payments (via CRED, ACH D to banks, etc.)
+	if category == "Bills_Utilities" && 
+		(strings.Contains(narrationUpper, "CRED") || 
+		 strings.Contains(narrationUpper, "ACH D") ||
+		 strings.Contains(narrationUpper, "CREDIT CARD") ||
+		 strings.Contains(narrationUpper, "CARD BILL")) {
+		isLegitimateRecurring = true
+	}
+	
+	// Rent payments (typically to same person/entity monthly)
+	if category == "Bills_Utilities" && 
+		(strings.Contains(narrationUpper, "RENT") || 
+		 strings.Contains(narrationUpper, "HOUSE RENT")) {
+		isLegitimateRecurring = true
+	}
+	
+	// Insurance premiums
+	if category == "Bills_Utilities" && method == "Insurance" {
+		isLegitimateRecurring = true
+	}
+	
+	// If it's a legitimate recurring payment, don't flag it
+	if isLegitimateRecurring {
+		return signals
+	}
+	
 	merchant := strings.ToUpper(strings.TrimSpace(txn.Merchant))
 	beneficiary := strings.ToUpper(strings.TrimSpace(txn.Beneficiary))
 	target := merchant
