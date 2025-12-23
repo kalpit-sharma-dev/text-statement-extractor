@@ -39,8 +39,12 @@ func (d *RecurringPaymentDetector) DetectRecurringPayments() []models.RecurringP
 		if confidence >= 50 {
 			avgAmount, dayOfMonth := d.calculateAverages(txns)
 
+			// Extract human-readable name from transactions
+			// Don't use the signature hash directly - extract merchant/beneficiary/narration
+			displayName := d.extractDisplayName(txns, signature)
+
 			result = append(result, models.RecurringPayment{
-				Name:       signature,
+				Name:       displayName,
 				Amount:     avgAmount,
 				DayOfMonth: dayOfMonth,
 				Pattern:    frequency,
@@ -588,6 +592,97 @@ func (d *RecurringPaymentDetector) calculateAverages(
 	}
 
 	return avgAmount, avgDay
+}
+
+// extractDisplayName extracts a human-readable name from transactions
+// This replaces signature hashes with meaningful names
+func (d *RecurringPaymentDetector) extractDisplayName(
+	txns []models.ClassifiedTransaction,
+	signature string,
+) string {
+	if len(txns) == 0 {
+		return signature
+	}
+
+	// Priority 1: Use merchant name if available and meaningful
+	for _, txn := range txns {
+		if txn.Merchant != "" && txn.Merchant != "Unknown" {
+			merchantUpper := strings.ToUpper(strings.TrimSpace(txn.Merchant))
+			if !isGenericMerchant(merchantUpper) {
+				return txn.Merchant
+			}
+		}
+	}
+
+	// Priority 2: Use beneficiary name if available
+	for _, txn := range txns {
+		if txn.Beneficiary != "" {
+			return txn.Beneficiary
+		}
+	}
+
+	// Priority 3: Extract name from normalized narration (without dates/IDs)
+	// Use the first transaction's normalized narration as display name
+	if len(txns) > 0 {
+		normalizedNarration := utils.NormalizeNarrationForFingerprint(txns[0].Narration)
+		if normalizedNarration != "" {
+			// Clean up the normalized narration to make it more readable
+			normalizedNarration = strings.TrimSpace(normalizedNarration)
+
+			// If it's still too long, truncate intelligently
+			if len(normalizedNarration) > 60 {
+				// Try to find a meaningful break point
+				words := strings.Fields(normalizedNarration)
+				if len(words) > 0 {
+					// Take first few meaningful words
+					displayName := ""
+					for i, word := range words {
+						if i >= 5 { // Max 5 words
+							break
+						}
+						if displayName != "" {
+							displayName += " "
+						}
+						displayName += word
+					}
+					return displayName
+				}
+			}
+			return normalizedNarration
+		}
+	}
+
+	// Priority 4: Extract from original narration (first 50 chars)
+	if len(txns) > 0 && txns[0].Narration != "" {
+		narration := strings.TrimSpace(txns[0].Narration)
+		if len(narration) > 50 {
+			narration = narration[:50] + "..."
+		}
+		return narration
+	}
+
+	// Fallback: Remove prefix from signature
+	if strings.HasPrefix(signature, "MERCHANT:") {
+		return strings.TrimPrefix(signature, "MERCHANT:")
+	}
+	if strings.HasPrefix(signature, "BENEFICIARY:") {
+		return strings.TrimPrefix(signature, "BENEFICIARY:")
+	}
+	if strings.HasPrefix(signature, "FINGERPRINT:") {
+		// For fingerprint, we can't reverse it, so use a generic name
+		// Try to extract category or method from transactions
+		if len(txns) > 0 {
+			if txns[0].Category != "" && txns[0].Category != "Other" {
+				return txns[0].Category + " Payment"
+			}
+			if txns[0].Method != "" && txns[0].Method != "Other" {
+				return txns[0].Method + " Payment"
+			}
+		}
+		return "Recurring Payment"
+	}
+
+	return signature
 }
 
 // MatchTransactionToRecurring matches a transaction to recurring payments using pre-computed lookup map
