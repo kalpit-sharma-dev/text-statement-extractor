@@ -590,32 +590,55 @@ func (d *RecurringPaymentDetector) calculateAverages(
 	return avgAmount, avgDay
 }
 
-// DetectRecurringForTransaction detects if a specific transaction is recurring
-// This is used during classification to set IsRecurring flag
-func DetectRecurringForTransaction(
+// MatchTransactionToRecurring matches a transaction to recurring payments using pre-computed lookup map
+// This is optimized for performance - avoids re-detecting recurring payments for each transaction
+func MatchTransactionToRecurring(
 	txn models.ClassifiedTransaction,
-	allTransactions []models.ClassifiedTransaction,
+	detector *RecurringPaymentDetector,
+	recurringMap map[string]models.RecurringPayment,
 ) models.RecurringMetadata {
-	detector := NewRecurringPaymentDetector(allTransactions)
-	recurringPayments := detector.DetectRecurringPayments()
-
-	// Find matching recurring payment
+	// Get counterparty signature for this transaction
 	signature := detector.getCounterpartySignature(txn)
 	if signature == "" {
 		return models.RecurringMetadata{IsRecurring: false}
 	}
 
-	for _, rp := range recurringPayments {
-		// Check if this transaction matches the recurring payment
+	// Extract signature key (remove prefix like "MERCHANT:", "FINGERPRINT:", etc.)
+	signatureKey := signature
+	if idx := strings.Index(signature, ":"); idx > 0 {
+		signatureKey = signature[idx+1:]
+	}
+
+	// Try direct match first
+	if rp, found := recurringMap[signatureKey]; found {
 		if rp.Confidence >= 50 {
-			// Simple matching: check if merchant/beneficiary matches
-			// Or if narration fingerprints match
+			return models.RecurringMetadata{
+				IsRecurring: true,
+				Confidence:  rp.Confidence,
+				Frequency:   rp.Frequency,
+				FirstSeen:   rp.FirstSeen,
+				LastSeen:    rp.LastSeen,
+				Count:       rp.Count,
+				Pattern:     rp.Pattern,
+			}
+		}
+	}
+
+	// Fallback: Check if merchant/beneficiary matches any recurring payment
+	// This handles cases where signature format differs
+	txnMerchantUpper := strings.ToUpper(txn.Merchant)
+	txnBeneficiaryUpper := strings.ToUpper(txn.Beneficiary)
+	txnFingerprint := utils.FingerprintNarration(txn.Narration)
+
+	for _, rp := range recurringMap {
+		if rp.Confidence >= 50 {
+			rpNameUpper := strings.ToUpper(rp.Name)
 			rpFingerprint := utils.FingerprintNarration(rp.Name)
-			txnFingerprint := utils.FingerprintNarration(txn.Narration)
-			
-			if strings.Contains(strings.ToUpper(rp.Name), strings.ToUpper(txn.Merchant)) ||
-				strings.Contains(strings.ToUpper(rp.Name), strings.ToUpper(txn.Beneficiary)) ||
-				(rpFingerprint != "" && rpFingerprint == txnFingerprint) {
+
+			// Check if merchant/beneficiary matches
+			if (txnMerchantUpper != "" && strings.Contains(rpNameUpper, txnMerchantUpper)) ||
+				(txnBeneficiaryUpper != "" && strings.Contains(rpNameUpper, txnBeneficiaryUpper)) ||
+				(txnFingerprint != "" && rpFingerprint != "" && txnFingerprint == rpFingerprint) {
 				return models.RecurringMetadata{
 					IsRecurring: true,
 					Confidence:  rp.Confidence,
@@ -632,3 +655,21 @@ func DetectRecurringForTransaction(
 	return models.RecurringMetadata{IsRecurring: false}
 }
 
+// DetectRecurringForTransaction detects if a specific transaction is recurring
+// DEPRECATED: Use MatchTransactionToRecurring with pre-computed recurring payments for better performance
+// This function is kept for backward compatibility but should not be used in loops
+func DetectRecurringForTransaction(
+	txn models.ClassifiedTransaction,
+	allTransactions []models.ClassifiedTransaction,
+) models.RecurringMetadata {
+	detector := NewRecurringPaymentDetector(allTransactions)
+	recurringPayments := detector.DetectRecurringPayments()
+
+	// Build lookup map
+	recurringMap := make(map[string]models.RecurringPayment)
+	for _, rp := range recurringPayments {
+		recurringMap[rp.Name] = rp
+	}
+
+	return MatchTransactionToRecurring(txn, detector, recurringMap)
+}

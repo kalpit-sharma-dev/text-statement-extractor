@@ -641,10 +641,21 @@ func ClassifyTransactions(transactions []models.ClassifiedTransaction, customerN
 	}
 
 	// Second pass: detect recurring payments using comprehensive detection
-	// This requires all transactions to be classified first
+	// PERFORMANCE FIX: Detect all recurring payments ONCE, then build lookup map
+	// This avoids O(N²) complexity of calling DetectRecurringPayments() for each transaction
+	detector := analytics.NewRecurringPaymentDetector(classified)
+	recurringPayments := detector.DetectRecurringPayments()
+
+	// Build lookup map for fast matching: signature -> RecurringPayment
+	recurringMap := make(map[string]models.RecurringPayment)
+	for _, rp := range recurringPayments {
+		// Store by signature for fast lookup
+		recurringMap[rp.Name] = rp
+	}
+
+	// Third pass: match each transaction to recurring payments using lookup map
 	for i := range classified {
-		// Use comprehensive recurring detection
-		recurringMetadata := analytics.DetectRecurringForTransaction(classified[i], classified)
+		recurringMetadata := analytics.MatchTransactionToRecurring(classified[i], detector, recurringMap)
 		classified[i].IsRecurring = recurringMetadata.IsRecurring
 		classified[i].RecurringMetadata = recurringMetadata
 	}
