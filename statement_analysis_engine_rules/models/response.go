@@ -141,12 +141,17 @@ type BehaviourInsight struct {
 	Insight string `json:"insight"`
 }
 
-// RecurringPayment represents a recurring payment
+// RecurringPayment represents a recurring payment with comprehensive metadata
 type RecurringPayment struct {
 	Name       string  `json:"name"`
 	Amount     float64 `json:"amount"`
 	DayOfMonth int     `json:"dayOfMonth"`
-	Pattern    string  `json:"pattern"`
+	Pattern    string  `json:"pattern"` // MONTHLY, WEEKLY, QUARTERLY, etc.
+	Confidence int     `json:"confidence"` // 0-100 confidence score
+	Frequency  string  `json:"frequency"` // MONTHLY, WEEKLY, QUARTERLY
+	FirstSeen  string  `json:"firstSeen"` // Date of first occurrence
+	LastSeen   string  `json:"lastSeen"`  // Date of last occurrence
+	Count      int     `json:"count"`     // Number of occurrences
 }
 
 // SavingsOpportunity represents a savings opportunity

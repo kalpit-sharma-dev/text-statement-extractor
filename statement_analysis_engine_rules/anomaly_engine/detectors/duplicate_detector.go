@@ -90,31 +90,36 @@ func (d *DuplicateDetector) DetectInternal(txn models.ClassifiedTransaction, pro
 	category := txn.Category
 	method := txn.Method
 	
-	// Check if this is a legitimate recurring payment that shouldn't be flagged as duplicate
-	// EMIs, credit card bills, rent, insurance premiums can legitimately occur on same day
-	// (e.g., multiple credit card payments, or retry after failed payment)
+	// Check if this is a confirmed recurring payment (confidence ≥70)
+	// Use the comprehensive recurring detection metadata
 	isLegitimateRecurring := false
-	
-	// EMI/Loan payments are inherently recurring and may have retries
-	if method == "EMI" || category == "Loan" || 
-		strings.Contains(narrationUpper, "EMI") || 
-		strings.Contains(narrationUpper, "LOAN EMI") ||
-		strings.Contains(narrationUpper, "STAFF LOAN EMI") {
+	if txn.IsRecurring && txn.RecurringMetadata.Confidence >= 70 {
 		isLegitimateRecurring = true
 	}
 	
-	// Credit card bill payments (via CRED, ACH D to banks, etc.) can have retries
-	if category == "Bills_Utilities" && 
-		(strings.Contains(narrationUpper, "CRED") || 
-		 strings.Contains(narrationUpper, "ACH D") ||
-		 strings.Contains(narrationUpper, "CREDIT CARD") ||
-		 strings.Contains(narrationUpper, "CARD BILL")) {
-		isLegitimateRecurring = true
-	}
-	
-	// Insurance premiums
-	if category == "Bills_Utilities" && method == "Insurance" {
-		isLegitimateRecurring = true
+	// Fallback: Check for known recurring payment types
+	if !isLegitimateRecurring {
+		// EMI/Loan payments are inherently recurring and may have retries
+		if method == "EMI" || category == "Loan" || 
+			strings.Contains(narrationUpper, "EMI") || 
+			strings.Contains(narrationUpper, "LOAN EMI") ||
+			strings.Contains(narrationUpper, "STAFF LOAN EMI") {
+			isLegitimateRecurring = true
+		}
+		
+		// Credit card bill payments (via CRED, ACH D to banks, etc.) can have retries
+		if category == "Bills_Utilities" && 
+			(strings.Contains(narrationUpper, "CRED") || 
+			 strings.Contains(narrationUpper, "ACH D") ||
+			 strings.Contains(narrationUpper, "CREDIT CARD") ||
+			 strings.Contains(narrationUpper, "CARD BILL")) {
+			isLegitimateRecurring = true
+		}
+		
+		// Insurance premiums
+		if category == "Bills_Utilities" && method == "Insurance" {
+			isLegitimateRecurring = true
+		}
 	}
 	
 	for i := len(d.history) - 1; i >= 0 && i >= len(d.history)-lookbackLimit; i-- {

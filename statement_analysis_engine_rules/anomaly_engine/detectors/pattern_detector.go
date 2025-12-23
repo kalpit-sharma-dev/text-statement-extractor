@@ -181,8 +181,14 @@ func (p *PatternDetector) detectHighValueRecurring(txn models.ClassifiedTransact
 		return signals
 	}
 	
-	// Suppress for known legitimate recurring payments (EMIs, loans, credit card bills)
-	// These are expected to be recurring and shouldn't be flagged as anomalies
+	// Suppress for confirmed recurring payments (confidence ≥70)
+	// Use the comprehensive recurring detection metadata
+	if txn.IsRecurring && txn.RecurringMetadata.Confidence >= 70 {
+		// Confirmed recurring payment - don't flag as anomaly
+		return signals
+	}
+	
+	// Also check for known legitimate recurring payment types (fallback)
 	narrationUpper := strings.ToUpper(txn.Narration)
 	category := txn.Category
 	method := txn.Method

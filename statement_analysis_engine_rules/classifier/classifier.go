@@ -1,6 +1,7 @@
 package classifier
 
 import (
+	"classify/statement_analysis_engine_rules/analytics"
 	"classify/statement_analysis_engine_rules/models"
 	"classify/statement_analysis_engine_rules/rules"
 	"classify/statement_analysis_engine_rules/utils"
@@ -633,24 +634,19 @@ func generateReason(category string, keywords []string, gateway string, channel 
 // customerName is optional - if provided, used for self-transfer detection
 func ClassifyTransactions(transactions []models.ClassifiedTransaction, customerName string) []models.ClassifiedTransaction {
 	classified := make([]models.ClassifiedTransaction, len(transactions))
-	previousNarrations := make([]string, 0)
 
+	// First pass: classify all transactions
 	for i, txn := range transactions {
-		// Classify transaction
 		classified[i] = ClassifyTransaction(txn, customerName)
+	}
 
-		// Check for recurring payments
-		previousNarrations = append(previousNarrations, txn.Narration)
-		if len(previousNarrations) > 10 {
-			previousNarrations = previousNarrations[1:] // Keep last 10
-		}
-
-		classified[i].IsRecurring = rules.IsRecurringPayment(
-			txn.Narration,
-			txn.WithdrawalAmt+txn.DepositAmt,
-			txn.Date,
-			previousNarrations,
-		)
+	// Second pass: detect recurring payments using comprehensive detection
+	// This requires all transactions to be classified first
+	for i := range classified {
+		// Use comprehensive recurring detection
+		recurringMetadata := analytics.DetectRecurringForTransaction(classified[i], classified)
+		classified[i].IsRecurring = recurringMetadata.IsRecurring
+		classified[i].RecurringMetadata = recurringMetadata
 	}
 
 	return classified

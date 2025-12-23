@@ -30,8 +30,22 @@ type ClassifiedTransaction struct {
 	IsIncome   bool   // true if deposit, false if withdrawal
 	IsRecurring bool  // true if recurring payment detected
 	
+	// Recurring payment metadata (if IsRecurring is true)
+	RecurringMetadata RecurringMetadata `json:"recurringMetadata,omitempty"`
+	
 	// Classification metadata (for explainability and debugging)
 	ClassificationMetadata ClassificationMetadata `json:"classificationMetadata,omitempty"`
+}
+
+// RecurringMetadata stores recurring payment detection details
+type RecurringMetadata struct {
+	IsRecurring bool    `json:"isRecurring"`
+	Confidence  int     `json:"confidence"`  // 0-100 confidence score
+	Frequency   string  `json:"frequency"`   // MONTHLY, WEEKLY, QUARTERLY
+	FirstSeen   string  `json:"firstSeen"`   // Date of first occurrence
+	LastSeen    string  `json:"lastSeen"`    // Date of last occurrence
+	Count       int     `json:"count"`       // Number of occurrences
+	Pattern     string  `json:"pattern"`     // Pattern description
 }
 
 // TransactionList is a collection of classified transactions
