@@ -41,4 +41,4 @@ volumes:
 
 
 
-# export POSTGRES_DSN="postgres://vectoruser:vectorpass@localhost:5432/vectordb?sslmode=disable"
+# export POSTGRES_DSN="postgres://vectoruser:vectorpass@localhost:5432/vectordb?sslmode=disable"3
